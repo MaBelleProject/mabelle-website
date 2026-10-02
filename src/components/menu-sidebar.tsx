@@ -7,6 +7,7 @@ import { X, LogOut } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
 const TRANSITION = "300ms cubic-bezier(0.4, 0, 0.2, 1)";
 
@@ -97,14 +98,26 @@ export default function MenuSidebar({ brands }: { brands: Brand[] }) {
           )}
         </nav>
 
-        {/* Sign-out confirmation overlay */}
-        {confirmSignOut && (
-          <div className="absolute inset-0 bg-white/95 flex flex-col items-center justify-center px-6 gap-5 z-10">
-            <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center">
-              <LogOut className="w-6 h-6 text-red-500" />
+      </aside>
+
+      {confirmSignOut && createPortal(
+        <div
+          className="fixed inset-0 z-[200] flex items-center justify-center p-4"
+          onClick={() => setConfirmSignOut(false)}
+        >
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+
+          {/* Card */}
+          <div
+            className="relative bg-white rounded-2xl shadow-2xl w-full max-w-xs px-6 py-8 flex flex-col items-center gap-5"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center">
+              <LogOut className="w-7 h-7 text-red-500" />
             </div>
             <div className="text-center">
-              <p className="font-semibold text-stone-800 text-base">Sign out?</p>
+              <p className="font-bold text-stone-800 text-lg">Sign out?</p>
               <p className="text-stone-400 text-sm mt-1">You&apos;ll need to log in again at checkout.</p>
             </div>
             <div className="flex flex-col gap-2 w-full">
@@ -122,8 +135,9 @@ export default function MenuSidebar({ brands }: { brands: Brand[] }) {
               </button>
             </div>
           </div>
-        )}
-      </aside>
+        </div>,
+        document.body
+      )}
     </>
   );
 }

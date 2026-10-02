@@ -16,6 +16,8 @@ export default function Carousel({ slides }: CarouselProps) {
   const [dragOffset, setDragOffset] = useState(0); // live px offset while dragging
   const [dragging, setDragging] = useState(false);
   const dragStart = useRef<number | null>(null);
+  const dragOffsetRef = useRef(0);   // always current — state lags behind renders
+  const wasDraggedRef = useRef(false); // survives until click fires
   const trackRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -41,20 +43,27 @@ export default function Carousel({ slides }: CarouselProps) {
 
   const startDrag = (clientX: number) => {
     dragStart.current = clientX;
+    dragOffsetRef.current = 0;
+    wasDraggedRef.current = false;
     setDragging(true);
     setPaused(true);
   };
 
   const moveDrag = (clientX: number) => {
     if (dragStart.current === null) return;
-    setDragOffset(clientX - dragStart.current);
+    const offset = clientX - dragStart.current;
+    dragOffsetRef.current = offset;
+    if (Math.abs(offset) > 5) wasDraggedRef.current = true;
+    setDragOffset(offset);
   };
 
   const endDrag = () => {
     if (dragStart.current === null) return;
-    if (dragOffset < -SWIPE_THRESHOLD) next();
-    else if (dragOffset > SWIPE_THRESHOLD) prev();
+    const offset = dragOffsetRef.current; // use ref — always up-to-date regardless of render timing
+    if (offset < -SWIPE_THRESHOLD) next();
+    else if (offset > SWIPE_THRESHOLD) prev();
     dragStart.current = null;
+    dragOffsetRef.current = 0;
     setDragOffset(0);
     setDragging(false);
     setPaused(false);
@@ -67,8 +76,7 @@ export default function Carousel({ slides }: CarouselProps) {
     startDrag(e.clientX);
   };
   const onPointerMove = (e: React.PointerEvent) => {
-    if (!dragging) return;
-    moveDrag(e.clientX);
+    moveDrag(e.clientX); // dragStart.current guard inside moveDrag is sufficient
   };
   const onPointerUp = () => endDrag();
 
@@ -80,11 +88,14 @@ export default function Carousel({ slides }: CarouselProps) {
 
   // ── click vs drag guard ───────────────────────────────────────────────────
 
-  const handleSlideClick = (slide: CarouselSlide) => {
-    if (Math.abs(dragOffset) > 5) return; // suppress click after drag
+  const handleContainerClick = (e: React.MouseEvent) => {
+    if ((e.target as Element).closest('button')) return; // dot buttons bubble up — skip
+    const slide = slides[current];
+    if (wasDraggedRef.current) { wasDraggedRef.current = false; return; }
     if (!slide.destinationType || !slide.destinationId) return;
     switch (slide.destinationType) {
       case "category":
+      case "brand":
         router.push(`/brand/${slide.destinationId}`);
         break;
       case "product":
@@ -115,6 +126,7 @@ export default function Carousel({ slides }: CarouselProps) {
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
+      onClick={handleContainerClick}
     >
       {/* Track */}
       <div
@@ -134,7 +146,6 @@ export default function Carousel({ slides }: CarouselProps) {
             <div
               key={slide.id}
               className={`carousel-slide relative ${clickable ? "cursor-pointer" : ""}`}
-              onClick={() => handleSlideClick(slide)}
             >
               <img
                 src={url}
@@ -170,6 +181,7 @@ export default function Carousel({ slides }: CarouselProps) {
           {slides.map((_, i) => (
             <button
               key={i}
+              onPointerDown={e => e.stopPropagation()}
               onClick={() => go(i)}
               className={`h-2 rounded-full transition-all duration-300 ${i === current ? "bg-blue-400 w-2" : "bg-white w-2"
                 }`}

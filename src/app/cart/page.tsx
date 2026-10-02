@@ -1,12 +1,20 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useCart } from "@/context/cart-context";
 import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
-import { fileUrl } from "@/lib/api";
+import { fileUrl, storefrontApi } from "@/lib/api";
 
 export default function CartPage() {
   const { items, update, remove, subtotal } = useCart();
+  const [deliveryCharge, setDeliveryCharge] = useState(0);
+
+  useEffect(() => {
+    storefrontApi.settings().then(s => {
+      if (s?.deliveryCharge) setDeliveryCharge(parseFloat(s.deliveryCharge));
+    }).catch(() => {});
+  }, []);
 
   if (items.length === 0) {
     return (
@@ -88,11 +96,11 @@ export default function CartPage() {
           </div>
           <div className="flex justify-between text-sm text-stone-400 mb-6">
             <span>Delivery</span>
-            <span>Calculated at checkout</span>
+            <span>{deliveryCharge > 0 ? `$${deliveryCharge.toFixed(2)}` : "Free"}</span>
           </div>
           <div className="flex justify-between font-bold text-stone-800 text-base border-t border-stone-100 pt-4 mb-6">
             <span>Total</span>
-            <span>${subtotal.toFixed(2)}</span>
+            <span>${(subtotal + deliveryCharge).toFixed(2)}</span>
           </div>
           <Link
             href="/checkout"

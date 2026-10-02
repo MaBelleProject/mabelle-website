@@ -116,6 +116,8 @@ export const storefrontApi = {
     request<{ sent: boolean }>('/forgot-password', { method: 'POST', body: JSON.stringify({ phone }) }),
   resetPassword: (token: string, newPassword: string) =>
     request<{ success: boolean }>('/reset-password', { method: 'POST', body: JSON.stringify({ token, newPassword }) }),
-  changePassword: (phone: string, currentPassword: string, newPassword: string) =>
-    request<{ success: boolean }>('/change-password', { method: 'POST', body: JSON.stringify({ phone, currentPassword, newPassword }) }),
+  sendChangePasswordCode: (phone: string, currentPassword: string) =>
+    request<{ sent: boolean }>('/send-change-password-code', { method: 'POST', body: JSON.stringify({ phone, currentPassword }) }),
+  changePassword: (phone: string, currentPassword: string, newPassword: string, code: string) =>
+    request<{ success: boolean }>('/change-password', { method: 'POST', body: JSON.stringify({ phone, currentPassword, newPassword, code }) }),
 };
