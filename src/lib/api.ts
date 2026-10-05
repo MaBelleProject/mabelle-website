@@ -74,7 +74,7 @@ export interface Settings {
   id: number | null; projectId: number;
   companyName: string | null; slogan: string | null; companyLogo: string | null;
   companyDescription: string | null; phoneNumber: string | null;
-  qrCode: string | null; instagramPage: string | null; deliveryCharge: string | null; updatedAt: string | null;
+  instagramQrCode: string | null; whatsappQrCode: string | null; instagramPage: string | null; deliveryCharge: string | null; updatedAt: string | null;
 }
 
 export interface PromoCode {
