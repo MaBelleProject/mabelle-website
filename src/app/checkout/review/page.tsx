@@ -141,12 +141,12 @@ export default function ReviewPage() {
         {/* Items + Summary */}
         <div className="lg:col-span-3 flex flex-col gap-4">
           {/* Order Items */}
-          <div className="bg-white rounded-2xl border border-stone-100 shadow-sm overflow-hidden">
-            <div className="px-5 py-4 border-b border-stone-50">
+          <div className="bg-white rounded-2xl border border-[var(--sage-light)] shadow-sm overflow-hidden">
+            <div className="px-5 py-4 border-b border-[var(--sage-light)]">
               <h2 className="font-semibold text-stone-800">Items ({items.reduce((s, i) => s + i.quantity, 0)})</h2>
             </div>
             {items.map(item => (
-              <div key={item.productId} className="flex items-center gap-3 px-5 py-3 border-b border-stone-50 last:border-0">
+              <div key={item.productId} className="flex items-center gap-3 px-5 py-3 border-b border-[var(--sage-light)] last:border-0">
                 <span className="text-stone-500 text-sm flex-1 min-w-0">
                   <span className="font-medium text-stone-800">{item.productName}</span>
                   <span className="text-stone-400"> × {item.quantity}</span>
@@ -159,7 +159,7 @@ export default function ReviewPage() {
           </div>
 
           {/* Delivery Info */}
-          <div className="bg-white rounded-2xl border border-stone-100 shadow-sm px-5 py-4">
+          <div className="bg-white rounded-2xl border border-[var(--sage-light)] shadow-sm px-5 py-4">
             <h2 className="font-semibold text-stone-800 mb-3">Delivery Details</h2>
             <div className="grid grid-cols-2 gap-y-2 text-sm">
               <InfoRow label="Name" value={info.name} />
@@ -175,7 +175,7 @@ export default function ReviewPage() {
         {/* Order totals + promo */}
         <div className="lg:col-span-2 flex flex-col gap-4">
           {/* Promo Code */}
-          <div className="bg-white rounded-2xl border border-stone-100 shadow-sm px-5 py-4">
+          <div className="bg-white rounded-2xl border border-[var(--sage-light)] shadow-sm px-5 py-4">
             <h2 className="font-semibold text-stone-800 mb-3">Promo Code</h2>
             {promo ? (
               <div className="flex items-center gap-2">
@@ -216,7 +216,7 @@ export default function ReviewPage() {
           </div>
 
           {/* Totals */}
-          <div className="bg-white rounded-2xl border border-stone-100 shadow-sm px-5 py-4">
+          <div className="bg-white rounded-2xl border border-[var(--sage-light)] shadow-sm px-5 py-4">
             <h2 className="font-semibold text-stone-800 mb-4">Order Total</h2>
             <div className="flex flex-col gap-2 text-sm text-stone-600">
               <div className="flex justify-between"><span>Subtotal</span><span>${subtotal.toFixed(2)}</span></div>
@@ -228,7 +228,7 @@ export default function ReviewPage() {
                 <div className="flex justify-between text-green-600"><span>Promo ({promo!.code})</span><span>-${promoDiscount.toFixed(2)}</span></div>
               )}
             </div>
-            <div className="flex justify-between font-bold text-stone-800 text-base border-t border-stone-100 mt-3 pt-3">
+            <div className="flex justify-between font-bold text-stone-800 text-base border-t border-[var(--sage-light)] mt-3 pt-3">
               <span>Total</span><span>${netTotal.toFixed(2)}</span>
             </div>
           </div>

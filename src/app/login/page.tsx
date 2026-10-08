@@ -33,7 +33,7 @@ function LoginForm() {
   };
 
   return (
-    <form onSubmit={submit} className="w-full max-w-sm bg-white rounded-2xl shadow-sm border border-stone-100 p-8 space-y-5">
+    <form onSubmit={submit} className="w-full max-w-sm bg-white rounded-2xl shadow-sm border border-[var(--sage-light)] p-8 space-y-5">
       <div className="flex items-center gap-2.5">
         <div className="w-10 h-10 bg-[var(--brand)] rounded-xl flex items-center justify-center">
           <ShoppingBag className="w-5 h-5 text-white" />
@@ -97,7 +97,7 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <div className="min-h-[calc(100vh-8rem)] flex items-center justify-center bg-stone-50 p-4">
+    <div className="min-h-[calc(100vh-8rem)] flex items-center justify-center p-4">
       <Suspense>
         <LoginForm />
       </Suspense>

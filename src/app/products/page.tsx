@@ -51,7 +51,7 @@ function ProductsContent() {
             value={query}
             onChange={e => setQuery(e.target.value)}
             placeholder="Search products…"
-            className="w-full pl-9 pr-4 py-2.5 rounded-full border border-stone-200 bg-white text-sm focus:outline-none focus:border-[var(--brand)] focus:ring-1 focus:ring-[var(--brand)] transition"
+            className="w-full pl-9 pr-4 py-2.5 rounded-full border border-[var(--sage-light)] bg-white text-sm focus:outline-none focus:border-[var(--brand)] focus:ring-1 focus:ring-[var(--brand)] transition"
           />
         </form>
       )}
@@ -59,7 +59,7 @@ function ProductsContent() {
       {loading ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
           {Array.from({ length: 10 }).map((_, i) => (
-            <div key={i} className="bg-stone-100 rounded-2xl aspect-square animate-pulse" />
+            <div key={i} className="bg-[var(--sage-light)] rounded-2xl aspect-square animate-pulse" />
           ))}
         </div>
       ) : products.length === 0 ? (

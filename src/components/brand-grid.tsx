@@ -17,9 +17,9 @@ export default function BrandGrid({ brands }: BrandGridProps) {
             <Link
               key={brand.id}
               href={`/brand/${brand.id}`}
-              className="group flex flex-col items-center gap-2 p-4 bg-white rounded-2xl border border-stone-100 hover:border-[var(--brand-light)] hover:shadow-md transition"
+              className="group flex flex-col items-center gap-2 p-4 bg-white rounded-2xl border border-[var(--sage-light)] hover:border-[var(--brand-light)] hover:shadow-md transition"
             >
-              <div className="w-20 h-20 rounded-full overflow-hidden bg-stone-50 flex items-center justify-center">
+              <div className="w-20 h-20 rounded-full overflow-hidden bg-[var(--sage-light)] flex items-center justify-center">
                 {imgUrl ? (
                   <img src={imgUrl} alt={brand.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
                 ) : (

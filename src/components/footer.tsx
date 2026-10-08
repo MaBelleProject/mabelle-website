@@ -20,28 +20,28 @@ export default function Footer({ settings }: FooterProps) {
   const instaHref = settings?.instagramPage ?? undefined;
 
   return (
-    <footer className="bg-stone-900 text-stone-300 mt-20">
+    <footer className="bg-[#cfe8ba] text-[#4a6a30] mt-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 grid grid-cols-1 sm:grid-cols-3 gap-8">
         <div>
-          <p className="text-white font-semibold text-lg mb-2">{settings?.companyName ?? "Mabelle Bites"}</p>
-          {settings?.slogan && <p className="text-sm text-stone-400 italic">{settings.slogan}</p>}
+          <p className="text-[#3d5c22] font-semibold text-lg mb-2">{settings?.companyName ?? "Mabelle Bites"}</p>
+          {settings?.slogan && <p className="text-sm text-[#4a6a30] italic">{settings.slogan}</p>}
           {settings?.companyDescription && (
-            <p className="text-sm text-stone-400 mt-3 leading-relaxed">{settings.companyDescription}</p>
+            <p className="text-sm text-[#4a6a30] mt-3 leading-relaxed">{settings.companyDescription}</p>
           )}
         </div>
 
         <div>
-          <p className="text-white font-semibold mb-3">Quick Links</p>
+          <p className="text-[#3d5c22] font-semibold mb-3">Quick Links</p>
           <ul className="space-y-2 text-sm">
-            <li><Link href="/" className="hover:text-white transition">Home</Link></li>
-            <li><Link href="/products" className="hover:text-white transition">All Products</Link></li>
-            <li><Link href="/about" className="hover:text-white transition">About Us</Link></li>
-            <li><Link href="/cart" className="hover:text-white transition">Cart</Link></li>
+            <li><Link href="/" className="hover:text-[#3d5c22] transition">Home</Link></li>
+            <li><Link href="/products" className="hover:text-[#3d5c22] transition">All Products</Link></li>
+            <li><Link href="/about" className="hover:text-[#3d5c22] transition">About Us</Link></li>
+            <li><Link href="/cart" className="hover:text-[#3d5c22] transition">Cart</Link></li>
           </ul>
         </div>
 
         <div>
-          <p className="text-white font-semibold mb-3">Connect</p>
+          <p className="text-[#3d5c22] font-semibold mb-3">Connect</p>
           <div className="flex gap-3">
             {whatsappHref && (
               <a
@@ -65,11 +65,11 @@ export default function Footer({ settings }: FooterProps) {
             )}
           </div>
           {settings?.phoneNumber && (
-            <p className="text-sm text-stone-400 mt-3">📞 {settings.phoneNumber}</p>
+            <p className="text-sm text-[#4a6a30] mt-3">📞 {settings.phoneNumber}</p>
           )}
         </div>
       </div>
-      <div className="border-t border-stone-800 py-4 text-center text-xs text-stone-500">
+      <div className="border-t border-[#b5d49e] py-4 text-center text-xs text-[#4a6a30]">
         © {new Date().getFullYear()} {settings?.companyName ?? "Mabelle Bites"}. All rights reserved.
       </div>
     </footer>

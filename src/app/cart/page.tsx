@@ -39,9 +39,9 @@ export default function CartPage() {
           {items.map(item => {
             const imgUrl = fileUrl(item.imageUrl);
             return (
-              <div key={item.productId} className="flex items-center gap-4 bg-white rounded-2xl p-4 border border-stone-100 shadow-sm">
+              <div key={item.productId} className="flex items-center gap-4 bg-white rounded-2xl p-4 border border-[var(--sage-light)] shadow-sm">
                 {/* Image */}
-                <div className="w-16 h-16 rounded-xl overflow-hidden bg-stone-50 shrink-0">
+                <div className="w-16 h-16 rounded-xl overflow-hidden bg-[var(--cream)] shrink-0">
                   {imgUrl ? (
                     <img src={imgUrl} alt={item.productName} className="w-full h-full object-cover" />
                   ) : (
@@ -58,8 +58,8 @@ export default function CartPage() {
                 </div>
 
                 {/* Qty controls */}
-                <div className="flex items-center gap-1 bg-stone-100 rounded-full p-1 shrink-0">
-                  <button onClick={() => update(item.productId, item.quantity - 1)} className="w-7 h-7 rounded-full bg-white flex items-center justify-center shadow hover:bg-stone-50 transition" aria-label="Decrease">
+                <div className="flex items-center gap-1 bg-[var(--sage-light)] rounded-full p-1 shrink-0">
+                  <button onClick={() => update(item.productId, item.quantity - 1)} className="w-7 h-7 rounded-full bg-white flex items-center justify-center shadow hover:bg-[var(--cream)] transition" aria-label="Decrease">
                     <Minus className="w-3 h-3" />
                   </button>
                   <span className="w-6 text-center text-sm font-semibold">{item.quantity}</span>
@@ -88,7 +88,7 @@ export default function CartPage() {
         </div>
 
         {/* Summary */}
-        <div className="bg-white rounded-2xl border border-stone-100 shadow-sm p-6 h-fit sticky top-24">
+        <div className="bg-white rounded-2xl border border-[var(--sage-light)] shadow-sm p-6 h-fit sticky top-24">
           <h2 className="font-bold text-stone-800 mb-4">Order Summary</h2>
           <div className="flex justify-between text-sm text-stone-600 mb-3">
             <span>Subtotal</span>
@@ -98,7 +98,7 @@ export default function CartPage() {
             <span>Delivery</span>
             <span>{deliveryCharge > 0 ? `$${deliveryCharge.toFixed(2)}` : "Free"}</span>
           </div>
-          <div className="flex justify-between font-bold text-stone-800 text-base border-t border-stone-100 pt-4 mb-6">
+          <div className="flex justify-between font-bold text-stone-800 text-base border-t border-[var(--sage-light)] pt-4 mb-6">
             <span>Total</span>
             <span>${(subtotal + deliveryCharge).toFixed(2)}</span>
           </div>

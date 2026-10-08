@@ -6,17 +6,27 @@
   --color-brand-dark: var(--brand-dark);
   --color-brand-light: var(--brand-light);
   --color-cream: var(--cream);
+  --color-sage: var(--sage);
+  --color-sage-light: var(--sage-light);
   --font-sans: var(--font-geist-sans);
   --font-heading: var(--font-playfair);
 }
 
 :root {
-  --brand: oklch(0.60 0.14 50);
-  --brand-dark: oklch(0.42 0.12 45);
-  --brand-light: oklch(0.84 0.08 55);
-  --cream: oklch(0.975 0.012 70);
-  --background: oklch(0.99 0.006 70);
-  --foreground: oklch(0.18 0.025 40);
+  /* Coral/salmon — "elle" letters in the logo */
+  --brand: oklch(0.68 0.13 22);
+  --brand-dark: oklch(0.56 0.15 22);
+  --brand-light: oklch(0.93 0.04 22);
+  /* Olive sage — "Ma" / "Bites" letters and leaves in the logo */
+  --sage: oklch(0.54 0.10 138);
+  --sage-light: oklch(0.93 0.028 145);
+  /* Amber — "B" letter in the logo */
+  --amber: oklch(0.76 0.13 72);
+  /* Cards — pure white to contrast with mint background */
+  --cream: oklch(1 0 0);
+  /* Page background — near white with barely-there green tint */
+  --background: oklch(0.984 0.008 145);
+  --foreground: oklch(0.22 0.07 138);
 }
 
 @layer base {

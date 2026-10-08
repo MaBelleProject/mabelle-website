@@ -30,7 +30,7 @@ export default async function BrandPage({ params, searchParams }: PageProps) {
       {/* Brand header */}
       <div className="flex items-center gap-4 mb-8">
         {imgUrl && (
-          <div className="w-16 h-16 rounded-full overflow-hidden bg-stone-50 shrink-0">
+          <div className="w-16 h-16 rounded-full overflow-hidden bg-[var(--sage-light)] shrink-0">
             <img src={imgUrl} alt={brand.name} className="w-full h-full object-cover" />
           </div>
         )}
@@ -48,7 +48,7 @@ export default async function BrandPage({ params, searchParams }: PageProps) {
             className={`px-4 py-1.5 rounded-full text-sm font-medium transition border ${
               !sectionIdStr
                 ? "bg-[var(--brand)] text-white border-[var(--brand)]"
-                : "bg-white text-stone-600 border-stone-200 hover:border-[var(--brand)] hover:text-[var(--brand)]"
+                : "bg-white text-stone-600 border-[var(--sage-light)] hover:border-[var(--brand)] hover:text-[var(--brand)]"
             }`}
           >
             All Flavors
@@ -60,7 +60,7 @@ export default async function BrandPage({ params, searchParams }: PageProps) {
               className={`px-4 py-1.5 rounded-full text-sm font-medium transition border ${
                 sectionIdStr === String(sec.id)
                   ? "bg-[var(--brand)] text-white border-[var(--brand)]"
-                  : "bg-white text-stone-600 border-stone-200 hover:border-[var(--brand)] hover:text-[var(--brand)]"
+                  : "bg-white text-stone-600 border-[var(--sage-light)] hover:border-[var(--brand)] hover:text-[var(--brand)]"
               }`}
             >
               {sec.name}

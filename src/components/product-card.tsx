@@ -49,10 +49,10 @@ export default function ProductCard({ product }: ProductCardProps) {
   return (
     <Link
       href={`/product/${product.id}`}
-      className="group flex flex-col bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition border border-stone-100"
+      className="group flex flex-col bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition border border-[var(--sage-light)]"
     >
       {/* Image */}
-      <div className="relative aspect-square bg-stone-50 overflow-hidden">
+      <div className="relative aspect-square bg-[var(--cream)] overflow-hidden">
         {imgUrl ? (
           <img
             src={imgUrl}
@@ -101,8 +101,8 @@ export default function ProductCard({ product }: ProductCardProps) {
         {/* Cart control */}
         {qty > 0 ? (
           <div className="flex items-center justify-between mt-1">
-            <div className="flex items-center gap-1 bg-stone-100 rounded-full p-0.5">
-              <button onClick={handleDecrease} className="w-7 h-7 rounded-full bg-white shadow flex items-center justify-center hover:bg-stone-50 transition" aria-label="Decrease">
+            <div className="flex items-center gap-1 bg-[var(--sage-light)] rounded-full p-0.5">
+              <button onClick={handleDecrease} className="w-7 h-7 rounded-full bg-white shadow flex items-center justify-center hover:bg-[var(--brand-light)] transition" aria-label="Decrease">
                 <Minus className="w-3 h-3" />
               </button>
               <span className="w-6 text-center text-sm font-semibold">{qty}</span>

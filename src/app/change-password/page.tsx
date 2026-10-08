@@ -28,7 +28,7 @@ export default function ChangePasswordPage() {
 
   if (!customer) {
     return (
-      <div className="min-h-[calc(100vh-8rem)] flex items-center justify-center bg-stone-50 p-4">
+      <div className="min-h-[calc(100vh-8rem)] flex items-center justify-center p-4">
         <div className="text-center space-y-3">
           <p className="text-sm text-stone-600">You must be logged in to change your password.</p>
           <Link href="/login" className="text-sm text-[var(--brand)] font-medium hover:underline">Sign in</Link>
@@ -96,8 +96,8 @@ export default function ChangePasswordPage() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-8rem)] flex items-center justify-center bg-stone-50 p-4">
-      <div className="w-full max-w-sm bg-white rounded-2xl shadow-sm border border-stone-100 p-8 space-y-5">
+    <div className="min-h-[calc(100vh-8rem)] flex items-center justify-center p-4">
+      <div className="w-full max-w-sm bg-white rounded-2xl shadow-sm border border-[var(--sage-light)] p-8 space-y-5">
         <div className="flex items-center gap-2.5">
           <div className="w-10 h-10 bg-[var(--brand)] rounded-xl flex items-center justify-center">
             <ShoppingBag className="w-5 h-5 text-white" />
@@ -177,7 +177,7 @@ export default function ChangePasswordPage() {
           </form>
         ) : (
           <form onSubmit={submitCode} className="space-y-4">
-            <div className="bg-stone-50 rounded-xl px-4 py-3 text-sm text-stone-600">
+            <div className="bg-[var(--sage-light)] rounded-xl px-4 py-3 text-sm text-stone-600">
               A 6-digit code was sent to{" "}
               <span className="font-medium text-stone-800">
                 {customer.email ? maskEmail(customer.email) : "your email"}

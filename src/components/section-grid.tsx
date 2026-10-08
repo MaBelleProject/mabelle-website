@@ -18,9 +18,9 @@ export default function SectionGrid({ brands }: SectionGridProps) {
             <Link
               key={sec.id}
               href={`/brand/${sec.brandId}?section=${sec.id}`}
-              className="group flex flex-col items-center gap-2 p-4 bg-white rounded-2xl border border-stone-100 hover:border-[var(--brand-light)] hover:shadow-md transition"
+              className="group flex flex-col items-center gap-2 p-4 bg-white rounded-2xl border border-[var(--sage-light)] hover:border-[var(--brand-light)] hover:shadow-md transition"
             >
-              <div className="w-20 h-20 rounded-full overflow-hidden bg-stone-50 flex items-center justify-center">
+              <div className="w-20 h-20 rounded-full overflow-hidden bg-[var(--sage-light)] flex items-center justify-center">
                 {imgUrl ? (
                   <img
                     src={imgUrl}

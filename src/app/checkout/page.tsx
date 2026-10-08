@@ -145,7 +145,7 @@ export default function CheckoutPage() {
       ) : (
         <div className="mb-6">
           {showLoginForm ? (
-            <form onSubmit={handleLogin} className="bg-stone-50 border border-stone-200 rounded-xl px-4 py-4">
+            <form onSubmit={handleLogin} className="bg-[var(--sage-light)] border border-[var(--sage-light)] rounded-xl px-4 py-4">
               <p className="text-sm font-semibold text-stone-700 mb-3">Log in to your account</p>
               {loginError && <p className="text-xs text-red-500 mb-2">{loginError}</p>}
               <div className="flex flex-col gap-2.5">
@@ -170,7 +170,7 @@ export default function CheckoutPage() {
                     <LogIn className="w-3.5 h-3.5" />
                     {loginBusy ? "Signing in…" : "Log In"}
                   </button>
-                  <button type="button" onClick={() => setShowLoginForm(false)} className="px-4 py-2 text-stone-500 text-sm rounded-full hover:bg-stone-100 transition">
+                  <button type="button" onClick={() => setShowLoginForm(false)} className="px-4 py-2 text-stone-500 text-sm rounded-full hover:bg-[var(--sage-light)] transition">
                     Cancel
                   </button>
                 </div>

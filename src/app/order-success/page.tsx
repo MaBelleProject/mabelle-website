@@ -13,7 +13,7 @@ function SuccessContent({ orderNumber, total }: { orderNumber: string | null; to
         Thank you! Your order has been received and is being processed.
       </p>
       {orderNumber && (
-        <div className="bg-stone-50 rounded-2xl px-6 py-4 mb-6 inline-block">
+        <div className="bg-[var(--sage-light)] rounded-2xl px-6 py-4 mb-6 inline-block">
           <p className="text-xs text-stone-400 mb-1">Order Number</p>
           <p className="text-lg font-bold text-stone-800">{orderNumber}</p>
           {total && <p className="text-[var(--brand)] font-semibold mt-1">${parseFloat(total).toFixed(2)}</p>}

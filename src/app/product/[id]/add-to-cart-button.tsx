@@ -24,8 +24,8 @@ export default function AddToCartButton({ product }: Props) {
   if (qty > 0) {
     return (
       <div className="flex items-center gap-3 mt-2">
-        <div className="flex items-center gap-2 bg-stone-100 rounded-full p-1">
-          <button onClick={() => update(product.id, qty - 1)} className="w-8 h-8 rounded-full bg-white shadow flex items-center justify-center hover:bg-stone-50 transition" aria-label="Decrease">
+        <div className="flex items-center gap-2 bg-[var(--sage-light)] rounded-full p-1">
+          <button onClick={() => update(product.id, qty - 1)} className="w-8 h-8 rounded-full bg-white shadow flex items-center justify-center hover:bg-[var(--brand-light)] transition" aria-label="Decrease">
             <Minus className="w-3.5 h-3.5" />
           </button>
           <span className="w-8 text-center font-semibold text-stone-800">{qty}</span>

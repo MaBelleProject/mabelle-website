@@ -51,7 +51,7 @@ export default function MenuSidebar({ brands }: { brands: Brand[] }) {
         <div className="flex items-center justify-end px-3 h-16 shrink-0">
           <button
             onClick={close}
-            className="flex items-center justify-center w-9 h-9 rounded-full hover:bg-stone-50 transition"
+            className="flex items-center justify-center w-9 h-9 rounded-full hover:bg-[var(--sage-light)] transition"
             aria-label="Close menu"
           >
             <X className="w-5 h-5 text-stone-600" />
@@ -60,7 +60,7 @@ export default function MenuSidebar({ brands }: { brands: Brand[] }) {
 
         {/* Nav links */}
         <nav className="flex-1 overflow-y-auto px-3 pb-4 flex flex-col gap-0.5">
-          <Link href="/" onClick={close} className="px-4 py-3 rounded-lg text-stone-700 hover:bg-stone-50 hover:text-[var(--brand)] text-sm font-medium transition">
+          <Link href="/" onClick={close} className="px-4 py-3 rounded-lg text-stone-700 hover:bg-[var(--sage-light)] hover:text-[var(--brand)] text-sm font-medium transition">
             Home
           </Link>
 
@@ -69,30 +69,30 @@ export default function MenuSidebar({ brands }: { brands: Brand[] }) {
               key={s.id}
               href={`/brand/${s.brandId}?section=${s.id}`}
               onClick={close}
-              className="px-4 py-3 rounded-lg text-stone-700 hover:bg-stone-50 hover:text-[var(--brand)] text-sm font-medium transition"
+              className="px-4 py-3 rounded-lg text-stone-700 hover:bg-[var(--sage-light)] hover:text-[var(--brand)] text-sm font-medium transition"
             >
               {s.name}
             </Link>
           ))}
 
-          <Link href="/about" onClick={close} className="px-4 py-3 rounded-lg text-stone-700 hover:bg-stone-50 hover:text-[var(--brand)] text-sm font-medium transition">
+          <Link href="/about" onClick={close} className="px-4 py-3 rounded-lg text-stone-700 hover:bg-[var(--sage-light)] hover:text-[var(--brand)] text-sm font-medium transition">
             About Us
           </Link>
 
           {customer ? (
             <>
-              <Link href="/change-password" onClick={close} className="px-4 py-3 rounded-lg text-stone-700 hover:bg-stone-50 hover:text-[var(--brand)] text-sm font-medium transition">
+              <Link href="/change-password" onClick={close} className="px-4 py-3 rounded-lg text-stone-700 hover:bg-[var(--sage-light)] hover:text-[var(--brand)] text-sm font-medium transition">
                 Change Password
               </Link>
               <button
                 onClick={() => setConfirmSignOut(true)}
-                className="px-4 py-3 rounded-lg text-stone-700 hover:bg-stone-50 hover:text-red-500 text-sm font-medium transition text-left flex items-center gap-2"
+                className="px-4 py-3 rounded-lg text-stone-700 hover:bg-[var(--sage-light)] hover:text-red-500 text-sm font-medium transition text-left flex items-center gap-2"
               >
                 <LogOut className="w-4 h-4" /> Sign Out
               </button>
             </>
           ) : (
-            <Link href="/login" onClick={close} className="px-4 py-3 rounded-lg text-stone-700 hover:bg-stone-50 hover:text-[var(--brand)] text-sm font-medium transition">
+            <Link href="/login" onClick={close} className="px-4 py-3 rounded-lg text-stone-700 hover:bg-[var(--sage-light)] hover:text-[var(--brand)] text-sm font-medium transition">
               Login
             </Link>
           )}
@@ -129,7 +129,7 @@ export default function MenuSidebar({ brands }: { brands: Brand[] }) {
               </button>
               <button
                 onClick={() => setConfirmSignOut(false)}
-                className="w-full py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-700 text-sm font-semibold rounded-full transition"
+                className="w-full py-2.5 bg-[var(--sage-light)] hover:bg-[oklch(0.89_0.025_145)] text-stone-700 text-sm font-semibold rounded-full transition"
               >
                 Cancel
               </button>

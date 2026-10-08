@@ -38,7 +38,7 @@ export default async function ProductPage({ params }: PageProps) {
 
       <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
         {/* Image */}
-        <div className="relative aspect-square rounded-2xl overflow-hidden bg-stone-50">
+        <div className="relative aspect-square rounded-2xl overflow-hidden bg-[var(--cream)]">
           {imgUrl ? (
             <img src={imgUrl} alt={product.name} className="w-full h-full object-cover" />
           ) : (
@@ -78,7 +78,7 @@ export default async function ProductPage({ params }: PageProps) {
 
           {/* Stock */}
           {outOfStock ? (
-            <p className="text-sm font-medium text-stone-500 bg-stone-100 rounded-full px-3 py-1 w-fit">Out of stock</p>
+            <p className="text-sm font-medium text-stone-500 bg-[var(--sage-light)] rounded-full px-3 py-1 w-fit">Out of stock</p>
           ) : lowStock ? (
             <div className="flex items-center gap-1.5 text-amber-600 text-sm font-medium">
               <AlertTriangle className="w-4 h-4" />
@@ -137,7 +137,7 @@ export default async function ProductPage({ params }: PageProps) {
         <Section title="Ingredients">
           <div className="flex flex-wrap gap-2">
             {product.ingredients.map(ing => (
-              <span key={ing.id} className="bg-stone-100 text-stone-700 text-sm px-3 py-1 rounded-full">
+              <span key={ing.id} className="bg-[var(--sage-light)] text-[var(--sage)] text-sm px-3 py-1 rounded-full font-medium">
                 {ing.name}{ing.percentage !== "0.00" ? ` (${ing.percentage}%)` : ""}
               </span>
             ))}
@@ -166,7 +166,7 @@ export default async function ProductPage({ params }: PageProps) {
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="bg-stone-50 rounded-xl px-3 py-2">
+    <div className="bg-[var(--sage-light)] rounded-xl px-3 py-2">
       <p className="text-xs text-stone-400 font-medium">{label}</p>
       <p className="text-stone-700 font-medium mt-0.5">{value}</p>
     </div>
@@ -175,7 +175,7 @@ function InfoRow({ label, value }: { label: string; value: string }) {
 
 function SpecRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex justify-between items-start py-2 border-b border-stone-100">
+    <div className="flex justify-between items-start py-2 border-b border-[var(--sage-light)]">
       <span className="text-stone-500 text-sm">{label}</span>
       <span className="text-stone-800 text-sm font-medium text-right ml-4">{value}</span>
     </div>
@@ -185,7 +185,7 @@ function SpecRow({ label, value }: { label: string; value: string }) {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="mt-10">
-      <h2 className="text-lg font-bold text-stone-800 mb-4 pb-2 border-b border-stone-100">{title}</h2>
+      <h2 className="text-lg font-bold text-stone-800 mb-4 pb-2 border-b border-[var(--sage-light)]">{title}</h2>
       {children}
     </div>
   );
