@@ -1,22 +1,47 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
+import type { OrderLine } from "@/lib/api";
+
+export type CartItemType = "product" | "bundle" | "gift";
 
 export interface CartItem {
-  productId: number;
+  /** Identifies the line: "p-<productId>", "b-<bundleId>", or one per customized gift. */
+  key: string;
+  itemType: CartItemType;
+  productId?: number;
+  bundleId?: number;
+  giftPackageId?: number;
   productCode: string;
   productName: string;
   unitPrice: number;
   imageUrl?: string | null;
   quantity: number;
   maxQty: number;
+  // Gifts: the customer's choices, kept exactly as they will be ordered
+  giftSelections?: { giftItemId: number; productId: number; quantity: number }[];
+  packagingId?: number | null;
+  packagingName?: string | null;
+  giftMessage?: string;
+  /** What is inside (bundles / gifts), for display. */
+  contents?: string[];
 }
+
+export const productKey = (productId: number) => `p-${productId}`;
+export const bundleKey = (bundleId: number) => `b-${bundleId}`;
+
+/** Where a cart line's own page is. */
+export const cartItemHref = (item: CartItem) =>
+  item.itemType === "bundle" ? `/bundles/${item.bundleId}` : item.itemType === "gift" ? `/gifts/${item.giftPackageId}` : `/product/${item.productId}`;
+
+type NewItem = Omit<CartItem, "quantity" | "key" | "itemType"> & { key?: string; itemType?: CartItemType };
 
 interface CartContextValue {
   items: CartItem[];
-  add: (item: Omit<CartItem, "quantity">) => void;
-  update: (productId: number, quantity: number) => void;
-  remove: (productId: number) => void;
+  /** Adds `quantity` (default 1) of a line, merging with the same key. */
+  add: (item: NewItem, quantity?: number) => void;
+  update: (key: string, quantity: number) => void;
+  remove: (key: string) => void;
   clear: () => void;
   count: number;
   subtotal: number;
@@ -26,6 +51,24 @@ const CartContext = createContext<CartContextValue | null>(null);
 
 const STORAGE_KEY = "mabelle_cart";
 
+/** Carts saved before bundles / gifts existed hold plain products without a key. */
+const migrate = (raw: unknown): CartItem[] =>
+  Array.isArray(raw)
+    ? raw.map((i: CartItem) => ({ ...i, itemType: i.itemType ?? "product", key: i.key ?? productKey(i.productId!) }))
+    : [];
+
+/** The cart line in the shape the order / quote API expects. */
+export function toOrderLine(i: CartItem): OrderLine {
+  if (i.itemType === "bundle") return { itemType: "bundle", bundleId: i.bundleId!, quantity: i.quantity };
+  if (i.itemType === "gift") {
+    return {
+      itemType: "gift", giftPackageId: i.giftPackageId!, quantity: i.quantity,
+      giftSelections: i.giftSelections ?? [], packagingId: i.packagingId ?? null, giftMessage: i.giftMessage || undefined,
+    };
+  }
+  return { productId: i.productId!, productCode: i.productCode, productName: i.productName, unitPrice: i.unitPrice, quantity: i.quantity };
+}
+
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [hydrated, setHydrated] = useState(false);
@@ -33,7 +76,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) setItems(JSON.parse(raw));
+      if (raw) setItems(migrate(JSON.parse(raw)));
     } catch { /* ignore corrupt storage */ }
     setHydrated(true);
   }, []);
@@ -42,32 +85,32 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     if (hydrated) localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
   }, [items, hydrated]);
 
-  const add = (item: Omit<CartItem, "quantity">) => {
+  const add = (item: NewItem, quantity = 1) => {
+    const itemType = item.itemType ?? "product";
+    const key = item.key ?? (itemType === "bundle" ? bundleKey(item.bundleId!) : productKey(item.productId!));
     setItems(prev => {
-      const existing = prev.find(i => i.productId === item.productId);
+      const existing = prev.find(i => i.key === key);
       if (existing) {
         return prev.map(i =>
-          i.productId === item.productId
-            ? { ...i, quantity: Math.min(i.quantity + 1, item.maxQty) }
-            : i,
+          i.key === key ? { ...i, ...item, key, itemType, quantity: Math.min(i.quantity + quantity, item.maxQty) } : i,
         );
       }
-      return [...prev, { ...item, quantity: 1 }];
+      return [...prev, { ...item, key, itemType, quantity: Math.min(quantity, item.maxQty) }];
     });
   };
 
-  const update = (productId: number, quantity: number) => {
+  const update = (key: string, quantity: number) => {
     if (quantity <= 0) {
-      setItems(prev => prev.filter(i => i.productId !== productId));
+      setItems(prev => prev.filter(i => i.key !== key));
     } else {
       setItems(prev =>
-        prev.map(i => i.productId === productId ? { ...i, quantity } : i),
+        prev.map(i => i.key === key ? { ...i, quantity } : i),
       );
     }
   };
 
-  const remove = (productId: number) => {
-    setItems(prev => prev.filter(i => i.productId !== productId));
+  const remove = (key: string) => {
+    setItems(prev => prev.filter(i => i.key !== key));
   };
 
   const clear = () => setItems([]);

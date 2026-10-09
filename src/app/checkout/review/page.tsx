@@ -3,9 +3,10 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useCart } from "@/context/cart-context";
+import { useCart, toOrderLine } from "@/context/cart-context";
 import { useCustomer } from "@/context/customer-context";
 import { storefrontApi, type PromoCode } from "@/lib/api";
+import { useCartQuote } from "@/lib/use-cart-quote";
 import { ArrowLeft, Tag, CheckCircle, XCircle } from "lucide-react";
 
 interface CheckoutInfo {
@@ -35,6 +36,8 @@ export default function ReviewPage() {
   const [placing, setPlacing] = useState(false);
   const [error, setError] = useState("");
   const [redirecting, setRedirecting] = useState(false);
+  // Exact totals from the server: offers applied automatically, bundle / gift prices
+  const { quote, error: quoteError } = useCartQuote(items, { customerId: info?.customerId, procodeId: promo?.id });
 
   useEffect(() => {
     if (items.length === 0) {
@@ -55,8 +58,10 @@ export default function ReviewPage() {
 
   if (redirecting || !info) return null;
 
-  const promoDiscount = computePromoDiscount(promo, subtotal);
-  const netTotal = subtotal + deliveryCharge - promoDiscount;
+  const shownSubtotal = quote?.subtotal ?? subtotal;
+  const promoDiscount = quote?.promoCodeAmount ?? computePromoDiscount(promo, subtotal);
+  const delivery = quote ? quote.totalCharges : deliveryCharge;
+  const netTotal = quote?.netTotal ?? subtotal + deliveryCharge - promoDiscount;
 
   const applyPromo = async () => {
     if (!promoInput.trim()) return;
@@ -81,13 +86,7 @@ export default function ReviewPage() {
     setPlacing(true);
     setError("");
     try {
-      const orderItems = items.map(i => ({
-        productId: i.productId,
-        productCode: i.productCode,
-        productName: i.productName,
-        unitPrice: i.unitPrice,
-        quantity: i.quantity,
-      }));
+      const orderItems = items.map(toOrderLine);
 
       const fullAddress = [info.address, info.floor, info.city].filter(Boolean).join(", ");
 
@@ -145,14 +144,17 @@ export default function ReviewPage() {
             <div className="px-5 py-4 border-b border-stone-50">
               <h2 className="font-semibold text-stone-800">Items ({items.reduce((s, i) => s + i.quantity, 0)})</h2>
             </div>
-            {items.map(item => (
-              <div key={item.productId} className="flex items-center gap-3 px-5 py-3 border-b border-stone-50 last:border-0">
+            {items.map((item, idx) => (
+              <div key={item.key} className="flex items-start gap-3 px-5 py-3 border-b border-stone-50 last:border-0">
                 <span className="text-stone-500 text-sm flex-1 min-w-0">
                   <span className="font-medium text-stone-800">{item.productName}</span>
                   <span className="text-stone-400"> × {item.quantity}</span>
+                  {item.contents?.length ? <span className="block text-xs text-stone-400">{item.contents.join(" · ")}</span> : null}
+                  {item.packagingName && <span className="block text-xs text-stone-400">Packaging: {item.packagingName}</span>}
+                  {item.giftMessage && <span className="block text-xs text-stone-400 italic">Card: “{item.giftMessage}”</span>}
                 </span>
                 <span className="text-sm font-semibold text-stone-800 shrink-0">
-                  ${(item.unitPrice * item.quantity).toFixed(2)}
+                  ${(quote?.items[idx]?.totalPrice ?? item.unitPrice * item.quantity).toFixed(2)}
                 </span>
               </div>
             ))}
@@ -219,14 +221,21 @@ export default function ReviewPage() {
           <div className="bg-white rounded-2xl border border-stone-100 shadow-sm px-5 py-4">
             <h2 className="font-semibold text-stone-800 mb-4">Order Total</h2>
             <div className="flex flex-col gap-2 text-sm text-stone-600">
-              <div className="flex justify-between"><span>Subtotal</span><span>${subtotal.toFixed(2)}</span></div>
+              <div className="flex justify-between"><span>Subtotal</span><span>${shownSubtotal.toFixed(2)}</span></div>
               <div className="flex justify-between text-stone-400">
                 <span>Delivery</span>
-                <span>{deliveryCharge > 0 ? `$${deliveryCharge.toFixed(2)}` : "Free"}</span>
+                <span>{delivery > 0 ? `$${delivery.toFixed(2)}` : "Free"}</span>
               </div>
               {promoDiscount > 0 && (
                 <div className="flex justify-between text-green-600"><span>Promo ({promo!.code})</span><span>-${promoDiscount.toFixed(2)}</span></div>
               )}
+              {quote?.offers.map(o => (
+                <div key={o.offerId} className="flex justify-between text-green-600">
+                  <span className="flex items-center gap-1"><Tag className="w-3.5 h-3.5" /> {o.offerName}</span>
+                  <span>-${o.discountAmount.toFixed(2)}</span>
+                </div>
+              ))}
+              {quoteError && <p className="text-xs text-red-500">{quoteError}</p>}
             </div>
             <div className="flex justify-between font-bold text-stone-800 text-base border-t border-stone-100 mt-3 pt-3">
               <span>Total</span><span>${netTotal.toFixed(2)}</span>

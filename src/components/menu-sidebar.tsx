@@ -75,6 +75,13 @@ export default function MenuSidebar({ brands }: { brands: Brand[] }) {
             </Link>
           ))}
 
+          <Link href="/bundles" onClick={close} className="px-4 py-3 rounded-lg text-stone-700 hover:bg-stone-50 hover:text-[var(--brand)] text-sm font-medium transition">
+            Bundles
+          </Link>
+          <Link href="/gifts" onClick={close} className="px-4 py-3 rounded-lg text-stone-700 hover:bg-stone-50 hover:text-[var(--brand)] text-sm font-medium transition">
+            Gifts
+          </Link>
+
           <Link href="/about" onClick={close} className="px-4 py-3 rounded-lg text-stone-700 hover:bg-stone-50 hover:text-[var(--brand)] text-sm font-medium transition">
             About Us
           </Link>

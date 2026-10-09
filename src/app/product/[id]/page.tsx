@@ -1,8 +1,10 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { storefrontApi, fileUrl } from "@/lib/api";
+import { trimZeros } from "@/lib/format";
 import AddToCartButton from "./add-to-cart-button";
-import { AlertTriangle } from "lucide-react";
+import ProductInfoTabs from "./product-info-tabs";
+import { AlertTriangle, Check } from "lucide-react";
 
 interface PageProps { params: Promise<{ id: string }> }
 
@@ -20,6 +22,7 @@ export default async function ProductPage({ params }: PageProps) {
   const originalPrice = isDiscounted ? price / (1 - discPct / 100) : null;
   const lowStock = product.quantity > 0 && product.quantity < LOW_STOCK;
   const outOfStock = product.quantity <= 0;
+  const highlights = product.specifications.filter(s => s.specType === "boolean" && s.valueBoolean);
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
@@ -69,7 +72,7 @@ export default async function ProductPage({ params }: PageProps) {
               <>
                 <span className="text-3xl font-bold text-red-600">${price.toFixed(2)}</span>
                 <span className="text-lg text-stone-400 line-through">${originalPrice!.toFixed(2)}</span>
-                <span className="text-sm bg-red-50 text-red-600 font-semibold px-2 py-0.5 rounded-full">{discPct}% off</span>
+                <span className="text-sm bg-red-50 text-red-600 font-semibold px-2 py-0.5 rounded-full">{trimZeros(product.discountPercentage)}% off</span>
               </>
             ) : (
               <span className="text-3xl font-bold text-stone-800">${price.toFixed(2)}</span>
@@ -94,23 +97,37 @@ export default async function ProductPage({ params }: PageProps) {
             <p className="text-sm text-stone-500 italic border-l-2 border-[var(--brand-light)] pl-3">{product.remarkToCustomer}</p>
           )}
 
+          {/* Highlights (checked boolean specs) */}
+          {highlights.length > 0 && (
+            <ul className="flex flex-wrap gap-x-5 gap-y-2">
+              {highlights.map(spec => (
+                <li key={spec.id} className="flex items-center gap-1.5 text-sm text-stone-700">
+                  <span className="flex items-center justify-center w-5 h-5 rounded-full bg-[var(--mint-light)] shrink-0">
+                    <Check className="w-3.5 h-3.5 text-[var(--mint)]" strokeWidth={3} />
+                  </span>
+                  {spec.name}
+                </li>
+              ))}
+            </ul>
+          )}
+
           {/* Quick info */}
           <div className="grid grid-cols-2 gap-3 text-sm">
             {product.color && <InfoRow label="Color" value={product.color} />}
             {product.material && <InfoRow label="Material" value={product.material} />}
             {product.madeIn && <InfoRow label="Made In" value={product.madeIn} />}
-            {product.shelfLife && <InfoRow label="Shelf Life" value={product.shelfLife} />}
+            {product.shelfLife && <InfoRow label="Shelf Life" value={`${trimZeros(product.shelfLife)}${product.shelfLifeUnit ? ` ${product.shelfLifeUnit}` : ""}`} />}
             {product.suitableAgeValue && (
-              <InfoRow label="Suitable Age" value={`${product.suitableAgeValue}${product.suitableAgeUnit ? ` ${product.suitableAgeUnit}` : ""}+`} />
+              <InfoRow label="Suitable Age" value={`${trimZeros(product.suitableAgeValue)}${product.suitableAgeUnit ? ` ${product.suitableAgeUnit}` : ""}+`} />
             )}
             {(product.weightGrams || product.productLenght || product.height || product.width) && (
               <InfoRow
                 label="Dimensions"
                 value={[
-                  product.weightGrams ? `${product.weightGrams}g` : null,
-                  product.productLenght ? `L:${product.productLenght}cm` : null,
-                  product.height ? `H:${product.height}cm` : null,
-                  product.width ? `W:${product.width}cm` : null,
+                  product.weightGrams ? `${trimZeros(product.weightGrams)}g` : null,
+                  product.productLenght ? `L:${trimZeros(product.productLenght)}cm` : null,
+                  product.height ? `H:${trimZeros(product.height)}cm` : null,
+                  product.width ? `W:${trimZeros(product.width)}cm` : null,
                 ].filter(Boolean).join(" · ")}
               />
             )}
@@ -132,33 +149,9 @@ export default async function ProductPage({ params }: PageProps) {
         </div>
       </div>
 
-      {/* Ingredients */}
-      {product.ingredients.length > 0 && (
-        <Section title="Ingredients">
-          <div className="flex flex-wrap gap-2">
-            {product.ingredients.map(ing => (
-              <span key={ing.id} className="bg-stone-100 text-stone-700 text-sm px-3 py-1 rounded-full">
-                {ing.name}{ing.percentage !== "0.00" ? ` (${ing.percentage}%)` : ""}
-              </span>
-            ))}
-          </div>
-        </Section>
-      )}
-
-      {/* Specifications */}
-      {product.specifications.length > 0 && (
-        <Section title="Specifications">
-          <div className="grid sm:grid-cols-2 gap-3">
-            {product.specifications.map(spec => {
-              let val = "";
-              if (spec.specType === "boolean") val = spec.valueBoolean ? "Yes" : "No";
-              else if (spec.specType === "numeric") val = `${spec.valueNumeric ?? ""}${spec.unit ? ` ${spec.unit}` : ""}`;
-              else val = spec.valueText ?? "";
-              if (!val) return null;
-              return <SpecRow key={spec.id} label={spec.name} value={val} />;
-            })}
-          </div>
-        </Section>
+      {/* Specifications & Ingredients */}
+      {(product.specifications.length > 0 || product.ingredients.length > 0) && (
+        <ProductInfoTabs specifications={product.specifications} ingredients={product.ingredients} />
       )}
     </div>
   );
@@ -169,24 +162,6 @@ function InfoRow({ label, value }: { label: string; value: string }) {
     <div className="bg-stone-50 rounded-xl px-3 py-2">
       <p className="text-xs text-stone-400 font-medium">{label}</p>
       <p className="text-stone-700 font-medium mt-0.5">{value}</p>
-    </div>
-  );
-}
-
-function SpecRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex justify-between items-start py-2 border-b border-stone-100">
-      <span className="text-stone-500 text-sm">{label}</span>
-      <span className="text-stone-800 text-sm font-medium text-right ml-4">{value}</span>
-    </div>
-  );
-}
-
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div className="mt-10">
-      <h2 className="text-lg font-bold text-stone-800 mb-4 pb-2 border-b border-stone-100">{title}</h2>
-      {children}
     </div>
   );
 }

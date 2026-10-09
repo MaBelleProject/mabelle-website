@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Minus, Plus, ShoppingCart, AlertTriangle } from "lucide-react";
 import type { Product } from "@/lib/api";
 import { fileUrl } from "@/lib/api";
-import { useCart } from "@/context/cart-context";
+import { useCart, productKey } from "@/context/cart-context";
 
 const LOW_STOCK_THRESHOLD = 5;
 
@@ -27,7 +27,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   const lowStock = product.quantity > 0 && product.quantity < LOW_STOCK_THRESHOLD;
   const outOfStock = product.quantity <= 0;
 
-  const cartItem = items.find(i => i.productId === product.id);
+  const cartItem = items.find(i => i.key === productKey(product.id));
   const qty = cartItem?.quantity ?? 0;
 
   const handleAdd = (e: React.MouseEvent) => {
@@ -38,12 +38,12 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   const handleDecrease = (e: React.MouseEvent) => {
     e.preventDefault();
-    update(product.id, qty - 1);
+    update(productKey(product.id), qty - 1);
   };
 
   const handleIncrease = (e: React.MouseEvent) => {
     e.preventDefault();
-    update(product.id, qty + 1);
+    update(productKey(product.id), qty + 1);
   };
 
   return (

@@ -54,7 +54,7 @@ export interface Product {
   id: number; code: string; name: string; description?: string | null; remarkToCustomer?: string | null;
   status: string; categoryId?: number | null; sectionId?: number | null; subsectionId?: number | null;
   color: string; weightGrams?: string | null; productLenght?: string | null; height?: string | null; width?: string | null;
-  sellingPrice: string; imageUrl?: string | null; shelfLife?: string | null;
+  sellingPrice: string; imageUrl?: string | null; shelfLife?: string | null; shelfLifeUnit?: string | null;
   suitableAgeValue?: number | null; suitableAgeUnit?: string | null;
   material?: string | null; addOn?: string | null; madeIn: string;
   discountPercentage: string;
@@ -83,6 +83,72 @@ export interface PromoCode {
   condition?: string | null; categoryId?: number | null; sectionId?: number | null; subsectionId?: number | null;
 }
 
+export interface BundleItem {
+  id: number; productId: number; quantity: number;
+  productCode: string; productName: string; sellingPrice: string; imageUrl?: string | null; stock: number;
+}
+
+/** A fixed set of products sold together at one price. */
+export interface Bundle {
+  id: number; code: string; name: string; description?: string | null; imageUrl?: string | null;
+  price: string; items: BundleItem[];
+  /** The contents at their own prices (to show the saving). */
+  itemsValue: string;
+  /** How many can be ordered with the current stock. */
+  available: number;
+}
+
+export interface GiftProduct {
+  id: number; code: string; name: string; sellingPrice: string; imageUrl?: string | null; status: string; stock: number;
+}
+
+export interface GiftSlot {
+  id: number; productId: number; quantity: number;
+  isCustomizable: boolean; maxQuantity: number | null;
+  product: GiftProduct;
+  /** Products the customer may swap this slot to. */
+  options: GiftProduct[];
+}
+
+export interface GiftPackage {
+  id: number; code: string; name: string; description?: string | null; imageUrl?: string | null;
+  items: GiftSlot[];
+  /** Price of the default contents (packaging not included). */
+  defaultPrice: string;
+}
+
+export interface GiftPackaging {
+  id: number; name: string; imageUrl?: string | null; price: string;
+}
+
+export interface Offer {
+  id: number; name: string; description?: string | null;
+  offerType: 'buy_x_get_y' | 'free_delivery' | 'fixed_discount' | 'percentage_discount';
+  appliesToAll: boolean; productIds: number[];
+  minOrderAmount: string; minQuantity: number;
+  buyQuantity: number | null; getQuantity: number | null;
+  discountAmount: string; discountPercentage: string;
+}
+
+/** One cart line as the order API expects it. */
+export type OrderLine =
+  | { itemType?: 'product'; productId: number; productCode: string; productName: string; unitPrice: number; quantity: number }
+  | { itemType: 'bundle'; bundleId: number; quantity: number }
+  | {
+    itemType: 'gift'; giftPackageId: number; quantity: number;
+    giftSelections: { giftItemId: number; productId: number; quantity: number }[];
+    packagingId: number | null; giftMessage?: string;
+  };
+
+/** Server pricing of a cart: offers applied, bundle / gift prices as they will be charged. */
+export interface OrderQuote {
+  items: { itemType: string; productName: string; unitPrice: number; quantity: number; totalPrice: number }[];
+  subtotal: number; promoCodeAmount: number;
+  offerDiscountAmount: number; deliveryDiscountAmount: number;
+  totalCharges: number; netTotal: number;
+  offers: { offerId: number; offerName: string; offerType: Offer['offerType']; discountAmount: number }[];
+}
+
 // ─── API calls ────────────────────────────────────────────────────────────────
 
 export const storefrontApi = {
@@ -97,6 +163,14 @@ export const storefrontApi = {
     return request<Product[]>(`/products${qs ? `?${qs}` : ''}`);
   },
   product: (id: number) => request<ProductDetail>(`/products/${id}`),
+  bundles: () => request<Bundle[]>('/bundles'),
+  bundle: (id: number) => request<Bundle>(`/bundles/${id}`),
+  gifts: () => request<GiftPackage[]>('/gifts'),
+  gift: (id: number) => request<GiftPackage>(`/gifts/${id}`),
+  giftPackaging: () => request<GiftPackaging[]>('/gifts/packaging'),
+  offers: () => request<Offer[]>('/offers'),
+  quote: (data: { customerId?: number; procodeId?: number; items: OrderLine[] }) =>
+    request<OrderQuote>('/orders/quote', { method: 'POST', body: JSON.stringify(data) }),
   settings: () => request<Settings | null>('/settings'),
   validatePromo: (code: string, phone?: string) =>
     request<{ valid: boolean; promo: PromoCode | null; message?: string }>(
@@ -106,7 +180,7 @@ export const storefrontApi = {
     customerId?: number;
     newCustomer?: { name: string; phone: string; email?: string; address?: string; password?: string };
     phoneNumber?: string; address?: string; paymentMethod: string; remark?: string;
-    procodeId?: number; items: { productId: number; productCode: string; productName: string; unitPrice: number; quantity: number }[];
+    procodeId?: number; items: OrderLine[];
     orderType?: string;
   }) => request<{ id: number; orderNumber: string; netTotal: string }>('/orders', {
     method: 'POST',
