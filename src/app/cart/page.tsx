@@ -52,7 +52,7 @@ export default function CartPage() {
             const imgUrl = fileUrl(item.imageUrl);
             const unitPrice = quote?.items[idx]?.unitPrice ?? item.unitPrice;
             return (
-              <div key={item.productId} className="flex items-center gap-4 bg-white rounded-2xl p-4 border border-[var(--sage-light)] shadow-sm">
+              <div key={item.key} className="flex items-center gap-4 bg-white rounded-2xl p-4 border border-[var(--sage-light)] shadow-sm">
                 {/* Image */}
                 <div className="w-16 h-16 rounded-xl overflow-hidden bg-[var(--cream)] shrink-0">
                   {imgUrl ? (
@@ -72,13 +72,13 @@ export default function CartPage() {
                   </Link>
                   {item.contents?.length ? <p className="text-xs text-stone-500 mt-0.5 line-clamp-2">{item.contents.join(" · ")}</p> : null}
                   {item.packagingName && <p className="text-xs text-stone-500">Packaging: {item.packagingName}</p>}
-                  {item.giftMessage && <p className="text-xs text-stone-400 italic line-clamp-1">“{item.giftMessage}”</p>}
+                  {item.giftMessage && <p className="text-xs text-stone-400 italic line-clamp-1">"{item.giftMessage}"</p>}
                   <p className="text-xs text-stone-400 mt-0.5">${unitPrice.toFixed(2)} each</p>
                 </div>
 
                 {/* Qty controls */}
                 <div className="flex items-center gap-1 bg-[var(--sage-light)] rounded-full p-1 shrink-0">
-                  <button onClick={() => update(item.productId, item.quantity - 1)} className="w-7 h-7 rounded-full bg-white flex items-center justify-center shadow hover:bg-[var(--cream)] transition" aria-label="Decrease">
+                  <button onClick={() => update(item.key, item.quantity - 1)} className="w-7 h-7 rounded-full bg-white flex items-center justify-center shadow hover:bg-[var(--cream)] transition" aria-label="Decrease">
                     <Minus className="w-3 h-3" />
                   </button>
                   <span className="w-6 text-center text-sm font-semibold">{item.quantity}</span>

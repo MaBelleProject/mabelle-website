@@ -150,14 +150,14 @@ export default function ReviewPage() {
             <div className="px-5 py-4 border-b border-[var(--sage-light)]">
               <h2 className="font-semibold text-stone-800">Items ({items.reduce((s, i) => s + i.quantity, 0)})</h2>
             </div>
-            {items.map(item => (
-              <div key={item.productId} className="flex items-center gap-3 px-5 py-3 border-b border-[var(--sage-light)] last:border-0">
+            {items.map((item, idx) => (
+              <div key={item.key} className="flex items-center gap-3 px-5 py-3 border-b border-[var(--sage-light)] last:border-0">
                 <span className="text-stone-500 text-sm flex-1 min-w-0">
                   <span className="font-medium text-stone-800">{item.productName}</span>
                   <span className="text-stone-400"> × {item.quantity}</span>
                   {item.contents?.length ? <span className="block text-xs text-stone-400">{item.contents.join(" · ")}</span> : null}
                   {item.packagingName && <span className="block text-xs text-stone-400">Packaging: {item.packagingName}</span>}
-                  {item.giftMessage && <span className="block text-xs text-stone-400 italic">Card: “{item.giftMessage}”</span>}
+                  {item.giftMessage && <span className="block text-xs text-stone-400 italic">Card: "{item.giftMessage}"</span>}
                 </span>
                 <span className="text-sm font-semibold text-stone-800 shrink-0">
                   ${(quote?.items[idx]?.totalPrice ?? item.unitPrice * item.quantity).toFixed(2)}

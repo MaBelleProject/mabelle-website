@@ -25,7 +25,7 @@ export default function AddToCartButton({ product }: Props) {
     return (
       <div className="flex items-center gap-3 mt-2">
         <div className="flex items-center gap-2 bg-[var(--sage-light)] rounded-full p-1">
-          <button onClick={() => update(product.id, qty - 1)} className="w-8 h-8 rounded-full bg-white shadow flex items-center justify-center hover:bg-[var(--brand-light)] transition" aria-label="Decrease">
+          <button onClick={() => update(productKey(product.id), qty - 1)} className="w-8 h-8 rounded-full bg-white shadow flex items-center justify-center hover:bg-[var(--brand-light)] transition" aria-label="Decrease">
             <Minus className="w-3.5 h-3.5" />
           </button>
           <span className="w-8 text-center font-semibold text-stone-800">{qty}</span>
