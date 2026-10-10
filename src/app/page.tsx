@@ -5,13 +5,16 @@ import BrandGrid from "@/components/brand-grid";
 import ProductCard from "@/components/product-card";
 import RevealGrid from "@/components/reveal-grid";
 import BundleCard from "@/components/bundle-card";
+import OfferCard from "@/components/offer-card";
 import Link from "next/link";
 import { Gift } from "lucide-react";
 
 export default async function HomePage() {
-  const [slides, brands, products, bundles, gifts] = await Promise.all([
+  const [slides, brands, sections, offers, products, bundles, gifts] = await Promise.all([
     storefrontApi.carousel().catch(() => []),
     storefrontApi.brands().catch(() => []),
+    storefrontApi.sections().catch(() => []),
+    storefrontApi.offers().catch(() => []),
     storefrontApi.products().catch(() => []),
     storefrontApi.bundles().catch(() => []),
     storefrontApi.gifts().catch(() => []),
@@ -24,12 +27,25 @@ export default async function HomePage() {
       {/* Carousel */}
       {slides.length > 0 && (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-4 pb-8">
-          <Carousel slides={slides} />
+          <Carousel slides={slides} sections={sections} />
         </section>
       )}
 
-      {/* Sections */}
-      <SectionGrid brands={brands} />
+      {/* Offers (highest priority first) */}
+      {offers.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-stone-800">Offers</h2>
+            <Link href="/offers" className="text-sm text-[var(--brand)] font-semibold hover:underline">View all →</Link>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {offers.slice(0, 3).map(o => <OfferCard key={o.id} offer={o} />)}
+          </div>
+        </section>
+      )}
+
+      {/* Sections (one per section code, across brands) */}
+      <SectionGrid sections={sections} />
 
       {/* Brands */}
       <BrandGrid brands={brands} />

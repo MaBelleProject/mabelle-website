@@ -7,6 +7,7 @@ import { useCart, toOrderLine } from "@/context/cart-context";
 import { useCustomer } from "@/context/customer-context";
 import { storefrontApi, type PromoCode } from "@/lib/api";
 import { useCartQuote } from "@/lib/use-cart-quote";
+import OfferPicker from "@/components/offer-picker";
 import { ArrowLeft, Tag, CheckCircle, XCircle } from "lucide-react";
 
 interface CheckoutInfo {
@@ -25,7 +26,7 @@ function computePromoDiscount(promo: PromoCode | null, subtotal: number): number
 
 export default function ReviewPage() {
   const router = useRouter();
-  const { items, subtotal, clear } = useCart();
+  const { items, subtotal, clear, selectedOfferId, selectOffer } = useCart();
   const { login } = useCustomer();
   const [info, setInfo] = useState<CheckoutInfo | null>(null);
   const [deliveryCharge, setDeliveryCharge] = useState(0);
@@ -37,7 +38,7 @@ export default function ReviewPage() {
   const [error, setError] = useState("");
   const [redirecting, setRedirecting] = useState(false);
   // Exact totals from the server: offers applied automatically, bundle / gift prices
-  const { quote, error: quoteError } = useCartQuote(items, { customerId: info?.customerId, procodeId: promo?.id });
+  const { quote, error: quoteError } = useCartQuote(items, { customerId: info?.customerId, procodeId: promo?.id, selectedOfferId });
 
   useEffect(() => {
     if (items.length === 0) {
@@ -60,8 +61,12 @@ export default function ReviewPage() {
 
   const shownSubtotal = quote?.subtotal ?? subtotal;
   const promoDiscount = quote?.promoCodeAmount ?? computePromoDiscount(promo, subtotal);
-  const delivery = quote ? quote.totalCharges : deliveryCharge;
-  const netTotal = quote?.netTotal ?? subtotal + deliveryCharge - promoDiscount;
+  // Delivery is kept outside the order's net total; the total to pay is netTotal + delivery left after offers.
+  const delivery = quote ? quote.deliveryCharge : deliveryCharge;
+  const deliveryDue = quote ? quote.deliveryDue : deliveryCharge;
+  const netTotal = quote?.totalDue ?? subtotal + deliveryCharge - promoDiscount;
+  const itemOffers = quote?.offers.filter(o => o.offerType !== "free_delivery") ?? [];
+  const deliveryOffer = quote?.offers.find(o => o.offerType === "free_delivery");
 
   const applyPromo = async () => {
     if (!promoInput.trim()) return;
@@ -96,6 +101,7 @@ export default function ReviewPage() {
         paymentMethod: info.paymentMethod,
         remark: info.remark || undefined,
         procodeId: promo?.id,
+        selectedOfferId: selectedOfferId ?? undefined,
         items: orderItems,
         orderType: "order",
       };
@@ -121,7 +127,7 @@ export default function ReviewPage() {
 
       clear();
       sessionStorage.removeItem("checkout_info");
-      router.push(`/order-success?orderNumber=${encodeURIComponent(order.orderNumber)}&total=${encodeURIComponent(order.netTotal)}`);
+      router.push(`/order-success?orderNumber=${encodeURIComponent(order.orderNumber)}&total=${encodeURIComponent(order.totalDue ?? order.netTotal)}`);
     } catch (err: any) {
       setError(err?.message ?? "Failed to place order. Please try again.");
       setPlacing(false);
@@ -220,16 +226,21 @@ export default function ReviewPage() {
           {/* Totals */}
           <div className="bg-white rounded-2xl border border-stone-100 shadow-sm px-5 py-4">
             <h2 className="font-semibold text-stone-800 mb-4">Order Total</h2>
+            <OfferPicker quote={quote} onSelect={selectOffer} />
             <div className="flex flex-col gap-2 text-sm text-stone-600">
               <div className="flex justify-between"><span>Subtotal</span><span>${shownSubtotal.toFixed(2)}</span></div>
               <div className="flex justify-between text-stone-400">
-                <span>Delivery</span>
-                <span>{delivery > 0 ? `$${delivery.toFixed(2)}` : "Free"}</span>
+                <span>Delivery{deliveryOffer && <span className="text-green-600"> · {deliveryOffer.offerName}</span>}</span>
+                <span>
+                  {deliveryDue < delivery
+                    ? <><span className="line-through mr-1">${delivery.toFixed(2)}</span><span className="text-green-600">{deliveryDue > 0 ? `$${deliveryDue.toFixed(2)}` : "Free"}</span></>
+                    : delivery > 0 ? `$${delivery.toFixed(2)}` : "Free"}
+                </span>
               </div>
               {promoDiscount > 0 && (
                 <div className="flex justify-between text-green-600"><span>Promo ({promo!.code})</span><span>-${promoDiscount.toFixed(2)}</span></div>
               )}
-              {quote?.offers.map(o => (
+              {itemOffers.map(o => (
                 <div key={o.offerId} className="flex justify-between text-green-600">
                   <span className="flex items-center gap-1"><Tag className="w-3.5 h-3.5" /> {o.offerName}</span>
                   <span>-${o.discountAmount.toFixed(2)}</span>

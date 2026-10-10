@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { storefrontApi, fileUrl } from "@/lib/api";
 import { trimZeros } from "@/lib/format";
+import { describeOffer, offerBadge, offersForProduct } from "@/lib/offers";
+import { sectionHref } from "@/lib/sections";
 import AddToCartButton from "./add-to-cart-button";
 import ProductInfoTabs from "./product-info-tabs";
 import { AlertTriangle, Check } from "lucide-react";
@@ -12,8 +14,13 @@ const LOW_STOCK = 5;
 
 export default async function ProductPage({ params }: PageProps) {
   const { id } = await params;
-  const product = await storefrontApi.product(parseInt(id)).catch(() => null);
+  const [product, allOffers] = await Promise.all([
+    storefrontApi.product(parseInt(id)).catch(() => null),
+    storefrontApi.offers().catch(() => []),
+  ]);
   if (!product) notFound();
+  // Every running offer this product counts towards, store-wide ones included.
+  const offers = offersForProduct(allOffers, product.id);
 
   const imgUrl = fileUrl(product.imageUrl);
   const price = parseFloat(product.sellingPrice);
@@ -47,17 +54,26 @@ export default async function ProductPage({ params }: PageProps) {
           ) : (
             <div className="w-full h-full flex items-center justify-center text-stone-300 text-8xl">🍬</div>
           )}
-          {isDiscounted && (
-            <span className="absolute top-3 left-3 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full">SALE</span>
+          {(isDiscounted || offers.length > 0) && (
+            <div className="absolute top-3 left-3 flex flex-col items-start gap-1.5">
+              {isDiscounted && <span className="bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full">SALE</span>}
+              {offers.length > 0 && (
+                <span className="bg-amber-400 text-stone-900 text-xs font-bold px-3 py-1 rounded-full uppercase shadow-sm">{offerBadge(offers[0])}</span>
+              )}
+            </div>
           )}
         </div>
 
         {/* Details */}
         <div className="flex flex-col gap-4">
           <div>
-            {product.sectionName && (
+            {product.sectionName && (product.sectionCode ? (
+              <Link href={sectionHref(product.sectionCode)} className="text-xs font-medium text-[var(--brand)] uppercase tracking-wide hover:underline">
+                {product.sectionName}
+              </Link>
+            ) : (
               <span className="text-xs font-medium text-[var(--brand)] uppercase tracking-wide">{product.sectionName}</span>
-            )}
+            ))}
             <h1 className="text-2xl sm:text-3xl font-bold text-stone-800 mt-1">{product.name}</h1>
             {product.categoryName && (
               <Link href={`/brand/${product.categoryId}`} className="text-sm text-stone-400 hover:text-[var(--brand)] transition">
@@ -78,6 +94,22 @@ export default async function ProductPage({ params }: PageProps) {
               <span className="text-3xl font-bold text-stone-800">${price.toFixed(2)}</span>
             )}
           </div>
+
+          {/* Offers this product counts towards */}
+          {offers.length > 0 && (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 space-y-1.5">
+              {offers.map(o => (
+                <div key={o.id} className="flex items-start gap-2 text-sm">
+                  <span className="shrink-0 bg-amber-400 text-stone-900 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase mt-0.5">{offerBadge(o)}</span>
+                  <span className="text-stone-700">
+                    <span className="font-semibold">{o.name}</span> — {describeOffer(o)}
+                    {o.appliesToAll && <span className="text-stone-400"> (all products)</span>}
+                  </span>
+                </div>
+              ))}
+              <Link href="/offers" className="block text-xs text-amber-800 font-semibold hover:underline pt-0.5">All offers →</Link>
+            </div>
+          )}
 
           {/* Stock */}
           {outOfStock ? (

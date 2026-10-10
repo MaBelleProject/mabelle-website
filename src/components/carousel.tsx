@@ -1,15 +1,19 @@
 "use client";
 
-import type { CarouselSlide } from "@/lib/api";
+import type { CarouselSlide, SectionGroup } from "@/lib/api";
 import { fileUrl } from "@/lib/api";
+import { sectionHref, sectionOfId } from "@/lib/sections";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-interface CarouselProps { slides: CarouselSlide[]; }
+interface CarouselProps { slides: CarouselSlide[]; sections?: SectionGroup[]; }
+
+/** 'offers' opens a fixed page; every other destination needs an id. */
+const isClickable = (s: CarouselSlide) => s.destinationType === "offers" || !!(s.destinationType && s.destinationId);
 
 const SWIPE_THRESHOLD = 50; // px needed to commit a slide change
 
-export default function Carousel({ slides }: CarouselProps) {
+export default function Carousel({ slides, sections = [] }: CarouselProps) {
   const router = useRouter();
   const [current, setCurrent] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -92,8 +96,11 @@ export default function Carousel({ slides }: CarouselProps) {
     if ((e.target as Element).closest('button')) return; // dot buttons bubble up — skip
     const slide = slides[current];
     if (wasDraggedRef.current) { wasDraggedRef.current = false; return; }
-    if (!slide.destinationType || !slide.destinationId) return;
+    if (!isClickable(slide)) return;
     switch (slide.destinationType) {
+      case "offers":
+        router.push("/offers");
+        break;
       case "category":
       case "brand":
         router.push(`/brand/${slide.destinationId}`);
@@ -101,9 +108,12 @@ export default function Carousel({ slides }: CarouselProps) {
       case "product":
         router.push(`/product/${slide.destinationId}`);
         break;
-      case "section":
-        router.push(`/products?sectionId=${slide.destinationId}`);
+      case "section": {
+        // Sections are shown by code across brands; fall back to the single section if it isn't grouped.
+        const group = sectionOfId(sections, slide.destinationId!);
+        router.push(group ? sectionHref(group.code) : `/products?sectionId=${slide.destinationId}`);
         break;
+      }
       case "subsection":
         router.push(`/products?subsectionId=${slide.destinationId}`);
         break;
@@ -141,7 +151,7 @@ export default function Carousel({ slides }: CarouselProps) {
       >
         {slides.map((slide) => {
           const url = fileUrl(slide.imageUrl) ?? slide.imageUrl;
-          const clickable = !!(slide.destinationType && slide.destinationId);
+          const clickable = isClickable(slide);
           return (
             <div
               key={slide.id}

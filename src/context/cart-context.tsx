@@ -43,6 +43,9 @@ interface CartContextValue {
   update: (key: string, quantity: number) => void;
   remove: (key: string) => void;
   clear: () => void;
+  /** Offer the customer picked in the cart (null = the default, highest-priority offer). */
+  selectedOfferId: number | null;
+  selectOffer: (offerId: number | null) => void;
   count: number;
   subtotal: number;
 }
@@ -50,6 +53,7 @@ interface CartContextValue {
 const CartContext = createContext<CartContextValue | null>(null);
 
 const STORAGE_KEY = "mabelle_cart";
+const OFFER_STORAGE_KEY = "mabelle_cart_offer";
 
 /** Carts saved before bundles / gifts existed hold plain products without a key. */
 const migrate = (raw: unknown): CartItem[] =>
@@ -71,19 +75,26 @@ export function toOrderLine(i: CartItem): OrderLine {
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
+  const [selectedOfferId, setSelectedOfferId] = useState<number | null>(null);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) setItems(migrate(JSON.parse(raw)));
+      const offer = Number(localStorage.getItem(OFFER_STORAGE_KEY));
+      if (offer > 0) setSelectedOfferId(offer);
     } catch { /* ignore corrupt storage */ }
     setHydrated(true);
   }, []);
 
   useEffect(() => {
-    if (hydrated) localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-  }, [items, hydrated]);
+    if (hydrated) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+      if (selectedOfferId) localStorage.setItem(OFFER_STORAGE_KEY, String(selectedOfferId));
+      else localStorage.removeItem(OFFER_STORAGE_KEY);
+    }
+  }, [items, selectedOfferId, hydrated]);
 
   const add = (item: NewItem, quantity = 1) => {
     const itemType = item.itemType ?? "product";
@@ -113,13 +124,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setItems(prev => prev.filter(i => i.key !== key));
   };
 
-  const clear = () => setItems([]);
+  const clear = () => { setItems([]); setSelectedOfferId(null); };
 
   const count = items.reduce((s, i) => s + i.quantity, 0);
   const subtotal = items.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
 
   return (
-    <CartContext.Provider value={{ items, add, update, remove, clear, count, subtotal }}>
+    <CartContext.Provider value={{ items, add, update, remove, clear, selectedOfferId, selectOffer: setSelectedOfferId, count, subtotal }}>
       {children}
     </CartContext.Provider>
   );

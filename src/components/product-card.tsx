@@ -5,6 +5,8 @@ import { Minus, Plus, ShoppingCart, AlertTriangle } from "lucide-react";
 import type { Product } from "@/lib/api";
 import { fileUrl } from "@/lib/api";
 import { useCart, productKey } from "@/context/cart-context";
+import { useOffers } from "@/context/offers-context";
+import { offerBadge, offersForProduct } from "@/lib/offers";
 
 const LOW_STOCK_THRESHOLD = 5;
 
@@ -22,6 +24,8 @@ function computeDisplay(product: Product): { price: number; originalPrice: numbe
 
 export default function ProductCard({ product }: ProductCardProps) {
   const { items, add, update } = useCart();
+  // Highest-priority offer aimed at this product (store-wide offers are shown in the offers panel instead).
+  const offer = offersForProduct(useOffers(), product.id, true)[0];
   const imgUrl = fileUrl(product.imageUrl);
   const { price, originalPrice } = computeDisplay(product);
   const lowStock = product.quantity > 0 && product.quantity < LOW_STOCK_THRESHOLD;
@@ -68,8 +72,15 @@ export default function ProductCard({ product }: ProductCardProps) {
             <span className="bg-white/90 text-stone-700 text-xs font-semibold px-3 py-1 rounded-full">Out of Stock</span>
           </div>
         )}
-        {originalPrice && !outOfStock && (
-          <span className="absolute top-2 left-2 bg-red-500 text-white text-[11px] font-bold px-2 py-0.5 rounded-full">SALE</span>
+        {!outOfStock && (originalPrice || offer) && (
+          <div className="absolute top-2 left-2 flex flex-col items-start gap-1">
+            {originalPrice && <span className="bg-red-500 text-white text-[11px] font-bold px-2 py-0.5 rounded-full">SALE</span>}
+            {offer && (
+              <span title={offer.name} className="bg-amber-400 text-stone-900 text-[11px] font-bold px-2 py-0.5 rounded-full uppercase shadow-sm">
+                {offerBadge(offer)}
+              </span>
+            )}
+          </div>
         )}
         {qty > 0 && (
           <span className="absolute top-2 right-2 bg-[var(--brand)] text-white text-[11px] font-bold px-2 py-0.5 rounded-full">{qty}</span>
@@ -79,6 +90,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       {/* Info */}
       <div className="p-3 flex flex-col gap-2 flex-1">
         <h3 className="text-sm font-semibold text-stone-800 line-clamp-2 leading-snug">{product.name}</h3>
+        {offer && <p className="text-xs font-medium text-amber-700 line-clamp-1">🎁 {offer.name}</p>}
 
         {lowStock && (
           <div className="flex items-center gap-1 text-amber-600 text-xs font-medium">

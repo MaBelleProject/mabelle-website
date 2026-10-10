@@ -5,13 +5,14 @@ import Link from "next/link";
 import { useCart, cartItemHref } from "@/context/cart-context";
 import { useCustomer } from "@/context/customer-context";
 import { useCartQuote } from "@/lib/use-cart-quote";
+import OfferPicker from "@/components/offer-picker";
 import { Minus, Plus, Trash2, ShoppingBag, Tag } from "lucide-react";
 import { fileUrl, storefrontApi } from "@/lib/api";
 
 export default function CartPage() {
-  const { items, update, remove, subtotal } = useCart();
+  const { items, update, remove, subtotal, selectedOfferId, selectOffer } = useCart();
   const { customer } = useCustomer();
-  const { quote } = useCartQuote(items, { customerId: customer?.id });
+  const { quote } = useCartQuote(items, { customerId: customer?.id, selectedOfferId });
   const [deliveryCharge, setDeliveryCharge] = useState(0);
 
   useEffect(() => {
@@ -34,8 +35,11 @@ export default function CartPage() {
   }
 
   const shownSubtotal = quote?.subtotal ?? subtotal;
-  const delivery = quote ? quote.totalCharges : deliveryCharge;
-  const total = quote?.netTotal ?? subtotal + deliveryCharge;
+  // Delivery is kept outside the order's net total; the total to pay is netTotal + delivery left after offers.
+  const delivery = quote ? quote.deliveryCharge : deliveryCharge;
+  const total = quote?.totalDue ?? subtotal + deliveryCharge;
+  const itemOffers = quote?.offers.filter(o => o.offerType !== "free_delivery") ?? [];
+  const deliveryOffer = quote?.offers.find(o => o.offerType === "free_delivery");
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
@@ -109,17 +113,18 @@ export default function CartPage() {
             <span>Subtotal</span>
             <span>${shownSubtotal.toFixed(2)}</span>
           </div>
-          {quote?.offers.map(o => (
+          <OfferPicker quote={quote} onSelect={selectOffer} />
+          {itemOffers.map(o => (
             <div key={o.offerId} className="flex justify-between text-sm text-green-600 mb-3">
               <span className="flex items-center gap-1"><Tag className="w-3.5 h-3.5" /> {o.offerName}</span>
               <span>-${o.discountAmount.toFixed(2)}</span>
             </div>
           ))}
           <div className="flex justify-between text-sm text-stone-400 mb-6">
-            <span>Delivery</span>
+            <span>Delivery{deliveryOffer && <span className="text-green-600"> · {deliveryOffer.offerName}</span>}</span>
             <span>
               {quote && quote.deliveryDiscountAmount > 0
-                ? <><span className="line-through mr-1">${delivery.toFixed(2)}</span><span className="text-green-600">Free</span></>
+                ? <><span className="line-through mr-1">${delivery.toFixed(2)}</span><span className="text-green-600">{quote.deliveryDue > 0 ? `$${quote.deliveryDue.toFixed(2)}` : "Free"}</span></>
                 : delivery > 0 ? `$${delivery.toFixed(2)}` : "Free"}
             </span>
           </div>

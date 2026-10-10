@@ -50,6 +50,14 @@ export interface Subsection { id: number; sectionId: number; code: string; name:
 export interface Section { id: number; categoryId: number; code: string; name: string; imageUrl?: string | null; subsections: Subsection[]; }
 export interface Brand { id: number; code: string; name: string; imageUrl?: string | null; sections: Section[]; }
 
+/** A website section: every brand's section with the same code, shown together. */
+export interface SectionGroup {
+  code: string; name: string; imageUrl?: string | null;
+  sectionIds: number[];
+  brands: { id: number; name: string }[];
+  subsections: Subsection[];
+}
+
 export interface Product {
   id: number; code: string; name: string; description?: string | null; remarkToCustomer?: string | null;
   status: string; categoryId?: number | null; sectionId?: number | null; subsectionId?: number | null;
@@ -63,6 +71,7 @@ export interface Product {
 
 export interface ProductDetail extends Product {
   categoryName?: string | null; sectionName?: string | null; subsectionName?: string | null;
+  sectionCode?: string | null;
   ingredients: { id: number; name: string; percentage: string }[];
   specifications: {
     id: number; name: string; specType: 'boolean' | 'numeric' | 'text';
@@ -125,9 +134,14 @@ export interface Offer {
   id: number; name: string; description?: string | null;
   offerType: 'buy_x_get_y' | 'free_delivery' | 'fixed_discount' | 'percentage_discount';
   appliesToAll: boolean; productIds: number[];
+  products: { id: number; code: string; name: string }[];
   minOrderAmount: string; minQuantity: number;
   buyQuantity: number | null; getQuantity: number | null;
   discountAmount: string; discountPercentage: string;
+  startDate: string | null; endDate: string | null;
+  combinable: boolean;
+  /** 1 = highest priority (0 = not set, ranks last); only the highest-priority applicable offer is applied. API returns offers in this order. */
+  priority: number;
 }
 
 /** One cart line as the order API expects it. */
@@ -146,7 +160,11 @@ export interface OrderQuote {
   subtotal: number; promoCodeAmount: number;
   offerDiscountAmount: number; deliveryDiscountAmount: number;
   totalCharges: number; netTotal: number;
+  /** Delivery is outside netTotal; totalDue = netTotal + deliveryDue is what the customer pays. */
+  deliveryCharge: number; deliveryDue: number; totalDue: number;
   offers: { offerId: number; offerName: string; offerType: Offer['offerType']; discountAmount: number }[];
+  /** Every offer the cart qualifies for, default (highest priority) first; only one is applied, and the customer may pick it. */
+  availableOffers: { offerId: number; offerName: string; offerType: Offer['offerType']; priority: number; discountAmount: number }[];
 }
 
 // ─── API calls ────────────────────────────────────────────────────────────────
@@ -154,7 +172,8 @@ export interface OrderQuote {
 export const storefrontApi = {
   carousel: () => request<CarouselSlide[]>('/carousel'),
   brands: () => request<Brand[]>('/brands'),
-  products: (params?: { search?: string; categoryId?: number; sectionId?: number; subsectionId?: number }) => {
+  sections: () => request<SectionGroup[]>('/sections'),
+  products: (params?: { search?: string; categoryId?: number; sectionId?: number; subsectionId?: number; sectionCode?: string }) => {
     const qs = new URLSearchParams(
       Object.entries(params ?? {})
         .filter(([, v]) => v !== undefined && v !== '')
@@ -169,7 +188,7 @@ export const storefrontApi = {
   gift: (id: number) => request<GiftPackage>(`/gifts/${id}`),
   giftPackaging: () => request<GiftPackaging[]>('/gifts/packaging'),
   offers: () => request<Offer[]>('/offers'),
-  quote: (data: { customerId?: number; procodeId?: number; items: OrderLine[] }) =>
+  quote: (data: { customerId?: number; procodeId?: number; selectedOfferId?: number; items: OrderLine[] }) =>
     request<OrderQuote>('/orders/quote', { method: 'POST', body: JSON.stringify(data) }),
   settings: () => request<Settings | null>('/settings'),
   validatePromo: (code: string, phone?: string) =>
@@ -180,9 +199,9 @@ export const storefrontApi = {
     customerId?: number;
     newCustomer?: { name: string; phone: string; email?: string; address?: string; password?: string };
     phoneNumber?: string; address?: string; paymentMethod: string; remark?: string;
-    procodeId?: number; items: OrderLine[];
+    procodeId?: number; selectedOfferId?: number; items: OrderLine[];
     orderType?: string;
-  }) => request<{ id: number; orderNumber: string; netTotal: string }>('/orders', {
+  }) => request<{ id: number; orderNumber: string; netTotal: string; totalDue: string }>('/orders', {
     method: 'POST',
     body: JSON.stringify(data),
   }),
