@@ -1,19 +1,24 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import { useCart } from "@/context/cart-context";
-import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
+import OfferPicker from "@/components/offer-picker";
+import { cartItemHref, useCart } from "@/context/cart-context";
+import { useCustomer } from "@/context/customer-context";
 import { fileUrl, storefrontApi } from "@/lib/api";
+import { useCartQuote } from "@/lib/use-cart-quote";
+import { Minus, Plus, ShoppingBag, Tag, Trash2 } from "lucide-react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 
 export default function CartPage() {
-  const { items, update, remove, subtotal } = useCart();
+  const { items, update, remove, subtotal, selectedOfferId, selectOffer } = useCart();
+  const { customer } = useCustomer();
+  const { quote } = useCartQuote(items, { customerId: customer?.id, selectedOfferId });
   const [deliveryCharge, setDeliveryCharge] = useState(0);
 
   useEffect(() => {
     storefrontApi.settings().then(s => {
       if (s?.deliveryCharge) setDeliveryCharge(parseFloat(s.deliveryCharge));
-    }).catch(() => {});
+    }).catch(() => { });
   }, []);
 
   if (items.length === 0) {
@@ -29,6 +34,13 @@ export default function CartPage() {
     );
   }
 
+  const shownSubtotal = quote?.subtotal ?? subtotal;
+  // Delivery is kept outside the order's net total; the total to pay is netTotal + delivery left after offers.
+  const delivery = quote ? quote.deliveryCharge : deliveryCharge;
+  const total = quote?.totalDue ?? subtotal + deliveryCharge;
+  const itemOffers = quote?.offers.filter(o => o.offerType !== "free_delivery") ?? [];
+  const deliveryOffer = quote?.offers.find(o => o.offerType === "free_delivery");
+
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
       <h1 className="text-2xl font-bold text-stone-800 mb-6">Your Cart</h1>
@@ -36,8 +48,9 @@ export default function CartPage() {
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Items */}
         <div className="lg:col-span-2 flex flex-col gap-3">
-          {items.map(item => {
+          {items.map((item, idx) => {
             const imgUrl = fileUrl(item.imageUrl);
+            const unitPrice = quote?.items[idx]?.unitPrice ?? item.unitPrice;
             return (
               <div key={item.productId} className="flex items-center gap-4 bg-white rounded-2xl p-4 border border-[var(--sage-light)] shadow-sm">
                 {/* Image */}
@@ -45,16 +58,22 @@ export default function CartPage() {
                   {imgUrl ? (
                     <img src={imgUrl} alt={item.productName} className="w-full h-full object-cover" />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-2xl">🍬</div>
+                    <div className="w-full h-full flex items-center justify-center text-2xl">{item.itemType === "gift" ? "🎁" : "🍬"}</div>
                   )}
                 </div>
 
                 {/* Info */}
                 <div className="flex-1 min-w-0">
-                  <Link href={`/product/${item.productId}`} className="text-sm font-semibold text-stone-800 hover:text-[var(--brand)] transition line-clamp-2">
+                  {item.itemType !== "product" && (
+                    <span className="text-[10px] font-semibold uppercase tracking-wide text-[var(--brand)]">{item.itemType}</span>
+                  )}
+                  <Link href={cartItemHref(item)} className="block text-sm font-semibold text-stone-800 hover:text-[var(--brand)] transition line-clamp-2">
                     {item.productName}
                   </Link>
-                  <p className="text-xs text-stone-400 mt-0.5">${item.unitPrice.toFixed(2)} each</p>
+                  {item.contents?.length ? <p className="text-xs text-stone-500 mt-0.5 line-clamp-2">{item.contents.join(" · ")}</p> : null}
+                  {item.packagingName && <p className="text-xs text-stone-500">Packaging: {item.packagingName}</p>}
+                  {item.giftMessage && <p className="text-xs text-stone-400 italic line-clamp-1">“{item.giftMessage}”</p>}
+                  <p className="text-xs text-stone-400 mt-0.5">${unitPrice.toFixed(2)} each</p>
                 </div>
 
                 {/* Qty controls */}
@@ -64,7 +83,7 @@ export default function CartPage() {
                   </button>
                   <span className="w-6 text-center text-sm font-semibold">{item.quantity}</span>
                   <button
-                    onClick={() => update(item.productId, item.quantity + 1)}
+                    onClick={() => update(item.key, item.quantity + 1)}
                     disabled={item.quantity >= item.maxQty}
                     className="w-7 h-7 rounded-full bg-[var(--brand)] text-white flex items-center justify-center shadow hover:bg-[var(--brand-dark)] transition disabled:opacity-40"
                     aria-label="Increase"
@@ -75,11 +94,11 @@ export default function CartPage() {
 
                 {/* Total */}
                 <span className="text-sm font-bold text-stone-800 w-16 text-right shrink-0">
-                  ${(item.unitPrice * item.quantity).toFixed(2)}
+                  ${(quote?.items[idx]?.totalPrice ?? unitPrice * item.quantity).toFixed(2)}
                 </span>
 
                 {/* Remove */}
-                <button onClick={() => remove(item.productId)} className="text-stone-300 hover:text-red-400 transition ml-1" aria-label="Remove">
+                <button onClick={() => remove(item.key)} className="text-stone-300 hover:text-red-400 transition ml-1" aria-label="Remove">
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
@@ -92,15 +111,26 @@ export default function CartPage() {
           <h2 className="font-bold text-stone-800 mb-4">Order Summary</h2>
           <div className="flex justify-between text-sm text-stone-600 mb-3">
             <span>Subtotal</span>
-            <span>${subtotal.toFixed(2)}</span>
+            <span>${shownSubtotal.toFixed(2)}</span>
           </div>
+          <OfferPicker quote={quote} onSelect={selectOffer} />
+          {itemOffers.map(o => (
+            <div key={o.offerId} className="flex justify-between text-sm text-green-600 mb-3">
+              <span className="flex items-center gap-1"><Tag className="w-3.5 h-3.5" /> {o.offerName}</span>
+              <span>-${o.discountAmount.toFixed(2)}</span>
+            </div>
+          ))}
           <div className="flex justify-between text-sm text-stone-400 mb-6">
-            <span>Delivery</span>
-            <span>{deliveryCharge > 0 ? `$${deliveryCharge.toFixed(2)}` : "Free"}</span>
+            <span>Delivery{deliveryOffer && <span className="text-green-600"> · {deliveryOffer.offerName}</span>}</span>
+            <span>
+              {quote && quote.deliveryDiscountAmount > 0
+                ? <><span className="line-through mr-1">${delivery.toFixed(2)}</span><span className="text-green-600">{quote.deliveryDue > 0 ? `$${quote.deliveryDue.toFixed(2)}` : "Free"}</span></>
+                : delivery > 0 ? `$${delivery.toFixed(2)}` : "Free"}
+            </span>
           </div>
           <div className="flex justify-between font-bold text-stone-800 text-base border-t border-[var(--sage-light)] pt-4 mb-6">
             <span>Total</span>
-            <span>${(subtotal + deliveryCharge).toFixed(2)}</span>
+            <span>${total.toFixed(2)}</span>
           </div>
           <Link
             href="/checkout"

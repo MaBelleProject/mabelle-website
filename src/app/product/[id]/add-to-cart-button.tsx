@@ -1,8 +1,8 @@
 "use client";
 
+import { productKey, useCart } from "@/context/cart-context";
+import { Check, Minus, Plus, ShoppingCart } from "lucide-react";
 import { useState } from "react";
-import { ShoppingCart, Minus, Plus, Check } from "lucide-react";
-import { useCart } from "@/context/cart-context";
 
 interface Props {
   product: { id: number; code: string; name: string; price: number; imageUrl?: string | null; maxQty: number };
@@ -12,7 +12,7 @@ export default function AddToCartButton({ product }: Props) {
   const { items, add, update } = useCart();
   const [added, setAdded] = useState(false);
 
-  const cartItem = items.find(i => i.productId === product.id);
+  const cartItem = items.find(i => i.key === productKey(product.id));
   const qty = cartItem?.quantity ?? 0;
 
   const handleAdd = () => {
@@ -30,7 +30,7 @@ export default function AddToCartButton({ product }: Props) {
           </button>
           <span className="w-8 text-center font-semibold text-stone-800">{qty}</span>
           <button
-            onClick={() => update(product.id, qty + 1)}
+            onClick={() => update(productKey(product.id), qty + 1)}
             disabled={qty >= product.maxQty}
             className="w-8 h-8 rounded-full bg-[var(--brand)] text-white shadow flex items-center justify-center hover:bg-[var(--brand-dark)] transition disabled:opacity-40"
             aria-label="Increase"

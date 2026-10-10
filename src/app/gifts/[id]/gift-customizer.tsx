@@ -19,8 +19,8 @@ function hash(s: string) {
 
 function Stepper({ value, min, max, onChange }: { value: number; min: number; max: number; onChange: (v: number) => void }) {
   return (
-    <div className="flex items-center gap-1 bg-stone-100 rounded-full p-0.5 shrink-0">
-      <button type="button" onClick={() => onChange(value - 1)} disabled={value <= min} className="w-7 h-7 rounded-full bg-white shadow flex items-center justify-center hover:bg-stone-50 transition disabled:opacity-40" aria-label="Decrease">
+    <div className="flex items-center gap-1 bg-[var(--sage-light)] rounded-full p-0.5 shrink-0">
+      <button type="button" onClick={() => onChange(value - 1)} disabled={value <= min} className="w-7 h-7 rounded-full bg-white shadow flex items-center justify-center hover:bg-[var(--brand-light)] transition disabled:opacity-40" aria-label="Decrease">
         <Minus className="w-3 h-3" />
       </button>
       <span className="w-6 text-center text-sm font-semibold">{value}</span>
@@ -83,7 +83,7 @@ export default function GiftCustomizer({ gift, packagings }: { gift: GiftPackage
   return (
     <div className="flex flex-col gap-5">
       {/* Contents */}
-      <section className="bg-stone-50 rounded-2xl p-4">
+      <section className="bg-[var(--sage-light)] rounded-2xl p-4">
         <p className="text-xs font-semibold text-stone-500 uppercase tracking-wide mb-3">What&apos;s inside</p>
         <ul className="flex flex-col gap-3">
           {gift.items.map(slot => {
@@ -144,7 +144,7 @@ export default function GiftCustomizer({ gift, packagings }: { gift: GiftPackage
                   className={`relative flex flex-col items-center gap-1 rounded-xl border p-2 text-center transition ${selected ? "border-[var(--brand)] ring-1 ring-[var(--brand)] bg-[var(--cream)]" : "border-stone-200 bg-white hover:border-[var(--brand-light)]"}`}
                 >
                   {selected && <Check className="absolute top-1.5 right-1.5 w-3.5 h-3.5 text-[var(--brand)]" />}
-                  <div className="w-14 h-14 rounded-lg overflow-hidden bg-stone-50 flex items-center justify-center">
+                  <div className="w-14 h-14 rounded-lg overflow-hidden bg-[var(--cream)] flex items-center justify-center">
                     {img ? <img src={img} alt="" className="w-full h-full object-cover" /> : <span className="text-xl">{p ? "🎀" : "—"}</span>}
                   </div>
                   <span className="text-xs font-medium text-stone-700 line-clamp-1">{p?.name ?? "No packaging"}</span>
@@ -172,7 +172,7 @@ export default function GiftCustomizer({ gift, packagings }: { gift: GiftPackage
       </section>
 
       {/* Price & add */}
-      <div className="flex items-center justify-between gap-4 border-t border-stone-100 pt-4">
+      <div className="flex items-center justify-between gap-4 border-t border-[var(--sage-light)] pt-4">
         <div>
           <p className="text-xs text-stone-400">Price per gift</p>
           <p className="text-3xl font-bold text-stone-800">${unitPrice.toFixed(2)}</p>
@@ -182,7 +182,7 @@ export default function GiftCustomizer({ gift, packagings }: { gift: GiftPackage
       {empty ? (
         <p className="text-sm text-amber-600">Add at least one treat to your gift.</p>
       ) : maxGifts < 1 ? (
-        <p className="text-sm font-medium text-stone-500 bg-stone-100 rounded-full px-3 py-1 w-fit">Not enough stock for this selection</p>
+        <p className="text-sm font-medium text-stone-500 bg-[var(--sage-light)] rounded-full px-3 py-1 w-fit">Not enough stock for this selection</p>
       ) : null}
       <div className="flex items-center gap-3">
         <button

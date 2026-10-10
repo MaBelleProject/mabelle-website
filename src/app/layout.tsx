@@ -4,6 +4,7 @@ import "./globals.css";
 import { CartProvider } from "@/context/cart-context";
 import { MenuProvider } from "@/context/menu-context";
 import { CustomerProvider } from "@/context/customer-context";
+import { OffersProvider } from "@/context/offers-context";
 import { storefrontApi } from "@/lib/api";
 import Header from "@/components/header";
 import MenuSidebar from "@/components/menu-sidebar";
@@ -18,9 +19,11 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const [brands, settings] = await Promise.all([
+  const [brands, settings, sections, offers] = await Promise.all([
     storefrontApi.brands().catch(() => []),
     storefrontApi.settings().catch(() => null),
+    storefrontApi.sections().catch(() => []),
+    storefrontApi.offers().catch(() => []),
   ]);
 
   return (
@@ -28,6 +31,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body>
         <CartProvider>
           <CustomerProvider>
+          <OffersProvider offers={offers}>
           <MenuProvider>
             {/*
              * Flex row: [sidebar spacer] [content column]
@@ -37,7 +41,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
              * inside MenuSidebar that slides in sync with the spacer.
              */}
             <div className="flex min-h-screen">
-              <MenuSidebar brands={brands} />
+              <MenuSidebar sections={sections} />
               <div className="flex-1 min-w-0 flex flex-col">
                 <Header brands={brands} settings={settings} />
                 <main className="flex-1">{children}</main>
@@ -46,6 +50,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               </div>
             </div>
           </MenuProvider>
+          </OffersProvider>
           </CustomerProvider>
         </CartProvider>
       </body>

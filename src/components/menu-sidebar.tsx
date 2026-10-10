@@ -1,9 +1,10 @@
 "use client";
 
-import { useMenu } from "@/context/menu-context";
 import { useCustomer } from "@/context/customer-context";
-import type { Brand } from "@/lib/api";
-import { X, LogOut } from "lucide-react";
+import { useMenu } from "@/context/menu-context";
+import type { SectionGroup } from "@/lib/api";
+import { sectionHref } from "@/lib/sections";
+import { LogOut, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -11,12 +12,11 @@ import { createPortal } from "react-dom";
 
 const TRANSITION = "300ms cubic-bezier(0.4, 0, 0.2, 1)";
 
-export default function MenuSidebar({ brands }: { brands: Brand[] }) {
+export default function MenuSidebar({ sections }: { sections: SectionGroup[] }) {
   const { open, close } = useMenu();
   const { customer, logout } = useCustomer();
   const pathname = usePathname();
   const [confirmSignOut, setConfirmSignOut] = useState(false);
-  const sections = brands.flatMap(b => b.sections.map(s => ({ ...s, brandId: b.id })));
 
   useEffect(() => { close(); }, [pathname]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -66,14 +66,24 @@ export default function MenuSidebar({ brands }: { brands: Brand[] }) {
 
           {sections.map(s => (
             <Link
-              key={s.id}
-              href={`/brand/${s.brandId}?section=${s.id}`}
+              key={s.code}
+              href={sectionHref(s.code)}
               onClick={close}
               className="px-4 py-3 rounded-lg text-stone-700 hover:bg-[var(--sage-light)] hover:text-[var(--brand)] text-sm font-medium transition"
             >
               {s.name}
             </Link>
           ))}
+
+          <Link href="/bundles" onClick={close} className="px-4 py-3 rounded-lg text-stone-700 hover:bg-[var(--sage-light)] hover:text-[var(--brand)] text-sm font-medium transition">
+            Bundles
+          </Link>
+          <Link href="/gifts" onClick={close} className="px-4 py-3 rounded-lg text-stone-700 hover:bg-[var(--sage-light)] hover:text-[var(--brand)] text-sm font-medium transition">
+            Gifts
+          </Link>
+          <Link href="/offers" onClick={close} className="px-4 py-3 rounded-lg text-stone-700 hover:bg-[var(--sage-light)] hover:text-[var(--brand)] text-sm font-medium transition">
+            Offers
+          </Link>
 
           <Link href="/about" onClick={close} className="px-4 py-3 rounded-lg text-stone-700 hover:bg-[var(--sage-light)] hover:text-[var(--brand)] text-sm font-medium transition">
             About Us

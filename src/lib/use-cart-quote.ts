@@ -1,17 +1,20 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { storefrontApi, type OrderQuote } from "@/lib/api";
 import { toOrderLine, type CartItem } from "@/context/cart-context";
+import { storefrontApi, type OrderQuote } from "@/lib/api";
+import { useEffect, useMemo, useState } from "react";
 
 /**
- * Prices the cart exactly as placing the order would: automatic offers, bundle and gift prices.
+ * Prices the cart exactly as placing the order would: automatic offers (or the one the customer picked),
+ * bundle and gift prices.
  * `quote` is null until the server has answered for the current cart.
  */
-export function useCartQuote(items: CartItem[], opts: { customerId?: number; procodeId?: number } = {}) {
+export function useCartQuote(items: CartItem[], opts: { customerId?: number; procodeId?: number; selectedOfferId?: number | null } = {}) {
   const request = useMemo(
-    () => (items.length ? { customerId: opts.customerId, procodeId: opts.procodeId, items: items.map(toOrderLine) } : null),
-    [items, opts.customerId, opts.procodeId],
+    () => (items.length
+      ? { customerId: opts.customerId, procodeId: opts.procodeId, selectedOfferId: opts.selectedOfferId ?? undefined, items: items.map(toOrderLine) }
+      : null),
+    [items, opts.customerId, opts.procodeId, opts.selectedOfferId],
   );
   const key = request ? JSON.stringify(request) : "";
   const [state, setState] = useState<{ key: string; quote?: OrderQuote; error?: string } | null>(null);

@@ -1,13 +1,17 @@
 import Link from "next/link";
 import { storefrontApi, fileUrl } from "@/lib/api";
 import { Gift } from "lucide-react";
+import BackButton from "@/components/back-button";
 
 export default async function GiftsPage() {
   const gifts = await storefrontApi.gifts().catch(() => []);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-      <h1 className="text-3xl font-bold text-stone-800 mb-2">Gifts</h1>
+      <div className="flex items-center gap-3 mb-2">
+        <BackButton />
+        <h1 className="text-3xl font-bold text-stone-800">Gifts</h1>
+      </div>
       <p className="text-stone-500 text-sm mb-6">Pick a gift box, make it yours: choose the treats, the wrapping, and add a personal message.</p>
       {gifts.length === 0 ? (
         <div className="text-center py-20 text-stone-400">
@@ -20,8 +24,8 @@ export default async function GiftsPage() {
             const img = fileUrl(g.imageUrl);
             const customizable = g.items.some(s => s.isCustomizable);
             return (
-              <Link key={g.id} href={`/gifts/${g.id}`} className="group flex flex-col bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition border border-stone-100">
-                <div className="relative aspect-square bg-stone-50 overflow-hidden">
+              <Link key={g.id} href={`/gifts/${g.id}`} className="group flex flex-col bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition border border-[var(--sage-light)]">
+                <div className="relative aspect-square bg-[var(--sage-light)] overflow-hidden">
                   {img ? (
                     <img src={img} alt={g.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                   ) : (

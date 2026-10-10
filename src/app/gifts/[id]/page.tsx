@@ -3,6 +3,7 @@ import Link from "next/link";
 import { storefrontApi, fileUrl } from "@/lib/api";
 import GiftCustomizer from "./gift-customizer";
 import { Gift } from "lucide-react";
+import BackButton from "@/components/back-button";
 
 interface PageProps { params: Promise<{ id: string }> }
 
@@ -18,6 +19,7 @@ export default async function GiftPage({ params }: PageProps) {
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
       <nav className="text-xs text-stone-400 mb-6 flex items-center gap-1.5">
+        <BackButton />
         <Link href="/" className="hover:text-[var(--brand)]">Home</Link>
         <span>/</span>
         <Link href="/gifts" className="hover:text-[var(--brand)]">Gifts</Link>
@@ -27,7 +29,7 @@ export default async function GiftPage({ params }: PageProps) {
 
       <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
         <div className="flex flex-col gap-4">
-          <div className="relative aspect-square rounded-2xl overflow-hidden bg-stone-50">
+          <div className="relative aspect-square rounded-2xl overflow-hidden bg-[var(--sage-light)]">
             {imgUrl ? (
               <img src={imgUrl} alt={gift.name} className="w-full h-full object-cover" />
             ) : (

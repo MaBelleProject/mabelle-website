@@ -28,8 +28,8 @@ export function BundleCartControl({ bundle, size = "sm" }: { bundle: Bundle; siz
   if (qty > 0) {
     return (
       <div className="flex items-center gap-3" onClick={stop}>
-        <div className="flex items-center gap-1 bg-stone-100 rounded-full p-0.5">
-          <button onClick={() => update(bundleKey(bundle.id), qty - 1)} className="w-7 h-7 rounded-full bg-white shadow flex items-center justify-center hover:bg-stone-50 transition" aria-label="Decrease">
+        <div className="flex items-center gap-1 bg-[var(--sage-light)] rounded-full p-0.5">
+          <button onClick={() => update(bundleKey(bundle.id), qty - 1)} className="w-7 h-7 rounded-full bg-white shadow flex items-center justify-center hover:bg-[var(--brand-light)] transition" aria-label="Decrease">
             <Minus className="w-3 h-3" />
           </button>
           <span className="w-6 text-center text-sm font-semibold">{qty}</span>
@@ -63,8 +63,8 @@ export default function BundleCard({ bundle }: { bundle: Bundle }) {
   const price = parseFloat(bundle.price);
   const value = parseFloat(bundle.itemsValue);
   return (
-    <Link href={`/bundles/${bundle.id}`} className="group flex flex-col bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition border border-stone-100">
-      <div className="relative aspect-square bg-stone-50 overflow-hidden">
+    <Link href={`/bundles/${bundle.id}`} className="group flex flex-col bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition border border-[var(--sage-light)]">
+      <div className="relative aspect-square bg-[var(--sage-light)] overflow-hidden">
         {imgUrl ? (
           <img src={imgUrl} alt={bundle.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
         ) : (

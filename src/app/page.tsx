@@ -4,12 +4,20 @@ import SectionGrid from "@/components/section-grid";
 import BrandGrid from "@/components/brand-grid";
 import ProductCard from "@/components/product-card";
 import RevealGrid from "@/components/reveal-grid";
+import BundleCard from "@/components/bundle-card";
+import OfferCard from "@/components/offer-card";
+import Link from "next/link";
+import { Gift } from "lucide-react";
 
 export default async function HomePage() {
-  const [slides, brands, products] = await Promise.all([
+  const [slides, brands, sections, offers, products, bundles, gifts] = await Promise.all([
     storefrontApi.carousel().catch(() => []),
     storefrontApi.brands().catch(() => []),
+    storefrontApi.sections().catch(() => []),
+    storefrontApi.offers().catch(() => []),
     storefrontApi.products().catch(() => []),
+    storefrontApi.bundles().catch(() => []),
+    storefrontApi.gifts().catch(() => []),
   ]);
 
   const featured = products.slice(0, 12);
@@ -19,12 +27,25 @@ export default async function HomePage() {
       {/* Carousel */}
       {slides.length > 0 && (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-4 pb-8">
-          <Carousel slides={slides} />
+          <Carousel slides={slides} sections={sections} />
         </section>
       )}
 
-      {/* Sections */}
-      <SectionGrid brands={brands} />
+      {/* Offers (highest priority first) */}
+      {offers.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-stone-800">Offers</h2>
+            <Link href="/offers" className="text-sm text-[var(--brand)] font-semibold hover:underline">View all →</Link>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {offers.slice(0, 3).map(o => <OfferCard key={o.id} offer={o} />)}
+          </div>
+        </section>
+      )}
+
+      {/* Sections (one per section code, across brands) */}
+      <SectionGrid sections={sections} />
 
       {/* Brands */}
       <BrandGrid brands={brands} />
@@ -41,6 +62,33 @@ export default async function HomePage() {
           <RevealGrid className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {featured.map(p => <ProductCard key={p.id} product={p} />)}
           </RevealGrid>
+        </section>
+      )}
+
+      {/* Bundles */}
+      {bundles.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-stone-800">Bundles</h2>
+            <Link href="/bundles" className="text-sm text-[var(--brand)] font-semibold hover:underline">View all →</Link>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            {bundles.slice(0, 5).map(b => <BundleCard key={b.id} bundle={b} />)}
+          </div>
+        </section>
+      )}
+
+      {/* Gifts */}
+      {gifts.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+          <Link href="/gifts" className="flex items-center gap-4 rounded-2xl bg-[var(--cream)] border border-[var(--brand-light)] px-6 py-5 hover:shadow-md transition">
+            <span className="w-12 h-12 rounded-full bg-white flex items-center justify-center shrink-0"><Gift className="w-6 h-6 text-[var(--brand)]" /></span>
+            <span className="flex-1">
+              <span className="block text-lg font-bold text-stone-800">Make it a gift</span>
+              <span className="block text-sm text-stone-500">{gifts.length} gift box{gifts.length !== 1 ? "es" : ""} — choose the treats, the wrapping and add your message.</span>
+            </span>
+            <span className="text-sm text-[var(--brand)] font-semibold">Customize →</span>
+          </Link>
         </section>
       )}
 

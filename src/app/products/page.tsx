@@ -13,6 +13,7 @@ function ProductsContent() {
   const categoryId = params.get("categoryId") ?? undefined;
   const sectionId = params.get("sectionId") ?? undefined;
   const subsectionId = params.get("subsectionId") ?? undefined;
+  const sectionCode = params.get("sectionCode") ?? undefined;
 
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -25,8 +26,9 @@ function ProductsContent() {
       categoryId: categoryId ? +categoryId : undefined,
       sectionId: sectionId ? +sectionId : undefined,
       subsectionId: subsectionId ? +subsectionId : undefined,
+      sectionCode,
     }).then(setProducts).finally(() => setLoading(false));
-  }, [search, categoryId, sectionId, subsectionId]);
+  }, [search, categoryId, sectionId, subsectionId, sectionCode]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">

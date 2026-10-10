@@ -1,12 +1,13 @@
 import RevealGrid from "@/components/reveal-grid";
-import type { Brand } from "@/lib/api";
+import type { SectionGroup } from "@/lib/api";
 import { fileUrl } from "@/lib/api";
+import { sectionHref } from "@/lib/sections";
 import Link from "next/link";
 
-interface SectionGridProps { brands: Brand[]; }
+interface SectionGridProps { sections: SectionGroup[]; }
 
-export default function SectionGrid({ brands }: SectionGridProps) {
-  const sections = brands.flatMap(b => b.sections.map(s => ({ ...s, brandId: b.id })));
+/** One tile per section code — e.g. "Lollipops" shows the lollipops of every brand. */
+export default function SectionGrid({ sections }: SectionGridProps) {
   if (!sections.length) return null;
   return (
     <section className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
@@ -16,8 +17,8 @@ export default function SectionGrid({ brands }: SectionGridProps) {
           const imgUrl = fileUrl(sec.imageUrl);
           return (
             <Link
-              key={sec.id}
-              href={`/brand/${sec.brandId}?section=${sec.id}`}
+              key={sec.code}
+              href={sectionHref(sec.code)}
               className="group flex flex-col items-center gap-2 p-4 bg-white rounded-2xl border border-[var(--sage-light)] hover:border-[var(--brand-light)] hover:shadow-md transition"
             >
               <div className="w-20 h-20 rounded-full overflow-hidden bg-[var(--sage-light)] flex items-center justify-center">

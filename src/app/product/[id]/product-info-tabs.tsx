@@ -22,7 +22,7 @@ export default function ProductInfoTabs({ specifications, ingredients }: Props) 
 
   return (
     <div className="mt-10">
-      <div role="tablist" aria-label="Product information" className="flex gap-2 border-b border-stone-100">
+      <div role="tablist" aria-label="Product information" className="flex gap-2 border-b border-[var(--sage-light)]">
         {tabs.map(t => {
           const active = tab === t.key;
           return (
@@ -42,7 +42,7 @@ export default function ProductInfoTabs({ specifications, ingredients }: Props) 
             >
               {t.label}
               {t.count > 0 && (
-                <span className={`ml-1.5 text-xs font-medium px-1.5 py-0.5 rounded-full ${active ? "bg-[var(--cream)]" : "bg-stone-100"}`}>
+                <span className={`ml-1.5 text-xs font-medium px-1.5 py-0.5 rounded-full ${active ? "bg-[var(--cream)]" : "bg-[var(--sage-light)]"}`}>
                   {t.count}
                 </span>
               )}
@@ -67,7 +67,7 @@ export default function ProductInfoTabs({ specifications, ingredients }: Props) 
             {ingredients.map(ing => {
               const pct = parseFloat(ing.percentage);
               return (
-                <div key={ing.id} className="flex justify-between items-center py-2.5 border-b border-stone-100">
+                <div key={ing.id} className="flex justify-between items-center py-2.5 border-b border-[var(--sage-light)]">
                   <span className="text-stone-700 text-sm">{ing.name}</span>
                   {pct > 0 && (
                     <span className="text-stone-800 text-sm font-medium ml-4 tabular-nums">{trimZeros(ing.percentage)}%</span>
@@ -88,11 +88,11 @@ function SpecRow({ spec }: { spec: ProductDetail["specifications"][number] }) {
   let value: React.ReactNode;
   if (spec.specType === "boolean") {
     value = spec.valueBoolean ? (
-      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[var(--mint-light)]" aria-label="Yes">
-        <Check className="w-3.5 h-3.5 text-[var(--mint)]" strokeWidth={3} />
+      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[var(--sage-light)]" aria-label="Yes">
+        <Check className="w-3.5 h-3.5 text-[var(--sage)]" strokeWidth={3} />
       </span>
     ) : (
-      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-stone-100" aria-label="No">
+      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[var(--sage-light)]" aria-label="No">
         <Minus className="w-3.5 h-3.5 text-stone-400" strokeWidth={3} />
       </span>
     );
@@ -103,7 +103,7 @@ function SpecRow({ spec }: { spec: ProductDetail["specifications"][number] }) {
   }
 
   return (
-    <div className="flex justify-between items-center py-2.5 border-b border-stone-100">
+    <div className="flex justify-between items-center py-2.5 border-b border-[var(--sage-light)]">
       <span className="text-stone-500 text-sm">{spec.name}</span>
       <span className="text-stone-800 text-sm font-medium text-right ml-4">{value}</span>
     </div>

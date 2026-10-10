@@ -3,6 +3,7 @@ import Link from "next/link";
 import { storefrontApi, fileUrl } from "@/lib/api";
 import { BundleCartControl } from "@/components/bundle-card";
 import { Layers } from "lucide-react";
+import BackButton from "@/components/back-button";
 
 interface PageProps { params: Promise<{ id: string }> }
 
@@ -18,6 +19,7 @@ export default async function BundlePage({ params }: PageProps) {
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
       <nav className="text-xs text-stone-400 mb-6 flex items-center gap-1.5">
+        <BackButton />
         <Link href="/" className="hover:text-[var(--brand)]">Home</Link>
         <span>/</span>
         <Link href="/bundles" className="hover:text-[var(--brand)]">Bundles</Link>
@@ -26,7 +28,7 @@ export default async function BundlePage({ params }: PageProps) {
       </nav>
 
       <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
-        <div className="relative aspect-square rounded-2xl overflow-hidden bg-stone-50">
+        <div className="relative aspect-square rounded-2xl overflow-hidden bg-[var(--sage-light)]">
           {imgUrl ? (
             <img src={imgUrl} alt={bundle.name} className="w-full h-full object-cover" />
           ) : (
@@ -43,18 +45,18 @@ export default async function BundlePage({ params }: PageProps) {
             {value > price && (
               <>
                 <span className="text-lg text-stone-400 line-through">${value.toFixed(2)}</span>
-                <span className="text-sm bg-green-50 text-green-700 font-semibold px-2 py-0.5 rounded-full">Save ${(value - price).toFixed(2)}</span>
+                <span className="text-sm bg-[var(--sage-light)] text-[var(--sage)] font-semibold px-2 py-0.5 rounded-full">Save ${(value - price).toFixed(2)}</span>
               </>
             )}
           </div>
 
           {bundle.available <= 0 && (
-            <p className="text-sm font-medium text-stone-500 bg-stone-100 rounded-full px-3 py-1 w-fit">Out of stock</p>
+            <p className="text-sm font-medium text-stone-500 bg-[var(--sage-light)] rounded-full px-3 py-1 w-fit">Out of stock</p>
           )}
 
           {bundle.description && <p className="text-stone-600 text-sm leading-relaxed">{bundle.description}</p>}
 
-          <div className="bg-stone-50 rounded-2xl p-4">
+          <div className="bg-[var(--sage-light)] rounded-2xl p-4">
             <p className="text-xs font-semibold text-stone-500 uppercase tracking-wide mb-3">What&apos;s inside</p>
             <ul className="flex flex-col gap-2">
               {bundle.items.map(i => {
