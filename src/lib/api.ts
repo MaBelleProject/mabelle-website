@@ -24,15 +24,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   if (!(init?.body instanceof FormData)) headers["Content-Type"] = "application/json";
 
   const base = isServer ? `${SERVER_BASE}/storefront` : CLIENT_BASE;
-  // Server-side GETs use ISR (60s revalidate) so repeated calls within the same
-  // request cycle are deduplicated and subsequent pages load from cache.
-  // Browser requests and mutations always bypass cache.
-  const isGet = !init?.method || init.method === "GET";
-  const cacheOpts = isServer && isGet
-    ? ({ next: { revalidate: 60 } } as RequestInit)
-    : ({ cache: "no-store" } as RequestInit);
-
-  const res = await fetch(`${base}${path}`, { ...init, headers, ...cacheOpts });
+  const res = await fetch(`${base}${path}`, { ...init, headers, cache: "no-store" });
   if (!res.ok) throw new ApiError(res.status, await readError(res));
   return res.json() as Promise<T>;
 }
