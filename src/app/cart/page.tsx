@@ -42,7 +42,7 @@ export default function CartPage() {
   const deliveryOffer = quote?.offers.find(o => o.offerType === "free_delivery");
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
       <h1 className="text-2xl font-bold text-stone-800 mb-6">Your Cart</h1>
 
       <div className="grid lg:grid-cols-3 gap-6">

@@ -38,8 +38,8 @@ export default async function HomePage() {
             <h2 className="text-2xl font-bold text-stone-800">Offers</h2>
             <Link href="/offers" className="text-sm text-[var(--brand)] font-semibold hover:underline">View all →</Link>
           </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {offers.slice(0, 3).map(o => <OfferCard key={o.id} offer={o} />)}
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {offers.slice(0, 3).map(o => <OfferCard key={o.id} offer={o} compact />)}
           </div>
         </section>
       )}

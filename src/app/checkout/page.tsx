@@ -35,9 +35,33 @@ export default function CheckoutPage() {
     }
   }, [items.length, router]);
 
-  // If already logged in AND has a saved address → skip form entirely
+  // Pre-populate form from previously saved checkout info (edit flow)
+  useEffect(() => {
+    const raw = sessionStorage.getItem("checkout_info");
+    if (!raw) return;
+    try {
+      const saved = JSON.parse(raw);
+      setForm(prev => ({
+        ...prev,
+        address: saved.address ?? prev.address,
+        city: saved.city ?? prev.city,
+        floor: saved.floor ?? prev.floor,
+        remark: saved.remark ?? prev.remark,
+        name: saved.name ?? prev.name,
+        phone: saved.phone ?? prev.phone,
+        email: saved.email ?? prev.email,
+      }));
+    } catch { /* ignore */ }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // If already logged in AND has a saved address → skip form entirely (unless user clicked "Edit Information")
   useEffect(() => {
     if (!customer?.address) return;
+    const isEdit = sessionStorage.getItem("checkout_edit") === "1";
+    if (isEdit) {
+      sessionStorage.removeItem("checkout_edit");
+      return; // show the form so the user can edit their delivery details
+    }
     sessionStorage.setItem("checkout_info", JSON.stringify({
       name: customer.name,
       phone: customer.phone,

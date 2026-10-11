@@ -6,7 +6,6 @@ import { useCustomer } from "@/context/customer-context";
 import { storefrontApi, type PromoCode } from "@/lib/api";
 import { useCartQuote } from "@/lib/use-cart-quote";
 import { ArrowLeft, CheckCircle, Tag, XCircle } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -135,12 +134,28 @@ export default function ReviewPage() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
-      <Link href="/checkout" className="inline-flex items-center gap-1.5 text-sm text-stone-400 hover:text-[var(--brand)] mb-6 transition">
-        <ArrowLeft className="w-4 h-4" /> Edit Information
-      </Link>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+      {!info.customerId && (
+        <button
+          onClick={() => { sessionStorage.setItem("checkout_edit", "1"); router.push("/checkout"); }}
+          className="inline-flex items-center gap-1.5 text-sm text-stone-400 hover:text-[var(--brand)] mb-6 transition"
+        >
+          <ArrowLeft className="w-4 h-4" /> Edit Information
+        </button>
+      )}
 
-      <h1 className="text-2xl font-bold text-stone-800 mb-8">Review Your Order</h1>
+      <div className="flex items-center gap-3 mb-8">
+        {info.customerId && (
+          <button
+            onClick={() => router.push("/cart")}
+            className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-[var(--sage-light)] transition shrink-0"
+            aria-label="Back to cart"
+          >
+            <ArrowLeft className="w-4 h-4 text-stone-400" />
+          </button>
+        )}
+        <h1 className="text-2xl font-bold text-stone-800">Review Your Order</h1>
+      </div>
 
       <div className="grid lg:grid-cols-5 gap-6">
         {/* Items + Summary */}

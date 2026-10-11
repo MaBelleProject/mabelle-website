@@ -33,7 +33,7 @@ export default async function ProductPage({ params }: PageProps) {
   const highlights = product.specifications.filter(s => s.specType === "boolean" && s.valueBoolean);
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
       {/* Breadcrumb */}
       <nav className="text-xs text-stone-400 mb-6 flex items-center gap-1.5">
         <BackButton />

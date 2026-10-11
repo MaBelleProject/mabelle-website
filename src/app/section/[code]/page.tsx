@@ -35,7 +35,7 @@ export default async function SectionPage({ params, searchParams }: PageProps) {
       <div className="flex items-center gap-3 mb-8">
         <BackButton />
         {imgUrl && (
-          <div className="w-16 h-16 rounded-full overflow-hidden bg-[var(--sage-light)] shrink-0">
+          <div className="w-16 h-16 rounded-xl overflow-hidden bg-[var(--sage-light)] shrink-0">
             <img src={imgUrl} alt={section.name} className="w-full h-full object-cover" />
           </div>
         )}

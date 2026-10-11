@@ -3,6 +3,7 @@ import { storefrontApi } from "@/lib/api";
 import ProductCard from "@/components/product-card";
 import { fileUrl } from "@/lib/api";
 import Link from "next/link";
+import BackButton from "@/components/back-button";
 
 interface PageProps { params: Promise<{ id: string }>; searchParams: Promise<{ section?: string }> }
 
@@ -29,6 +30,7 @@ export default async function BrandPage({ params, searchParams }: PageProps) {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
       {/* Brand header */}
       <div className="flex items-center gap-4 mb-8">
+        <BackButton />
         {imgUrl && (
           <div className="w-16 h-16 rounded-full overflow-hidden bg-[var(--sage-light)] shrink-0">
             <img src={imgUrl} alt={brand.name} className="w-full h-full object-cover" />
