@@ -125,7 +125,11 @@ export default async function ProductPage({ params }: PageProps) {
 
           {/* Description */}
           {product.description && (
-            <p className="text-stone-600 text-sm leading-relaxed">{product.description}</p>
+            <div className="text-stone-600 text-sm leading-relaxed space-y-2">
+              {product.description.split(/\n+/).map((para, i) => (
+                <p key={i}>{para}</p>
+              ))}
+            </div>
           )}
           {product.remarkToCustomer && (
             <p className="text-sm text-stone-500 italic border-l-2 border-[var(--brand-light)] pl-3">{product.remarkToCustomer}</p>
