@@ -165,6 +165,7 @@ export const storefrontApi = {
   carousel: () => request<CarouselSlide[]>('/carousel'),
   brands: () => request<Brand[]>('/brands'),
   sections: () => request<SectionGroup[]>('/sections'),
+  bestSellers: () => request<Product[]>('/products/best-sellers'),
   products: (params?: { search?: string; categoryId?: number; sectionId?: number; subsectionId?: number; sectionCode?: string }) => {
     const qs = new URLSearchParams(
       Object.entries(params ?? {})

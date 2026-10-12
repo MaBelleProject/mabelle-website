@@ -6,11 +6,12 @@ import ProductCard from "@/components/product-card";
 import RevealGrid from "@/components/reveal-grid";
 import BundleCard from "@/components/bundle-card";
 import OfferCard from "@/components/offer-card";
+import BestSellersList from "@/components/best-sellers-list";
 import Link from "next/link";
 import { Gift } from "lucide-react";
 
 export default async function HomePage() {
-  const [slides, brands, sections, offers, products, bundles, gifts] = await Promise.all([
+  const [slides, brands, sections, offers, products, bundles, gifts, bestSellers] = await Promise.all([
     storefrontApi.carousel().catch(() => []),
     storefrontApi.brands().catch(() => []),
     storefrontApi.sections().catch(() => []),
@@ -18,6 +19,7 @@ export default async function HomePage() {
     storefrontApi.products().catch(() => []),
     storefrontApi.bundles().catch(() => []),
     storefrontApi.gifts().catch(() => []),
+    storefrontApi.bestSellers().catch(() => []),
   ]);
 
   const featured = products.slice(0, 12);
@@ -30,6 +32,9 @@ export default async function HomePage() {
           <Carousel slides={slides} sections={sections} />
         </section>
       )}
+
+      {/* Best Sellers */}
+      <BestSellersList products={bestSellers} />
 
       {/* Offers (highest priority first) */}
       {offers.length > 0 && (
@@ -92,7 +97,7 @@ export default async function HomePage() {
         </section>
       )}
 
-      {featured.length === 0 && slides.length === 0 && brands.length === 0 && (
+      {featured.length === 0 && slides.length === 0 && brands.length === 0 && bestSellers.length === 0 && (
         <div className="text-center py-24 text-stone-400">
           <p className="text-5xl mb-4">🍬</p>
           <p className="text-lg font-medium">Coming soon — deliciousness in progress!</p>
