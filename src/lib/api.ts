@@ -39,12 +39,13 @@ export interface CarouselSlide {
 }
 
 export interface Subsection { id: number; sectionId: number; code: string; name: string; imageUrl?: string | null; }
-export interface Section { id: number; categoryId: number; code: string; name: string; imageUrl?: string | null; subsections: Subsection[]; }
-export interface Brand { id: number; code: string; name: string; imageUrl?: string | null; sections: Section[]; }
+export interface Section { id: number; categoryId: number; code: string; name: string; imageUrl?: string | null; displayOrder: number; subsections: Subsection[]; }
+export interface Brand { id: number; code: string; name: string; imageUrl?: string | null; displayOrder: number; sections: Section[]; }
 
 /** A website section: every brand's section with the same code, shown together. */
 export interface SectionGroup {
   code: string; name: string; imageUrl?: string | null;
+  displayOrder: number;
   sectionIds: number[];
   brands: { id: number; name: string }[];
   subsections: Subsection[];

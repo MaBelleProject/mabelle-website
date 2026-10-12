@@ -29,11 +29,6 @@ export default function BrandGrid({ brands }: BrandGridProps) {
               ) : (
                 <div className="absolute inset-0 flex items-center justify-center text-4xl">🏷️</div>
               )}
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent px-2 py-2">
-                <span className="text-base font-bold text-white text-center block">
-                  {brand.name}
-                </span>
-              </div>
             </Link>
           );
         })}
