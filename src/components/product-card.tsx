@@ -7,8 +7,7 @@ import { fileUrl } from "@/lib/api";
 import { useCart, productKey } from "@/context/cart-context";
 import { useOffers } from "@/context/offers-context";
 import { offerBadge, offersForProduct } from "@/lib/offers";
-
-const LOW_STOCK_THRESHOLD = 5;
+import { useShowStockLeft } from "@/context/settings-context";
 
 interface ProductCardProps { product: Product; }
 
@@ -28,8 +27,9 @@ export default function ProductCard({ product }: ProductCardProps) {
   const offer = offersForProduct(useOffers(), product.id, true)[0];
   const imgUrl = fileUrl(product.imageUrl);
   const { price, originalPrice } = computeDisplay(product);
-  const lowStock = product.quantity > 0 && product.quantity < LOW_STOCK_THRESHOLD;
   const outOfStock = product.quantity <= 0;
+  // "Only X left" is switched on/off for the whole website in the dashboard settings.
+  const showLeft = useShowStockLeft() && !outOfStock;
 
   const cartItem = items.find(i => i.key === productKey(product.id));
   const qty = cartItem?.quantity ?? 0;
@@ -92,7 +92,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         <h3 className="text-sm font-semibold text-stone-800 line-clamp-2 leading-snug">{product.name}</h3>
         {offer && <p className="text-xs font-medium text-[var(--sage)] line-clamp-1">🎁 {offer.name}</p>}
 
-        {lowStock && (
+        {showLeft && (
           <div className="flex items-center gap-1 text-[var(--brand)] text-xs font-medium">
             <AlertTriangle className="w-3.5 h-3.5" />
             Only {product.quantity} left

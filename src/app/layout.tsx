@@ -5,6 +5,7 @@ import { CartProvider } from "@/context/cart-context";
 import { MenuProvider } from "@/context/menu-context";
 import { CustomerProvider } from "@/context/customer-context";
 import { OffersProvider } from "@/context/offers-context";
+import { ShowStockLeftProvider } from "@/context/settings-context";
 import { storefrontApi } from "@/lib/api";
 import Header from "@/components/header";
 import MenuSidebar from "@/components/menu-sidebar";
@@ -32,6 +33,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <CartProvider>
           <CustomerProvider>
           <OffersProvider offers={offers}>
+          <ShowStockLeftProvider value={settings?.showStockLeft ?? false}>
           <MenuProvider>
             {/*
              * Flex row: [sidebar spacer] [content column]
@@ -50,6 +52,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               </div>
             </div>
           </MenuProvider>
+          </ShowStockLeftProvider>
           </OffersProvider>
           </CustomerProvider>
         </CartProvider>

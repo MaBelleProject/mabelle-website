@@ -77,6 +77,8 @@ export interface Settings {
   companyName: string | null; slogan: string | null; companyLogo: string | null;
   companyDescription: string | null; phoneNumber: string | null;
   instagramQrCode: string | null; whatsappQrCode: string | null; instagramPage: string | null; deliveryCharge: string | null; updatedAt: string | null;
+  /** Show "Only X left" on product cards and pages (set in the dashboard). */
+  showStockLeft?: boolean;
 }
 
 export interface PromoCode {
@@ -121,6 +123,8 @@ export interface GiftPackage {
 
 export interface GiftPackaging {
   id: number; name: string; imageUrl?: string | null; price: string;
+  /** Boxes in stock; 0 or less = out of stock (can't be ordered). */
+  stock: number;
 }
 
 export interface Offer {
@@ -151,6 +155,8 @@ export type OrderLine =
 export interface OrderQuote {
   items: { itemType: string; productName: string; unitPrice: number; quantity: number; totalPrice: number }[];
   subtotal: number; promoCodeAmount: number;
+  /** false when the applied offer rules the promo code out; promoNote says why it was limited or not used. */
+  promoApplied: boolean; promoNote: string | null;
   offerDiscountAmount: number; deliveryDiscountAmount: number;
   totalCharges: number; netTotal: number;
   /** Delivery is outside netTotal; totalDue = netTotal + deliveryDue is what the customer pays. */

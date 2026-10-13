@@ -1,7 +1,7 @@
 "use client";
 
 import OfferPicker from "@/components/offer-picker";
-import { toOrderLine, useCart } from "@/context/cart-context";
+import { toOrderLine, useCart, type CartItem } from "@/context/cart-context";
 import { useCustomer } from "@/context/customer-context";
 import { storefrontApi, type PromoCode } from "@/lib/api";
 import { useCartQuote } from "@/lib/use-cart-quote";
@@ -15,12 +15,14 @@ interface CheckoutInfo {
   password?: string; customerId?: number;
 }
 
-function computePromoDiscount(promo: PromoCode | null, subtotal: number): number {
+/** Rough preview until the server quote arrives (which also applies the offer rules): bundles never get a promo code. */
+function computePromoDiscount(promo: PromoCode | null, items: CartItem[]): number {
   if (!promo) return 0;
+  const base = items.filter(i => i.itemType !== "bundle").reduce((s, i) => s + i.unitPrice * i.quantity, 0);
   const pct = parseFloat(promo.promoDiscountPercentage);
   const amt = parseFloat(promo.promoDiscountAmount);
-  if (pct > 0) return subtotal * (pct / 100);
-  return Math.min(amt, subtotal);
+  if (pct > 0) return base * (pct / 100);
+  return Math.min(amt, base);
 }
 
 export default function ReviewPage() {
@@ -59,7 +61,7 @@ export default function ReviewPage() {
   if (redirecting || !info) return null;
 
   const shownSubtotal = quote?.subtotal ?? subtotal;
-  const promoDiscount = quote?.promoCodeAmount ?? computePromoDiscount(promo, subtotal);
+  const promoDiscount = quote?.promoCodeAmount ?? computePromoDiscount(promo, items);
   // Delivery is kept outside the order's net total; the total to pay is netTotal + delivery left after offers.
   const delivery = quote ? quote.deliveryCharge : deliveryCharge;
   const deliveryDue = quote ? quote.deliveryDue : deliveryCharge;
@@ -236,6 +238,9 @@ export default function ReviewPage() {
               </div>
             )}
             {promoError && <p className="text-xs text-red-500 mt-1.5">{promoError}</p>}
+            {promo && quote?.promoNote && (
+              <p className={`text-xs mt-1.5 ${quote.promoApplied ? "text-amber-600" : "text-red-500"}`}>{quote.promoNote}</p>
+            )}
           </div>
 
           {/* Totals */}

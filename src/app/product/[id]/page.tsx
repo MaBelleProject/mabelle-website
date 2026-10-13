@@ -11,13 +11,12 @@ import BackButton from "@/components/back-button";
 
 interface PageProps { params: Promise<{ id: string }> }
 
-const LOW_STOCK = 5;
-
 export default async function ProductPage({ params }: PageProps) {
   const { id } = await params;
-  const [product, allOffers] = await Promise.all([
+  const [product, allOffers, settings] = await Promise.all([
     storefrontApi.product(parseInt(id)).catch(() => null),
     storefrontApi.offers().catch(() => []),
+    storefrontApi.settings().catch(() => null),
   ]);
   if (!product) notFound();
   // Every running offer this product counts towards, store-wide ones included.
@@ -28,8 +27,9 @@ export default async function ProductPage({ params }: PageProps) {
   const discPct = parseFloat(product.discountPercentage ?? "0");
   const isDiscounted = discPct > 0;
   const originalPrice = isDiscounted ? price / (1 - discPct / 100) : null;
-  const lowStock = product.quantity > 0 && product.quantity < LOW_STOCK;
   const outOfStock = product.quantity <= 0;
+  // "Only X left" is switched on/off for the whole website in the dashboard settings.
+  const showLeft = !!settings?.showStockLeft && !outOfStock;
   const highlights = product.specifications.filter(s => s.specType === "boolean" && s.valueBoolean);
 
   return (
@@ -116,10 +116,10 @@ export default async function ProductPage({ params }: PageProps) {
           {/* Stock */}
           {outOfStock ? (
             <p className="text-sm font-medium text-stone-500 bg-[var(--sage-light)] rounded-full px-3 py-1 w-fit">Out of stock</p>
-          ) : lowStock ? (
+          ) : showLeft ? (
             <div className="flex items-center gap-1.5 text-amber-600 text-sm font-medium">
               <AlertTriangle className="w-4 h-4" />
-              Only {product.quantity} left!
+              Only {product.quantity} left
             </div>
           ) : null}
 

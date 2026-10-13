@@ -34,7 +34,8 @@ function Stepper({ value, min, max, onChange }: { value: number; min: number; ma
 export default function GiftCustomizer({ gift, packagings }: { gift: GiftPackage; packagings: GiftPackaging[] }) {
   const { add } = useCart();
   const [choices, setChoices] = useState<Choice[]>(gift.items.map(s => ({ slotId: s.id, productId: s.productId, quantity: s.quantity })));
-  const [packagingId, setPackagingId] = useState<number | null>(packagings[0]?.id ?? null);
+  // Start on the first box in stock (no packaging when every box is sold out)
+  const [packagingId, setPackagingId] = useState<number | null>(packagings.find(p => p.stock > 0)?.id ?? null);
   const [message, setMessage] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
@@ -53,9 +54,14 @@ export default function GiftCustomizer({ gift, packagings }: { gift: GiftPackage
   // How many of this gift the stock allows (the same product may fill several slots)
   const perGift = new Map<number, number>();
   for (const c of choices) if (c.quantity > 0) perGift.set(c.productId, (perGift.get(c.productId) ?? 0) + c.quantity);
+  // …and by the chosen gift box: never more gifts than boxes left
   const maxGifts = perGift.size
-    ? Math.min(...[...perGift].map(([pid, q]) => Math.floor((productById.get(pid)?.stock ?? 0) / q)))
+    ? Math.min(
+      ...[...perGift].map(([pid, q]) => Math.floor((productById.get(pid)?.stock ?? 0) / q)),
+      packaging ? Math.max(0, packaging.stock) : Infinity,
+    )
     : 0;
+  const boxOut = !!packaging && packaging.stock <= 0;
   const empty = perGift.size === 0;
 
   const addToCart = () => {
@@ -135,20 +141,27 @@ export default function GiftCustomizer({ gift, packagings }: { gift: GiftPackage
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {[null, ...packagings].map(p => {
               const selected = (p?.id ?? null) === packagingId;
+              const soldOut = !!p && p.stock <= 0;
               const img = fileUrl(p?.imageUrl);
               return (
                 <button
                   key={p?.id ?? "none"}
                   type="button"
+                  disabled={soldOut}
+                  aria-label={soldOut ? `${p.name} (out of stock)` : undefined}
                   onClick={() => { setPackagingId(p?.id ?? null); setAdded(false); }}
-                  className={`relative flex flex-col items-center gap-1 rounded-xl border p-2 text-center transition ${selected ? "border-[var(--brand)] ring-1 ring-[var(--brand)] bg-[var(--cream)]" : "border-stone-200 bg-white hover:border-[var(--brand-light)]"}`}
+                  className={`relative flex flex-col items-center gap-1 rounded-xl border p-2 text-center transition disabled:cursor-not-allowed disabled:opacity-50 ${selected ? "border-[var(--brand)] ring-1 ring-[var(--brand)] bg-[var(--cream)]" : "border-stone-200 bg-white hover:border-[var(--brand-light)]"}`}
                 >
                   {selected && <Check className="absolute top-1.5 right-1.5 w-3.5 h-3.5 text-[var(--brand)]" />}
                   <div className="w-14 h-14 rounded-lg overflow-hidden bg-[var(--cream)] flex items-center justify-center">
                     {img ? <img src={img} alt="" className="w-full h-full object-cover" /> : <span className="text-xl">{p ? "🎀" : "—"}</span>}
                   </div>
                   <span className="text-xs font-medium text-stone-700 line-clamp-1">{p?.name ?? "No packaging"}</span>
-                  <span className="text-[11px] text-stone-400">{p ? `+$${parseFloat(p.price).toFixed(2)}` : "free"}</span>
+                  {soldOut ? (
+                    <span className="text-[11px] font-semibold text-stone-500">Out of Stock</span>
+                  ) : (
+                    <span className="text-[11px] text-stone-400">{p ? `+$${parseFloat(p.price).toFixed(2)}` : "free"}</span>
+                  )}
                 </button>
               );
             })}
@@ -181,6 +194,8 @@ export default function GiftCustomizer({ gift, packagings }: { gift: GiftPackage
       </div>
       {empty ? (
         <p className="text-sm text-amber-600">Add at least one treat to your gift.</p>
+      ) : boxOut ? (
+        <p className="text-sm font-medium text-stone-500 bg-[var(--sage-light)] rounded-full px-3 py-1 w-fit">This gift box is out of stock — choose another packaging</p>
       ) : maxGifts < 1 ? (
         <p className="text-sm font-medium text-stone-500 bg-[var(--sage-light)] rounded-full px-3 py-1 w-fit">Not enough stock for this selection</p>
       ) : null}
