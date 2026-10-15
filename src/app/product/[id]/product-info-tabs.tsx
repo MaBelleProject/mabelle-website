@@ -66,11 +66,12 @@ export default function ProductInfoTabs({ specifications, ingredients }: Props) 
           <div className="sm:columns-2 gap-x-8">
             {ingredients.map(ing => {
               const pct = parseFloat(ing.percentage);
+              const showPct = pct > 0 || ing.displayPercentage;
               return (
                 <div key={ing.id} className="break-inside-avoid flex justify-between items-center py-2.5 border-b border-[var(--sage-light)]">
                   <span className="text-stone-700 text-sm">{ing.name}</span>
-                  {pct > 0 && (
-                    <span className="text-stone-800 text-sm font-medium ml-4 tabular-nums">{trimZeros(ing.percentage)}%</span>
+                  {showPct && (
+                    <span className="text-stone-800 text-sm font-medium ml-4 tabular-nums">{pct > 0 ? `${trimZeros(ing.percentage)}%` : "0%"}</span>
                   )}
                 </div>
               );

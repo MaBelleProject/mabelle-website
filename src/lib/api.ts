@@ -65,7 +65,7 @@ export interface Product {
 export interface ProductDetail extends Product {
   categoryName?: string | null; sectionName?: string | null; subsectionName?: string | null;
   sectionCode?: string | null;
-  ingredients: { id: number; name: string; percentage: string }[];
+  ingredients: { id: number; name: string; percentage: string; displayPercentage: boolean }[];
   specifications: {
     id: number; name: string; specType: 'boolean' | 'numeric' | 'text';
     unit?: string | null; valueBoolean?: boolean | null; valueNumeric?: string | null; valueText?: string | null;
