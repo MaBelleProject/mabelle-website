@@ -54,8 +54,8 @@ export default function ProductInfoTabs({ specifications, ingredients }: Props) 
       <div role="tabpanel" id={`panel-${tab}`} aria-labelledby={`tab-${tab}`} className="pt-5">
         {tab === "specifications" ? (
           specifications.length > 0 ? (
-            <div className="grid sm:grid-cols-2 gap-x-8">
-              {specifications.map(spec => (
+            <div className="sm:columns-2 gap-x-8">
+              {[...specifications].sort((a, b) => (a.specType === "text" ? -1 : b.specType === "text" ? 1 : 0)).map(spec => (
                 <SpecRow key={spec.id} spec={spec} />
               ))}
             </div>
@@ -63,11 +63,11 @@ export default function ProductInfoTabs({ specifications, ingredients }: Props) 
             <Empty text="No specifications listed for this product." />
           )
         ) : ingredients.length > 0 ? (
-          <div className="grid sm:grid-cols-2 gap-x-8">
+          <div className="sm:columns-2 gap-x-8">
             {ingredients.map(ing => {
               const pct = parseFloat(ing.percentage);
               return (
-                <div key={ing.id} className="flex justify-between items-center py-2.5 border-b border-[var(--sage-light)]">
+                <div key={ing.id} className="break-inside-avoid flex justify-between items-center py-2.5 border-b border-[var(--sage-light)]">
                   <span className="text-stone-700 text-sm">{ing.name}</span>
                   {pct > 0 && (
                     <span className="text-stone-800 text-sm font-medium ml-4 tabular-nums">{trimZeros(ing.percentage)}%</span>
@@ -103,7 +103,7 @@ function SpecRow({ spec }: { spec: ProductDetail["specifications"][number] }) {
   }
 
   return (
-    <div className="flex justify-between items-center py-2.5 border-b border-[var(--sage-light)]">
+    <div className="break-inside-avoid flex justify-between items-center py-2.5 border-b border-[var(--sage-light)]">
       <span className="text-stone-500 text-sm">{spec.name}</span>
       <span className="text-stone-800 text-sm font-medium text-right ml-4">{value}</span>
     </div>

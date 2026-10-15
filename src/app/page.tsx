@@ -3,7 +3,6 @@ import Carousel from "@/components/carousel";
 import SectionGrid from "@/components/section-grid";
 import BrandGrid from "@/components/brand-grid";
 import ProductCard from "@/components/product-card";
-import RevealGrid from "@/components/reveal-grid";
 import BundleCard from "@/components/bundle-card";
 import OfferCard from "@/components/offer-card";
 import BestSellersList from "@/components/best-sellers-list";
@@ -22,7 +21,7 @@ export default async function HomePage() {
     storefrontApi.bestSellers().catch(() => []),
   ]);
 
-  const featured = products.slice(0, 12);
+  const featured = products.slice(0, 10);
 
   return (
     <div className="pb-16">
@@ -64,9 +63,11 @@ export default async function HomePage() {
               View all →
             </a>
           </div>
-          <RevealGrid className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {featured.map(p => <ProductCard key={p.id} product={p} />)}
-          </RevealGrid>
+          <div className="overflow-x-auto [&::-webkit-scrollbar]:hidden [scrollbar-width:none] [-ms-overflow-style:none]">
+            <div className="grid grid-rows-2 grid-flow-col gap-4 w-max auto-cols-[calc(50vw_-_1.5rem)] sm:auto-cols-[calc(33.333vw_-_27px)] md:auto-cols-[calc(25vw_-_1.5rem)] lg:auto-cols-[calc(20vw_-_1.4rem)] xl:auto-cols-[233px]">
+              {featured.map(p => <ProductCard key={p.id} product={p} />)}
+            </div>
+          </div>
         </section>
       )}
 
