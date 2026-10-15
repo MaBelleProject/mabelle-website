@@ -11,8 +11,8 @@ export default function SectionGrid({ sections }: SectionGridProps) {
   if (!sections.length) return null;
   return (
     <section className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-      <h2 className="text-2xl font-bold text-stone-800 mb-6">Shop by Section</h2>
-      <RevealGrid className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
+      <h2 className="text-2xl font-bold text-stone-800 mb-6">Discover Our Snacks</h2>
+      <RevealGrid className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-2">
         {sections.map(sec => {
           const imgUrl = fileUrl(sec.imageUrl);
           return (
