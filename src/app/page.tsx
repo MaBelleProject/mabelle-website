@@ -42,8 +42,15 @@ export default async function HomePage() {
             <h2 className="text-2xl font-bold text-stone-800">Offers</h2>
             <Link href="/offers" className="text-sm text-[var(--brand)] font-semibold hover:underline">View all →</Link>
           </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {offers.slice(0, 3).map(o => <OfferCard key={o.id} offer={o} compact />)}
+          <div className="relative">
+            <div className="flex overflow-x-auto gap-3 pb-2 scrollbar-hide">
+              {offers.map(o => (
+                <div key={o.id} className="shrink-0 w-[85%] sm:w-[45%] lg:w-[32%]">
+                  <OfferCard offer={o} compact />
+                </div>
+              ))}
+            </div>
+            <div className="absolute right-0 top-0 bottom-2 w-12 bg-gradient-to-l from-[var(--background)] to-transparent pointer-events-none" />
           </div>
         </section>
       )}
@@ -63,10 +70,13 @@ export default async function HomePage() {
               View all →
             </a>
           </div>
-          <div className="overflow-x-auto [&::-webkit-scrollbar]:hidden [scrollbar-width:none] [-ms-overflow-style:none]">
-            <div className="grid grid-rows-2 grid-flow-col gap-4 w-max auto-cols-[calc(50vw_-_1.5rem)] sm:auto-cols-[calc(33.333vw_-_27px)] md:auto-cols-[calc(25vw_-_1.5rem)] lg:auto-cols-[calc(20vw_-_1.4rem)] xl:auto-cols-[233px]">
-              {featured.map(p => <ProductCard key={p.id} product={p} />)}
-            </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            {featured.map(p => <ProductCard key={p.id} product={p} />)}
+          </div>
+          <div className="mt-6 text-center">
+            <a href="/products" className="inline-block px-8 py-3 rounded-full border-2 border-[var(--brand)] text-[var(--brand)] font-semibold hover:bg-[var(--brand)] hover:text-white transition">
+              View all products
+            </a>
           </div>
         </section>
       )}
