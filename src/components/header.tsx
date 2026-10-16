@@ -44,7 +44,7 @@ export default function Header({ brands: _brands, settings }: HeaderProps) {
           {/* Logo — absolutely centered */}
           <Link href="/" className="absolute left-1/2 -translate-x-1/2">
             {logoUrl ? (
-              <img src={logoUrl} alt={settings?.companyName ?? "Mabelle Bites"} className="h-28 w-auto object-contain" />
+              <img src={logoUrl} alt={settings?.companyName ?? "Mabelle Bites"} className="h-20 w-auto object-contain" />
             ) : (
               <span className="text-2xl font-bold text-[var(--brand-dark)]">
                 {settings?.companyName ?? "Mabelle Bites"}

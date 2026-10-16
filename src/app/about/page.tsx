@@ -1,4 +1,4 @@
-import { storefrontApi, fileUrl } from "@/lib/api";
+import { storefrontApi } from "@/lib/api";
 import { MessageCircle } from "lucide-react";
 
 function InstagramIcon({ className }: { className?: string }) {
@@ -17,33 +17,52 @@ export default async function AboutPage() {
   const phone = settings?.phoneNumber?.replace(/\D/g, "") ?? "";
   const whatsappHref = phone ? `https://wa.me/${phone}` : null;
   const instaHref = settings?.instagramPage ?? null;
-  const logoUrl = settings?.companyLogo ? fileUrl(settings.companyLogo) : null;
-
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12">
-      {/* Logo + Name */}
+      {/* Title */}
       <div className="flex flex-col items-center text-center mb-10">
-        {logoUrl && (
-          <img src={logoUrl} alt={settings?.companyName ?? "Mabelle Bites"} className="w-28 h-28 object-contain mb-4" />
-        )}
-        <h1 className="text-4xl font-bold text-stone-800">{settings?.companyName ?? "Mabelle Bites"}</h1>
+        <h1 className="text-4xl font-bold text-stone-800">About MaBelle Bites</h1>
         {settings?.slogan && (
           <p className="text-lg text-[var(--brand)] font-medium mt-2 italic">{settings.slogan}</p>
         )}
       </div>
 
-      {/* Description */}
-      {settings?.companyDescription ? (
-        <div className="prose prose-stone max-w-none text-stone-600 text-base leading-relaxed mb-10">
-          {settings.companyDescription.split("\n").map((p, i) => (
-            <p key={i}>{p}</p>
-          ))}
-        </div>
-      ) : (
-        <p className="text-stone-500 text-center mb-10">
-          We craft delicious treats with the finest ingredients, made with love and care.
+      {/* About content */}
+      <div className="text-stone-700 text-base leading-relaxed mb-10 space-y-5">
+        <h2 className="text-2xl font-bold text-stone-800">Little Bites, Big Love!</h2>
+
+        <p>
+          MaBelle Bites was born from a mother&apos;s love and a simple wish: <strong>to give our little ones snacks that are both delicious and made with better ingredients.</strong>
         </p>
-      )}
+        <p>
+          As parents, we all want the best for our children. But finding snacks that are tasty, fun, and made with ingredients we can feel good about isn&apos;t always easy. That&apos;s why MaBelle Bites was created!
+        </p>
+        <p>
+          We carefully select products from trusted brands, bringing you a variety of <strong>organic, no-added-sugar, and better-for-you snack options</strong> that little ones will love and parents can feel confident choosing.
+        </p>
+        <p>
+          From crunchy chips and yummy biscuits to colorful lollipops, gummies, and convenient ready-to-mix meals, we believe that healthier choices should never mean missing out on fun or flavor!
+        </p>
+
+        <h2 className="text-2xl font-bold text-stone-800 pt-2">Why MaBelle Bites?</h2>
+
+        <p>🌿 <strong>Better Ingredients</strong> – We look for products made with thoughtfully selected ingredients.</p>
+        <p>🍭 <strong>Happy Little Tummies</strong> – Delicious treats that make snack time exciting.</p>
+        <p>💚 <strong>Chosen with Love</strong> – Every product is selected with the same care we&apos;d give our own children.</p>
+        <p>👩‍👧‍👦 <strong>Made for Families</strong> – Making it easier for busy parents to discover better snack options for their little ones.</p>
+
+        <h2 className="text-2xl font-bold text-stone-800 pt-2">Our Little Mission</h2>
+
+        <p>
+          To make better snacking simple, accessible, and full of joy, because we believe every little bite matters.
+        </p>
+        <p>
+          <strong>From one parent to another, welcome to the MaBelle Bites family! 💚</strong>
+        </p>
+        {/* <p>
+          <em>Small bites. Happy kids. Healthier choices.</em>
+        </p> */}
+      </div>
 
       {/* Contact / Social */}
       <div className="flex flex-col sm:flex-row gap-4 justify-center">
