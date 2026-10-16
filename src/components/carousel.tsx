@@ -8,8 +8,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 interface CarouselProps { slides: CarouselSlide[]; sections?: SectionGroup[]; }
 
-/** 'offers' opens a fixed page; every other destination needs an id. */
-const isClickable = (s: CarouselSlide) => s.destinationType === "offers" || !!(s.destinationType && s.destinationId);
+/** Fixed-page destinations — no destinationId required. */
+const FIXED_DEST = new Set(["offers"]);
+
+const isClickable = (s: CarouselSlide) => FIXED_DEST.has(s.destinationType ?? "") || !!(s.destinationType && s.destinationId);
 
 const SWIPE_THRESHOLD = 50; // px needed to commit a slide change
 
@@ -100,6 +102,12 @@ export default function Carousel({ slides, sections = [] }: CarouselProps) {
     switch (slide.destinationType) {
       case "offers":
         router.push("/offers");
+        break;
+      case "bundles":
+        router.push(`/bundles/${slide.destinationId}`);
+        break;
+      case "gifts":
+        router.push(`/gifts/${slide.destinationId}`);
         break;
       case "category":
       case "brand":
