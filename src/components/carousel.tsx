@@ -9,7 +9,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 interface CarouselProps { slides: CarouselSlide[]; sections?: SectionGroup[]; }
 
 /** Fixed-page destinations — no destinationId required. */
-const FIXED_DEST = new Set(["offers"]);
+const FIXED_DEST = new Set(["offers", "bundles_page", "gifts_page"]);
 
 const isClickable = (s: CarouselSlide) => FIXED_DEST.has(s.destinationType ?? "") || !!(s.destinationType && s.destinationId);
 
@@ -103,11 +103,20 @@ export default function Carousel({ slides, sections = [] }: CarouselProps) {
       case "offers":
         router.push("/offers");
         break;
+      case "offer":
+        router.push(`/offers/${slide.destinationId}`);
+        break;
       case "bundles":
         router.push(`/bundles/${slide.destinationId}`);
         break;
       case "gifts":
         router.push(`/gifts/${slide.destinationId}`);
+        break;
+      case "bundles_page":
+        router.push("/bundles");
+        break;
+      case "gifts_page":
+        router.push("/gifts");
         break;
       case "category":
       case "brand":
