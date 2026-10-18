@@ -4,6 +4,7 @@ import "./globals.css";
 import { CartProvider } from "@/context/cart-context";
 import { MenuProvider } from "@/context/menu-context";
 import { CustomerProvider } from "@/context/customer-context";
+import { FavoritesProvider } from "@/context/favorites-context";
 import { OffersProvider } from "@/context/offers-context";
 import { ShowStockLeftProvider } from "@/context/settings-context";
 import { storefrontApi } from "@/lib/api";
@@ -32,6 +33,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body>
         <CartProvider>
           <CustomerProvider>
+          <FavoritesProvider>
           <OffersProvider offers={offers}>
           <ShowStockLeftProvider value={settings?.showStockLeft ?? false}>
           <MenuProvider>
@@ -54,6 +56,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           </MenuProvider>
           </ShowStockLeftProvider>
           </OffersProvider>
+          </FavoritesProvider>
           </CustomerProvider>
         </CartProvider>
       </body>

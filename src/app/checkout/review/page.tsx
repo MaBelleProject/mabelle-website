@@ -12,7 +12,7 @@ import { useEffect, useState } from "react";
 interface CheckoutInfo {
   name: string; phone: string; email: string; address: string;
   city: string; floor: string; paymentMethod: string; remark: string;
-  password?: string; customerId?: number;
+  password?: string; customerId?: number; isNonProfit?: boolean;
 }
 
 /** Rough preview until the server quote arrives (which also applies the offer rules): bundles never get a promo code. */
@@ -60,12 +60,15 @@ export default function ReviewPage() {
 
   if (redirecting || !info) return null;
 
+  const isNonProfit = info?.isNonProfit === true;
   const shownSubtotal = quote?.subtotal ?? subtotal;
   const promoDiscount = quote?.promoCodeAmount ?? computePromoDiscount(promo, items);
   // Delivery is kept outside the order's net total; the total to pay is netTotal + delivery left after offers.
   const delivery = quote ? quote.deliveryCharge : deliveryCharge;
-  const deliveryDue = quote ? quote.deliveryDue : deliveryCharge;
-  const netTotal = quote?.totalDue ?? subtotal + deliveryCharge - promoDiscount;
+  const deliveryDue = isNonProfit ? 0 : (quote ? quote.deliveryDue : deliveryCharge);
+  const netTotal = quote
+    ? isNonProfit ? quote.totalDue - quote.deliveryDue : quote.totalDue
+    : subtotal + (isNonProfit ? 0 : deliveryCharge) - promoDiscount;
   const itemOffers = quote?.offers.filter(o => o.offerType !== "free_delivery") ?? [];
   const deliveryOffer = quote?.offers.find(o => o.offerType === "free_delivery");
 
@@ -200,7 +203,7 @@ export default function ReviewPage() {
         {/* Order totals + promo */}
         <div className="lg:col-span-2 flex flex-col gap-4">
           {/* Promo Code */}
-          <div className="bg-white rounded-2xl border border-[var(--sage-light)] shadow-sm px-5 py-4">
+          {!isNonProfit && <div className="bg-white rounded-2xl border border-[var(--sage-light)] shadow-sm px-5 py-4">
             <h2 className="font-semibold text-stone-800 mb-3">Promo Code</h2>
             {promo ? (
               <div className="flex items-center gap-2">
@@ -241,7 +244,7 @@ export default function ReviewPage() {
             {promo && quote?.promoNote && (
               <p className={`text-xs mt-1.5 ${quote.promoApplied ? "text-amber-600" : "text-red-500"}`}>{quote.promoNote}</p>
             )}
-          </div>
+          </div>}
 
           {/* Totals */}
           <div className="bg-white rounded-2xl border border-[var(--sage-light)] shadow-sm px-5 py-4">
@@ -250,11 +253,17 @@ export default function ReviewPage() {
             <div className="flex flex-col gap-2 text-sm text-stone-600">
               <div className="flex justify-between"><span>Subtotal</span><span>${shownSubtotal.toFixed(2)}</span></div>
               <div className="flex justify-between text-stone-400">
-                <span>Delivery{deliveryOffer && <span className="text-green-600"> · {deliveryOffer.offerName}</span>}</span>
+                <span>
+                  Delivery
+                  {isNonProfit && <span className="text-green-600"> · Non-profit</span>}
+                  {deliveryOffer && <span className="text-green-600"> · {deliveryOffer.offerName}</span>}
+                </span>
                 <span>
                   {deliveryDue < delivery
                     ? <><span className="line-through mr-1">${delivery.toFixed(2)}</span><span className="text-green-600">{deliveryDue > 0 ? `$${deliveryDue.toFixed(2)}` : "Free"}</span></>
-                    : delivery > 0 ? `$${delivery.toFixed(2)}` : "Free"}
+                    : isNonProfit && !quote
+                      ? <><span className="line-through mr-1">${delivery.toFixed(2)}</span><span className="text-green-600">Free</span></>
+                      : delivery > 0 ? `$${delivery.toFixed(2)}` : "Free"}
                 </span>
               </div>
               {promoDiscount > 0 && (

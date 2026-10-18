@@ -5,6 +5,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 export interface CustomerInfo {
   id: number; name: string; phone: string; email?: string | null;
   address?: string | null; city?: string | null; floor?: string | null;
+  isNonProfit?: boolean;
 }
 
 interface Ctx {

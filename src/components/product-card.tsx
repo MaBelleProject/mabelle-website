@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { Minus, Plus, ShoppingCart, AlertTriangle } from "lucide-react";
+import { Heart, Minus, Plus, ShoppingCart, AlertTriangle } from "lucide-react";
 import type { Product } from "@/lib/api";
 import { fileUrl } from "@/lib/api";
 import { useCart, productKey } from "@/context/cart-context";
+import { useCustomer } from "@/context/customer-context";
+import { useFavorites } from "@/context/favorites-context";
 import { useOffers } from "@/context/offers-context";
 import { offerBadge, offersForProduct } from "@/lib/offers";
 import { useShowStockLeft } from "@/context/settings-context";
@@ -23,6 +25,8 @@ function computeDisplay(product: Product): { price: number; originalPrice: numbe
 
 export default function ProductCard({ product }: ProductCardProps) {
   const { items, add, update } = useCart();
+  const { customer } = useCustomer();
+  const { isFavorite, toggle } = useFavorites();
   // Highest-priority offer aimed at this product (store-wide offers are shown in the offers panel instead).
   const offer = offersForProduct(useOffers(), product.id, true)[0];
   const imgUrl = fileUrl(product.imageUrl);
@@ -30,6 +34,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   const outOfStock = product.quantity <= 0;
   // "Only X left" is switched on/off for the whole website in the dashboard settings.
   const showLeft = useShowStockLeft() && !outOfStock;
+  const isFav = isFavorite(product.id);
 
   const cartItem = items.find(i => i.key === productKey(product.id));
   const qty = cartItem?.quantity ?? 0;
@@ -48,6 +53,13 @@ export default function ProductCard({ product }: ProductCardProps) {
   const handleIncrease = (e: React.MouseEvent) => {
     e.preventDefault();
     update(productKey(product.id), qty + 1);
+  };
+
+  const handleFavorite = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!customer) return;
+    toggle(product.id);
   };
 
   return (
@@ -84,6 +96,15 @@ export default function ProductCard({ product }: ProductCardProps) {
         )}
         {qty > 0 && (
           <span className="absolute top-2 right-2 bg-[var(--brand)] text-white text-[11px] font-bold px-2 py-0.5 rounded-full">{qty}</span>
+        )}
+        {customer && (
+          <button
+            onClick={handleFavorite}
+            className="absolute bottom-2 right-2 z-10 w-7 h-7 rounded-full bg-white/90 flex items-center justify-center shadow-sm hover:scale-110 transition-transform"
+            aria-label={isFav ? "Remove from favorites" : "Add to favorites"}
+          >
+            <Heart className={`w-3.5 h-3.5 transition-colors ${isFav ? "fill-[var(--brand)] text-[var(--brand)]" : "text-stone-400"}`} />
+          </button>
         )}
       </div>
 

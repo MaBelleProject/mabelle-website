@@ -6,6 +6,7 @@ import ProductCard from "@/components/product-card";
 import BundleCard from "@/components/bundle-card";
 import OfferCard from "@/components/offer-card";
 import BestSellersList from "@/components/best-sellers-list";
+import OrderAgainSection from "@/components/order-again-section";
 import Link from "next/link";
 import { Gift } from "lucide-react";
 
@@ -31,6 +32,9 @@ export default async function HomePage() {
           <Carousel slides={slides} sections={sections} />
         </section>
       )}
+
+      {/* Order Again (logged-in customers only, fetches its own data) */}
+      <OrderAgainSection />
 
       {/* Best Sellers */}
       <BestSellersList products={bestSellers} />

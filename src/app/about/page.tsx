@@ -18,17 +18,17 @@ export default async function AboutPage() {
   const whatsappHref = phone ? `https://wa.me/${phone}` : null;
   const instaHref = settings?.instagramPage ?? null;
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
       {/* Title */}
-      <div className="flex flex-col items-center text-center mb-10">
-        <h1 className="text-4xl font-bold text-stone-800">About MaBelle Bites</h1>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-stone-800">About MaBelle Bites</h1>
         {settings?.slogan && (
-          <p className="text-lg text-[var(--brand)] font-medium mt-2 italic">{settings.slogan}</p>
+          <p className="text-[var(--brand)] font-medium mt-1 italic">{settings.slogan}</p>
         )}
       </div>
 
       {/* About content */}
-      <div className="text-stone-700 text-base leading-relaxed mb-10 space-y-5">
+      <div className="text-stone-700 text-base leading-relaxed space-y-6">
         <h2 className="text-2xl font-bold text-stone-800">Little Bites, Big Love!</h2>
 
         <p>
@@ -44,14 +44,16 @@ export default async function AboutPage() {
           From crunchy chips and yummy biscuits to colorful lollipops, gummies, and convenient ready-to-mix meals, we believe that healthier choices should never mean missing out on fun or flavor!
         </p>
 
-        <h2 className="text-2xl font-bold text-stone-800 pt-2">Why MaBelle Bites?</h2>
+        <h2 className="text-2xl font-bold text-stone-800 mt-10">Why MaBelle Bites?</h2>
 
-        <p>🌿 <strong>Better Ingredients</strong> – We look for products made with thoughtfully selected ingredients.</p>
-        <p>🍭 <strong>Happy Little Tummies</strong> – Delicious treats that make snack time exciting.</p>
-        <p>💚 <strong>Chosen with Love</strong> – Every product is selected with the same care we&apos;d give our own children.</p>
-        <p>👩‍👧‍👦 <strong>Made for Families</strong> – Making it easier for busy parents to discover better snack options for their little ones.</p>
+        <div className="flex flex-col gap-3">
+          <p>🌿 <strong>Better Ingredients</strong> – We look for products made with thoughtfully selected ingredients.</p>
+          <p>🍭 <strong>Happy Little Tummies</strong> – Delicious treats that make snack time exciting.</p>
+          <p>💚 <strong>Chosen with Love</strong> – Every product is selected with the same care we&apos;d give our own children.</p>
+          <p>👩‍👧‍👦 <strong>Made for Families</strong> – Making it easier for busy parents to discover better snack options for their little ones.</p>
+        </div>
 
-        <h2 className="text-2xl font-bold text-stone-800 pt-2">Our Little Mission</h2>
+        <h2 className="text-2xl font-bold text-stone-800 mt-10">Our Little Mission</h2>
 
         <p>
           To make better snacking simple, accessible, and full of joy, because we believe every little bite matters.
@@ -59,10 +61,10 @@ export default async function AboutPage() {
         <p>
           <strong>From one parent to another, welcome to the MaBelle Bites family! 💚</strong>
         </p>
-        {/* <p>
-          <em>Small bites. Happy kids. Healthier choices.</em>
-        </p> */}
       </div>
+
+      {/* Divider */}
+      <div className="border-t border-stone-100 my-14" />
 
       {/* Contact / Social */}
       <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -71,7 +73,7 @@ export default async function AboutPage() {
             href={whatsappHref}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-full font-semibold transition"
+            className="flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white px-7 py-3.5 rounded-full font-semibold transition"
           >
             <MessageCircle className="w-5 h-5" />
             Chat on WhatsApp
@@ -82,7 +84,7 @@ export default async function AboutPage() {
             href={instaHref}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:opacity-90 text-white px-6 py-3 rounded-full font-semibold transition"
+            className="flex items-center justify-center gap-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:opacity-90 text-white px-7 py-3.5 rounded-full font-semibold transition"
           >
             <InstagramIcon className="w-5 h-5" />
             Follow on Instagram

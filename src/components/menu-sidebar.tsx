@@ -4,7 +4,7 @@ import { useCustomer } from "@/context/customer-context";
 import { useMenu } from "@/context/menu-context";
 import type { SectionGroup } from "@/lib/api";
 import { sectionHref } from "@/lib/sections";
-import { LogOut, X } from "lucide-react";
+import { Heart, History, LogOut, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -91,6 +91,12 @@ export default function MenuSidebar({ sections }: { sections: SectionGroup[] }) 
 
           {customer ? (
             <>
+              <Link href="/order-history" onClick={close} className="px-4 py-3 rounded-lg text-stone-700 hover:bg-[var(--sage-light)] hover:text-[var(--brand)] text-sm font-medium transition flex items-center gap-2">
+                <History className="w-4 h-4" /> Order History
+              </Link>
+              <Link href="/favorites" onClick={close} className="px-4 py-3 rounded-lg text-stone-700 hover:bg-[var(--sage-light)] hover:text-[var(--brand)] text-sm font-medium transition flex items-center gap-2">
+                <Heart className="w-4 h-4" /> My Favorites
+              </Link>
               <Link href="/change-password" onClick={close} className="px-4 py-3 rounded-lg text-stone-700 hover:bg-[var(--sage-light)] hover:text-[var(--brand)] text-sm font-medium transition">
                 Change Password
               </Link>

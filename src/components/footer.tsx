@@ -1,5 +1,6 @@
-import Link from "next/link";
+import type { Settings } from "@/lib/api";
 import { MessageCircle } from "lucide-react";
+import Link from "next/link";
 
 function InstagramIcon({ className }: { className?: string }) {
   return (
@@ -10,7 +11,6 @@ function InstagramIcon({ className }: { className?: string }) {
     </svg>
   );
 }
-import type { Settings } from "@/lib/api";
 
 interface FooterProps { settings: Settings | null; }
 

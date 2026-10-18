@@ -3,9 +3,10 @@
 import { useCart } from "@/context/cart-context";
 import { useMenu } from "@/context/menu-context";
 import { useCustomer } from "@/context/customer-context";
+import { useFavorites } from "@/context/favorites-context";
 import type { Brand, Settings } from "@/lib/api";
 import { fileUrl } from "@/lib/api";
-import { Menu, Search, ShoppingCart } from "lucide-react";
+import { Heart, Menu, Search, ShoppingCart } from "lucide-react";
 import Link from "next/link";
 
 interface HeaderProps {
@@ -17,6 +18,7 @@ export default function Header({ brands: _brands, settings }: HeaderProps) {
   const { count } = useCart();
   const { toggle } = useMenu();
   const { customer } = useCustomer();
+  const { count: favCount } = useFavorites();
   const logoUrl = settings?.companyLogo ? fileUrl(settings.companyLogo) : undefined;
 
   return (
@@ -52,12 +54,22 @@ export default function Header({ brands: _brands, settings }: HeaderProps) {
             )}
           </Link>
 
-          {/* Right: greeting + cart */}
+          {/* Right: greeting + favorites + cart */}
           <div className="flex items-center gap-2">
             {customer && (
               <span className="hidden sm:block text-sm text-stone-500">
                 Hello, <span className="font-semibold text-stone-800">{customer.name.split(" ")[0]}</span>
               </span>
+            )}
+            {customer && (
+              <Link href="/favorites" className="relative flex items-center justify-center w-10 h-10 rounded-full hover:bg-[var(--sage-light)] transition" aria-label="My favorites">
+                <Heart className={`w-5 h-5 transition-colors ${favCount > 0 ? "fill-[var(--brand)] text-[var(--brand)]" : "text-stone-700"}`} />
+                {favCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center bg-[var(--brand)] text-white text-[10px] font-bold rounded-full px-1">
+                    {favCount > 99 ? "99+" : favCount}
+                  </span>
+                )}
+              </Link>
             )}
             <Link href="/cart" className="relative flex items-center justify-center w-10 h-10 rounded-full hover:bg-[var(--sage-light)] transition">
               <ShoppingCart className="w-5 h-5 text-stone-700" />

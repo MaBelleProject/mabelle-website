@@ -72,6 +72,7 @@ export default function CheckoutPage() {
       paymentMethod: "cash",
       remark: "",
       customerId: customer.id,
+      isNonProfit: customer.isNonProfit ?? false,
     }));
     router.replace("/checkout/review");
     setRedirecting(true);
@@ -134,6 +135,7 @@ export default function CheckoutPage() {
       remark: form.remark,
       password: !customer ? form.password : undefined,
       customerId: customer?.id,
+      isNonProfit: customer?.isNonProfit ?? false,
     }));
     router.push("/checkout/review");
   };
@@ -205,6 +207,12 @@ export default function CheckoutPage() {
               <LogIn className="w-3.5 h-3.5" /> Have an account? Log in for faster checkout
             </button>
           )}
+        </div>
+      )}
+
+      {customer?.isNonProfit && (
+        <div className="bg-green-50 border border-green-100 rounded-xl px-4 py-3 mb-6">
+          <span className="text-green-700 text-sm font-medium">Free delivery applied — non-profit account</span>
         </div>
       )}
 

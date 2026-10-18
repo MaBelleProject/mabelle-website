@@ -141,6 +141,43 @@ export interface Offer {
   priority: number;
 }
 
+export interface CustomerOrderItem {
+  id: number;
+  itemType: 'product' | 'bundle' | 'gift';
+  productId: number | null;
+  bundleId: number | null;
+  giftPackageId: number | null;
+  productCode: string;
+  productName: string;
+  unitPrice: string;
+  quantity: number;
+  totalPrice: string;
+  imageUrl?: string | null;
+}
+
+export interface CustomerOrder {
+  id: number;
+  orderNumber: string;
+  orderDate: string;
+  status: string;
+  paymentMethod: string;
+  address: string | null;
+  phoneNumber: string | null;
+  subtotal: string;
+  promoCodeAmount: string;
+  deliveryCharge: string;
+  deliveryDiscountAmount: string;
+  deliveryDue: string;
+  netTotal: string;
+  totalDue: string;
+  offerDiscountAmount: string;
+  clientDiscountAmount: string;
+  orderDiscountAmount: string;
+  items: CustomerOrderItem[];
+  offers: { offerName: string; discountAmount: string }[];
+  createdAt: string;
+}
+
 /** One cart line as the order API expects it. */
 export type OrderLine =
   | { itemType?: 'product'; productId: number; productCode: string; productName: string; unitPrice: number; quantity: number }
@@ -205,6 +242,13 @@ export const storefrontApi = {
     method: 'POST',
     body: JSON.stringify(data),
   }),
+  customerOrders: (customerId: number) => request<CustomerOrder[]>(`/customers/${customerId}/orders`),
+  customerOrderAgain: (customerId: number) => request<Product[]>(`/customers/${customerId}/order-again`),
+  getFavorites: (customerId: number) => request<number[]>(`/customers/${customerId}/favorites`),
+  addFavorite: (customerId: number, productId: number) =>
+    request<{ success: boolean }>(`/customers/${customerId}/favorites/${productId}`, { method: 'POST' }),
+  removeFavorite: (customerId: number, productId: number) =>
+    request<{ success: boolean }>(`/customers/${customerId}/favorites/${productId}`, { method: 'DELETE' }),
   forgotPassword: (phone: string) =>
     request<{ sent: boolean }>('/forgot-password', { method: 'POST', body: JSON.stringify({ phone }) }),
   resetPassword: (token: string, newPassword: string) =>

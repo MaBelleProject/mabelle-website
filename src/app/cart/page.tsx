@@ -34,10 +34,14 @@ export default function CartPage() {
     );
   }
 
+  const isNonProfit = customer?.isNonProfit === true;
   const shownSubtotal = quote?.subtotal ?? subtotal;
   // Delivery is kept outside the order's net total; the total to pay is netTotal + delivery left after offers.
   const delivery = quote ? quote.deliveryCharge : deliveryCharge;
-  const total = quote?.totalDue ?? subtotal + deliveryCharge;
+  const deliveryDue = isNonProfit ? 0 : (quote ? quote.deliveryDue : deliveryCharge);
+  const total = quote
+    ? isNonProfit ? quote.totalDue - quote.deliveryDue : quote.totalDue
+    : subtotal + (isNonProfit ? 0 : deliveryCharge);
   const itemOffers = quote?.offers.filter(o => o.offerType !== "free_delivery") ?? [];
   const deliveryOffer = quote?.offers.find(o => o.offerType === "free_delivery");
 
@@ -121,11 +125,19 @@ export default function CartPage() {
             </div>
           ))}
           <div className="flex justify-between text-sm text-stone-400 mb-6">
-            <span>Delivery{deliveryOffer && <span className="text-green-600"> · {deliveryOffer.offerName}</span>}</span>
             <span>
-              {quote && quote.deliveryDiscountAmount > 0
-                ? <><span className="line-through mr-1">${delivery.toFixed(2)}</span><span className="text-green-600">{quote.deliveryDue > 0 ? `$${quote.deliveryDue.toFixed(2)}` : "Free"}</span></>
-                : delivery > 0 ? `$${delivery.toFixed(2)}` : "Free"}
+              Delivery
+              {isNonProfit && <span className="text-green-600"> · Non-profit</span>}
+              {!isNonProfit && deliveryOffer && <span className="text-green-600"> · {deliveryOffer.offerName}</span>}
+            </span>
+            <span>
+              {isNonProfit
+                ? delivery > 0
+                  ? <><span className="line-through mr-1">${delivery.toFixed(2)}</span><span className="text-green-600">Free</span></>
+                  : <span className="text-green-600">Free</span>
+                : deliveryDue < delivery
+                  ? <><span className="line-through mr-1">${delivery.toFixed(2)}</span><span className="text-green-600">{deliveryDue > 0 ? `$${deliveryDue.toFixed(2)}` : "Free"}</span></>
+                  : delivery > 0 ? `$${delivery.toFixed(2)}` : "Free"}
             </span>
           </div>
           <div className="flex justify-between font-bold text-stone-800 text-base border-t border-[var(--sage-light)] pt-4 mb-6">
