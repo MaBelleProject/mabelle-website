@@ -11,15 +11,18 @@ export interface CartItem {
   itemType: CartItemType;
   productId?: number;
   bundleId?: number;
-  giftPackageId?: number;
+  /** The gift idea this was based on; null for "Create Your Own". */
+  giftPackageId?: number | null;
   productCode: string;
   productName: string;
   unitPrice: number;
   imageUrl?: string | null;
   quantity: number;
   maxQty: number;
-  // Gifts: the customer's choices, kept exactly as they will be ordered
-  giftSelections?: { giftItemId: number; productId: number; quantity: number }[];
+  // Bundles: product swaps (only items that differ from default)
+  bundleSelections?: { bundleItemId: number; productId: number }[];
+  // Gifts: the products the customer chose (any product, any quantity)
+  giftSelections?: { productId: number; quantity: number }[];
   packagingId?: number | null;
   packagingName?: string | null;
   giftMessage?: string;
@@ -32,7 +35,9 @@ export const bundleKey = (bundleId: number) => `b-${bundleId}`;
 
 /** Where a cart line's own page is. */
 export const cartItemHref = (item: CartItem) =>
-  item.itemType === "bundle" ? `/bundles/${item.bundleId}` : item.itemType === "gift" ? `/gifts/${item.giftPackageId}` : `/product/${item.productId}`;
+  item.itemType === "bundle" ? `/bundles/${item.bundleId}`
+  : item.itemType === "gift" ? (item.giftPackageId ? `/gifts/${item.giftPackageId}` : "/gifts/create")
+  : `/product/${item.productId}`;
 
 type NewItem = Omit<CartItem, "quantity" | "key" | "itemType"> & { key?: string; itemType?: CartItemType };
 
@@ -63,11 +68,17 @@ const migrate = (raw: unknown): CartItem[] =>
 
 /** The cart line in the shape the order / quote API expects. */
 export function toOrderLine(i: CartItem): OrderLine {
-  if (i.itemType === "bundle") return { itemType: "bundle", bundleId: i.bundleId!, quantity: i.quantity };
+  if (i.itemType === "bundle") {
+    return { itemType: "bundle", bundleId: i.bundleId!, quantity: i.quantity, bundleSelections: i.bundleSelections };
+  }
   if (i.itemType === "gift") {
     return {
-      itemType: "gift", giftPackageId: i.giftPackageId!, quantity: i.quantity,
-      giftSelections: i.giftSelections ?? [], packagingId: i.packagingId ?? null, giftMessage: i.giftMessage || undefined,
+      itemType: "gift",
+      giftPackageId: i.giftPackageId ?? null,
+      quantity: i.quantity,
+      giftSelections: i.giftSelections ?? [],
+      packagingId: i.packagingId ?? null,
+      giftMessage: i.giftMessage || undefined,
     };
   }
   return { productId: i.productId!, productCode: i.productCode, productName: i.productName, unitPrice: i.unitPrice, quantity: i.quantity };

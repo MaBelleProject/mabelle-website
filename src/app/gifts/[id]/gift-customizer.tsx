@@ -1,16 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
-import { Check, Minus, Plus, ShoppingCart } from "lucide-react";
-import { fileUrl, type GiftPackage, type GiftPackaging, type GiftProduct } from "@/lib/api";
+import { Check, Minus, Plus, ShoppingCart, Trash2, Search } from "lucide-react";
+import { fileUrl, storefrontApi, type GiftPackage, type GiftPackaging, type GiftProduct, type Product } from "@/lib/api";
 import { useCart } from "@/context/cart-context";
 
-interface Choice { slotId: number; productId: number; quantity: number }
+interface Selection { productId: number; quantity: number }
 
 const MESSAGE_MAX = 500;
 
-/** Short stable id of a customization, so the same gift built twice adds to the same cart line. */
 function hash(s: string) {
   let h = 5381;
   for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0;
@@ -31,134 +30,227 @@ function Stepper({ value, min, max, onChange }: { value: number; min: number; ma
   );
 }
 
-export default function GiftCustomizer({ gift, packagings }: { gift: GiftPackage; packagings: GiftPackaging[] }) {
+function ProductPicker({ allProducts, selected, onAdd }: {
+  allProducts: Product[];
+  selected: Set<number>;
+  onAdd: (productId: number) => void;
+}) {
+  const [q, setQ] = useState("");
+  const needle = q.trim().toLowerCase();
+  const visible = useMemo(
+    () => allProducts.filter((p) => p.status === "active" && (!needle || p.name.toLowerCase().includes(needle) || p.code.toLowerCase().includes(needle))),
+    [allProducts, needle],
+  );
+
+  return (
+    <div className="rounded-xl border border-[var(--sage-light)] bg-white overflow-hidden">
+      <div className="relative border-b border-[var(--sage-light)]">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-stone-400" />
+        <input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Search products to add…"
+          className="w-full pl-9 pr-3 py-2 text-xs focus:outline-none"
+        />
+      </div>
+      <div className="max-h-48 overflow-y-auto">
+        {visible.length === 0 && <p className="px-3 py-3 text-xs text-stone-400 text-center">No products found</p>}
+        {visible.map((p) => {
+          const alreadyIn = selected.has(p.id);
+          const img = fileUrl(p.imageUrl);
+          return (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => { if (!alreadyIn) onAdd(p.id); }}
+              disabled={alreadyIn}
+              className="w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-[var(--sage-light)] transition disabled:opacity-50 text-left"
+            >
+              <div className="w-7 h-7 rounded-md overflow-hidden bg-[var(--sage-light)] shrink-0 flex items-center justify-center">
+                {img ? <img src={img} alt="" className="w-full h-full object-cover" /> : <span>🍬</span>}
+              </div>
+              <span className="flex-1 truncate text-stone-700">{p.name}</span>
+              <span className="text-stone-400 shrink-0">${parseFloat(p.sellingPrice).toFixed(2)}</span>
+              {alreadyIn
+                ? <span className="text-[10px] text-[var(--brand)] font-semibold shrink-0">Added</span>
+                : <Plus className="w-3.5 h-3.5 text-[var(--brand)] shrink-0" />
+              }
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+export default function GiftCustomizer({
+  gift,
+  packagings,
+  allProducts,
+}: {
+  gift: GiftPackage | null;
+  packagings: GiftPackaging[];
+  allProducts: Product[];
+}) {
   const { add } = useCart();
-  const [choices, setChoices] = useState<Choice[]>(gift.items.map(s => ({ slotId: s.id, productId: s.productId, quantity: s.quantity })));
-  // Start on the first box in stock (no packaging when every box is sold out)
-  const [packagingId, setPackagingId] = useState<number | null>(packagings.find(p => p.stock > 0)?.id ?? null);
+
+  const productMap = useMemo(() => {
+    const m = new Map<number, Product | GiftProduct>();
+    for (const p of allProducts) m.set(p.id, p);
+    if (gift) for (const s of gift.items) m.set(s.product.id, s.product);
+    return m;
+  }, [allProducts, gift]);
+
+  const initialSelections: Selection[] = gift
+    ? gift.items.map((s) => ({ productId: s.productId, quantity: s.quantity }))
+    : [];
+
+  const [selections, setSelections] = useState<Selection[]>(initialSelections);
+  const [packagingId, setPackagingId] = useState<number | null>(packagings[0]?.id ?? null);
   const [message, setMessage] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
+  const [showPicker, setShowPicker] = useState(false);
 
-  const productById = new Map<number, GiftProduct>();
-  for (const s of gift.items) for (const p of [s.product, ...s.options]) productById.set(p.id, p);
-  const setChoice = (slotId: number, patch: Partial<Choice>) => {
+  const selectedIds = useMemo(() => new Set(selections.map((s) => s.productId)), [selections]);
+
+  const addProduct = (productId: number) => {
     setAdded(false);
-    setChoices(cs => cs.map(c => (c.slotId === slotId ? { ...c, ...patch } : c)));
+    setSelections((prev) => {
+      if (prev.some((s) => s.productId === productId)) return prev.map((s) => s.productId === productId ? { ...s, quantity: s.quantity + 1 } : s);
+      return [...prev, { productId, quantity: 1 }];
+    });
   };
 
-  const packaging = packagings.find(p => p.id === packagingId) ?? null;
-  const contentsPrice = choices.reduce((s, c) => s + parseFloat(productById.get(c.productId)?.sellingPrice ?? "0") * c.quantity, 0);
+  const removeProduct = (productId: number) => {
+    setAdded(false);
+    setSelections((prev) => prev.filter((s) => s.productId !== productId));
+  };
+
+  const setQty = (productId: number, qty: number) => {
+    setAdded(false);
+    if (qty <= 0) { removeProduct(productId); return; }
+    setSelections((prev) => prev.map((s) => s.productId === productId ? { ...s, quantity: qty } : s));
+  };
+
+  const packaging = packagings.find((p) => p.id === packagingId) ?? null;
+  const contentsPrice = selections.reduce((s, c) => {
+    const p = productMap.get(c.productId);
+    return s + (p ? parseFloat((p as Product).sellingPrice) * c.quantity : 0);
+  }, 0);
   const unitPrice = contentsPrice + (packaging ? parseFloat(packaging.price) : 0);
 
-  // How many of this gift the stock allows (the same product may fill several slots)
   const perGift = new Map<number, number>();
-  for (const c of choices) if (c.quantity > 0) perGift.set(c.productId, (perGift.get(c.productId) ?? 0) + c.quantity);
-  // …and by the chosen gift box: never more gifts than boxes left
+  for (const c of selections) if (c.quantity > 0) perGift.set(c.productId, (perGift.get(c.productId) ?? 0) + c.quantity);
   const maxGifts = perGift.size
-    ? Math.min(
-      ...[...perGift].map(([pid, q]) => Math.floor((productById.get(pid)?.stock ?? 0) / q)),
-      packaging ? Math.max(0, packaging.stock) : Infinity,
-    )
+    ? Math.min(...[...perGift].map(([pid, q]) => {
+        const p = productMap.get(pid);
+        return Math.floor(((p as Product)?.quantity ?? (p as GiftProduct)?.stock ?? 0) / q);
+      }))
     : 0;
-  const boxOut = !!packaging && packaging.stock <= 0;
-  const empty = perGift.size === 0;
+
+  const empty = selections.length === 0;
 
   const addToCart = () => {
     if (empty || maxGifts < 1) return;
-    const giftSelections = choices.map(c => ({ giftItemId: c.slotId, productId: c.productId, quantity: c.quantity }));
+    const giftSelections = selections.map((s) => ({ productId: s.productId, quantity: s.quantity }));
     const giftMessage = message.trim();
+    const contentsLabel = selections
+      .filter((s) => s.quantity > 0)
+      .map((s) => `${s.quantity} × ${productMap.get(s.productId)?.name ?? ""}`)
+      .join(", ");
     add({
-      key: `g-${gift.id}-${hash(JSON.stringify([giftSelections, packagingId, giftMessage]))}`,
+      key: `g-${gift?.id ?? "custom"}-${hash(JSON.stringify([giftSelections, packagingId, giftMessage]))}`,
       itemType: "gift",
-      giftPackageId: gift.id,
-      productCode: gift.code,
-      productName: gift.name,
+      giftPackageId: gift?.id ?? null,
+      productCode: gift?.code ?? "GIFT",
+      productName: gift?.name ?? "Custom Gift",
       unitPrice,
-      imageUrl: gift.imageUrl,
+      imageUrl: gift?.imageUrl ?? null,
       maxQty: maxGifts,
       giftSelections,
       packagingId,
       packagingName: packaging?.name ?? null,
       giftMessage,
-      contents: choices.filter(c => c.quantity > 0).map(c => `${c.quantity} × ${productById.get(c.productId)?.name ?? ""}`),
+      contents: [contentsLabel + (packaging ? ` + ${packaging.name}` : "")],
     }, Math.min(quantity, maxGifts));
     setAdded(true);
   };
 
   return (
     <div className="flex flex-col gap-5">
-      {/* Contents */}
+      {/* Selected products */}
       <section className="bg-[var(--sage-light)] rounded-2xl p-4">
-        <p className="text-xs font-semibold text-stone-500 uppercase tracking-wide mb-3">What&apos;s inside</p>
-        <ul className="flex flex-col gap-3">
-          {gift.items.map(slot => {
-            const choice = choices.find(c => c.slotId === slot.id)!;
-            const options = [slot.product, ...slot.options].filter(p => p.status === "active" || p.id === slot.productId);
-            const chosen = productById.get(choice.productId)!;
-            const img = fileUrl(chosen.imageUrl);
-            const max = Math.min(slot.maxQuantity ?? Infinity, chosen.stock);
-            return (
-              <li key={slot.id} className="flex flex-col gap-2">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg overflow-hidden bg-white shrink-0">
-                    {img ? <img src={img} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center">🍬</div>}
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-xs font-semibold text-stone-500 uppercase tracking-wide">What&apos;s inside</p>
+          <button
+            type="button"
+            onClick={() => setShowPicker((v) => !v)}
+            className="flex items-center gap-1 text-xs font-medium text-[var(--brand)] hover:underline"
+          >
+            <Plus className="w-3.5 h-3.5" /> Add product
+          </button>
+        </div>
+
+        {showPicker && (
+          <div className="mb-3">
+            <ProductPicker allProducts={allProducts} selected={selectedIds} onAdd={(id) => { addProduct(id); setShowPicker(false); }} />
+          </div>
+        )}
+
+        {selections.length === 0 ? (
+          <p className="text-sm text-stone-400 text-center py-4">No products yet — add some treats!</p>
+        ) : (
+          <ul className="flex flex-col gap-2">
+            {selections.map((sel) => {
+              const p = productMap.get(sel.productId);
+              if (!p) return null;
+              const img = fileUrl((p as Product).imageUrl ?? (p as GiftProduct).imageUrl);
+              const stock = (p as Product).quantity ?? (p as GiftProduct).stock ?? 0;
+              const maxQty = Math.max(sel.quantity, stock);
+              return (
+                <li key={sel.productId} className="flex items-center gap-3 bg-white rounded-xl px-3 py-2">
+                  <div className="w-9 h-9 rounded-lg overflow-hidden bg-[var(--sage-light)] shrink-0">
+                    {img ? <img src={img} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-lg">🍬</div>}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-stone-800 font-medium truncate">{chosen.name}</p>
-                    <p className="text-xs text-stone-400">${parseFloat(chosen.sellingPrice).toFixed(2)} each</p>
+                    <p className="text-sm text-stone-800 font-medium truncate">{p.name}</p>
+                    <p className="text-xs text-stone-400">${parseFloat((p as Product).sellingPrice).toFixed(2)} each</p>
                   </div>
-                  {slot.isCustomizable ? (
-                    <Stepper value={choice.quantity} min={0} max={Number.isFinite(max) ? max : 99} onChange={v => setChoice(slot.id, { quantity: v })} />
-                  ) : (
-                    <span className="text-sm font-semibold text-stone-700">× {choice.quantity}</span>
-                  )}
-                </div>
-                {slot.isCustomizable && options.length > 1 && (
-                  <div className="flex flex-wrap gap-1.5 pl-13">
-                    {options.map(p => (
-                      <button
-                        key={p.id}
-                        type="button"
-                        onClick={() => setChoice(slot.id, { productId: p.id, quantity: Math.min(choice.quantity || 1, slot.maxQuantity ?? Infinity) })}
-                        className={`px-2.5 py-1 rounded-full text-xs border transition ${p.id === choice.productId ? "bg-[var(--brand)] text-white border-[var(--brand)]" : "bg-white text-stone-600 border-stone-200 hover:border-[var(--brand)]"}`}
-                      >
-                        {p.name}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </li>
-            );
-          })}
-        </ul>
+                  <Stepper value={sel.quantity} min={1} max={maxQty || 99} onChange={(v) => setQty(sel.productId, v)} />
+                  <button type="button" onClick={() => removeProduct(sel.productId)} className="p-1 text-stone-300 hover:text-red-400 transition" aria-label="Remove">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </section>
 
-      {/* Packaging */}
+      {/* Gift box selection */}
       {packagings.length > 0 && (
         <section>
-          <p className="text-xs font-semibold text-stone-500 uppercase tracking-wide mb-2">Choose the packaging</p>
+          <p className="text-xs font-semibold text-stone-500 uppercase tracking-wide mb-2">Choose your gift box</p>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-            {[null, ...packagings].map(p => {
+            {[null, ...packagings].map((p) => {
               const selected = (p?.id ?? null) === packagingId;
-              const soldOut = !!p && p.stock <= 0;
+              const outOfStock = !!p && p.stock <= 0;
               const img = fileUrl(p?.imageUrl);
               return (
                 <button
                   key={p?.id ?? "none"}
                   type="button"
-                  disabled={soldOut}
-                  aria-label={soldOut ? `${p.name} (out of stock)` : undefined}
                   onClick={() => { setPackagingId(p?.id ?? null); setAdded(false); }}
-                  className={`relative flex flex-col items-center gap-1 rounded-xl border p-2 text-center transition disabled:cursor-not-allowed disabled:opacity-50 ${selected ? "border-[var(--brand)] ring-1 ring-[var(--brand)] bg-[var(--cream)]" : "border-stone-200 bg-white hover:border-[var(--brand-light)]"}`}
+                  className={`relative flex flex-col items-center gap-1 rounded-xl border p-2 text-center transition ${selected ? "border-[var(--brand)] ring-1 ring-[var(--brand)] bg-[var(--cream)]" : "border-stone-200 bg-white hover:border-[var(--brand-light)]"}`}
                 >
                   {selected && <Check className="absolute top-1.5 right-1.5 w-3.5 h-3.5 text-[var(--brand)]" />}
                   <div className="w-14 h-14 rounded-lg overflow-hidden bg-[var(--cream)] flex items-center justify-center">
                     {img ? <img src={img} alt="" className="w-full h-full object-cover" /> : <span className="text-xl">{p ? "🎀" : "—"}</span>}
                   </div>
-                  <span className="text-xs font-medium text-stone-700 line-clamp-1">{p?.name ?? "No packaging"}</span>
-                  {soldOut ? (
-                    <span className="text-[11px] font-semibold text-stone-500">Out of Stock</span>
+                  <span className="text-xs font-medium text-stone-700 line-clamp-1">{p?.name ?? "No box"}</span>
+                  {outOfStock ? (
+                    <span className="text-[10px] text-amber-600 font-medium">Low stock</span>
                   ) : (
                     <span className="text-[11px] text-stone-400">{p ? `+$${parseFloat(p.price).toFixed(2)}` : "free"}</span>
                   )}
@@ -176,7 +268,7 @@ export default function GiftCustomizer({ gift, packagings }: { gift: GiftPackage
           id="gift-message"
           value={message}
           maxLength={MESSAGE_MAX}
-          onChange={e => { setMessage(e.target.value); setAdded(false); }}
+          onChange={(e) => { setMessage(e.target.value); setAdded(false); }}
           rows={3}
           placeholder="Write a personal note for the gift card…"
           className="mt-2 w-full px-4 py-2.5 rounded-xl border border-stone-200 text-sm focus:outline-none focus:border-[var(--brand)] focus:ring-1 focus:ring-[var(--brand)] transition resize-none"
@@ -192,13 +284,8 @@ export default function GiftCustomizer({ gift, packagings }: { gift: GiftPackage
         </div>
         <Stepper value={quantity} min={1} max={Math.max(1, maxGifts)} onChange={setQuantity} />
       </div>
-      {empty ? (
-        <p className="text-sm text-amber-600">Add at least one treat to your gift.</p>
-      ) : boxOut ? (
-        <p className="text-sm font-medium text-stone-500 bg-[var(--sage-light)] rounded-full px-3 py-1 w-fit">This gift box is out of stock — choose another packaging</p>
-      ) : maxGifts < 1 ? (
-        <p className="text-sm font-medium text-stone-500 bg-[var(--sage-light)] rounded-full px-3 py-1 w-fit">Not enough stock for this selection</p>
-      ) : null}
+      {empty && <p className="text-sm text-amber-600">Add at least one product to your gift.</p>}
+      {!empty && maxGifts < 1 && <p className="text-sm font-medium text-stone-500 bg-[var(--sage-light)] rounded-full px-3 py-1 w-fit">Not enough stock for this selection</p>}
       <div className="flex items-center gap-3">
         <button
           type="button"

@@ -9,9 +9,10 @@ interface PageProps { params: Promise<{ id: string }> }
 
 export default async function GiftPage({ params }: PageProps) {
   const { id } = await params;
-  const [gift, packagings] = await Promise.all([
+  const [gift, packagings, allProducts] = await Promise.all([
     storefrontApi.gift(parseInt(id)).catch(() => null),
     storefrontApi.giftPackaging().catch(() => []),
+    storefrontApi.products().catch(() => []),
   ]);
   if (!gift) notFound();
   const imgUrl = fileUrl(gift.imageUrl);
@@ -40,7 +41,7 @@ export default async function GiftPage({ params }: PageProps) {
         <div className="flex flex-col gap-4">
           <h1 className="text-2xl sm:text-3xl font-bold text-stone-800">{gift.name}</h1>
           {gift.description && <p className="text-stone-600 text-sm leading-relaxed">{gift.description}</p>}
-          <GiftCustomizer gift={gift} packagings={packagings} />
+          <GiftCustomizer gift={gift} packagings={packagings} allProducts={allProducts} />
         </div>
       </div>
     </div>

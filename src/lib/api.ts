@@ -87,12 +87,18 @@ export interface PromoCode {
   condition?: string | null; categoryId?: number | null; sectionId?: number | null; subsectionId?: number | null;
 }
 
+export interface BundleReplacementProduct {
+  productId: number; code: string; name: string; sellingPrice: string; imageUrl?: string | null; status: string; stock: number;
+}
+
 export interface BundleItem {
   id: number; productId: number; quantity: number;
   productCode: string; productName: string; sellingPrice: string; imageUrl?: string | null; stock: number;
+  /** Products the customer may substitute for this item. */
+  replacements: BundleReplacementProduct[];
 }
 
-/** A fixed set of products sold together at one price. */
+/** A fixed set of products sold together at one price; customers can swap items with allowed replacements. */
 export interface Bundle {
   id: number; code: string; name: string; description?: string | null; imageUrl?: string | null;
   price: string; items: BundleItem[];
@@ -108,12 +114,10 @@ export interface GiftProduct {
 
 export interface GiftSlot {
   id: number; productId: number; quantity: number;
-  isCustomizable: boolean; maxQuantity: number | null;
   product: GiftProduct;
-  /** Products the customer may swap this slot to. */
-  options: GiftProduct[];
 }
 
+/** A predefined gift idea; customers use it as a starting point and freely add/remove/swap products. */
 export interface GiftPackage {
   id: number; code: string; name: string; description?: string | null; imageUrl?: string | null;
   items: GiftSlot[];
@@ -123,7 +127,7 @@ export interface GiftPackage {
 
 export interface GiftPackaging {
   id: number; name: string; imageUrl?: string | null; price: string;
-  /** Boxes in stock; 0 or less = out of stock (can't be ordered). */
+  /** Boxes in stock; may be ≤ 0 (out of stock) but customers can still select and order them. */
   stock: number;
 }
 
@@ -181,10 +185,14 @@ export interface CustomerOrder {
 /** One cart line as the order API expects it. */
 export type OrderLine =
   | { itemType?: 'product'; productId: number; productCode: string; productName: string; unitPrice: number; quantity: number }
-  | { itemType: 'bundle'; bundleId: number; quantity: number }
+  | { itemType: 'bundle'; bundleId: number; quantity: number; bundleSelections?: { bundleItemId: number; productId: number }[] }
   | {
-    itemType: 'gift'; giftPackageId: number; quantity: number;
-    giftSelections: { giftItemId: number; productId: number; quantity: number }[];
+    itemType: 'gift';
+    /** The gift idea this was based on (null / omitted for "Create Your Own"). */
+    giftPackageId?: number | null;
+    quantity: number;
+    /** The products the customer chose — any product at any quantity. */
+    giftSelections: { productId: number; quantity: number }[];
     packagingId: number | null; giftMessage?: string;
   };
 
