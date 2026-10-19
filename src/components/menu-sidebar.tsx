@@ -85,6 +85,9 @@ export default function MenuSidebar({ sections }: { sections: SectionGroup[] }) 
             Offers
           </Link>
 
+          <Link href="/reviews" onClick={close} className="px-4 py-3 rounded-lg text-stone-700 hover:bg-[var(--sage-light)] hover:text-[var(--brand)] text-sm font-medium transition">
+            Customer Reviews
+          </Link>
           <Link href="/about" onClick={close} className="px-4 py-3 rounded-lg text-stone-700 hover:bg-[var(--sage-light)] hover:text-[var(--brand)] text-sm font-medium transition">
             About Us
           </Link>

@@ -12,6 +12,7 @@ import Header from "@/components/header";
 import MenuSidebar from "@/components/menu-sidebar";
 import Footer from "@/components/footer";
 import WhatsAppButton from "@/components/whatsapp-button";
+import FeedbackPopup from "@/components/feedback-popup";
 
 const geist = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 
@@ -51,6 +52,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 <main className="flex-1">{children}</main>
                 <Footer settings={settings} />
                 <WhatsAppButton phoneNumber={settings?.phoneNumber} />
+                <FeedbackPopup />
               </div>
             </div>
           </MenuProvider>

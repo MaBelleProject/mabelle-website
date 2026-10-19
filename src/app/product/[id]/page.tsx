@@ -2,7 +2,7 @@ import { fileUrl, storefrontApi } from "@/lib/api";
 import { trimZeros } from "@/lib/format";
 import { describeOffer, offerBadge, offersForProduct } from "@/lib/offers";
 import { sectionHref } from "@/lib/sections";
-import { AlertTriangle, Check } from "lucide-react";
+import { AlertTriangle, Check, Star } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import AddToCartButton from "./add-to-cart-button";
@@ -13,10 +13,11 @@ interface PageProps { params: Promise<{ id: string }> }
 
 export default async function ProductPage({ params }: PageProps) {
   const { id } = await params;
-  const [product, allOffers, settings] = await Promise.all([
+  const [product, allOffers, settings, ratingInfo] = await Promise.all([
     storefrontApi.product(parseInt(id)).catch(() => null),
     storefrontApi.offers().catch(() => []),
     storefrontApi.settings().catch(() => null),
+    storefrontApi.productReviews(parseInt(id)).catch(() => null),
   ]);
   if (!product) notFound();
   // Every running offer this product counts towards, store-wide ones included.
@@ -77,6 +78,17 @@ export default async function ProductPage({ params }: PageProps) {
               <span className="text-xs font-medium text-[var(--brand)] uppercase tracking-wide">{product.sectionName}</span>
             ))}
             <h1 className="text-2xl sm:text-3xl font-bold text-stone-800 mt-1">{product.name}</h1>
+            {ratingInfo && ratingInfo.totalRatings > 0 && (
+              <div className="flex items-center gap-2 mt-2">
+                <div className="flex gap-0.5">
+                  {[1, 2, 3, 4, 5].map(n => (
+                    <Star key={n} className={`w-4 h-4 ${n <= Math.round(Number(ratingInfo.averageRating)) ? "fill-amber-400 text-amber-400" : "fill-stone-200 text-stone-200"}`} />
+                  ))}
+                </div>
+                <span className="text-sm font-semibold text-stone-700">{Number(ratingInfo.averageRating).toFixed(1)}</span>
+                <span className="text-sm text-stone-400">({ratingInfo.totalRatings} rating{ratingInfo.totalRatings !== 1 ? "s" : ""})</span>
+              </div>
+            )}
             {product.categoryName && (
               <Link href={`/brand/${product.categoryId}`} className="text-sm text-stone-400 hover:text-[var(--brand)] transition">
                 Brand: {product.categoryName}
@@ -190,6 +202,36 @@ export default async function ProductPage({ params }: PageProps) {
       {/* Specifications & Ingredients */}
       {(product.specifications.length > 0 || product.ingredients.length > 0) && (
         <ProductInfoTabs specifications={product.specifications} ingredients={product.ingredients} />
+      )}
+
+      {/* Customer Reviews */}
+      {ratingInfo && ratingInfo.reviews.length > 0 && (
+        <section className="mt-10">
+          <h2 className="text-xl font-bold text-stone-800 mb-4">Customer Reviews</h2>
+          <div className="flex flex-col gap-3">
+            {ratingInfo.reviews.map(review => (
+              <div key={review.id} className="bg-white rounded-2xl border border-[var(--sage-light)] p-4 flex flex-col gap-2">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-[var(--brand-light)] flex items-center justify-center shrink-0">
+                      <span className="text-[var(--brand)] font-bold text-xs">{review.displayName.charAt(0).toUpperCase()}</span>
+                    </div>
+                    <span className="font-semibold text-stone-800 text-sm">{review.displayName}</span>
+                  </div>
+                  <div className="flex gap-0.5">
+                    {[1, 2, 3, 4, 5].map(n => (
+                      <Star key={n} className={`w-4 h-4 ${n <= review.rating ? "fill-amber-400 text-amber-400" : "fill-stone-200 text-stone-200"}`} />
+                    ))}
+                  </div>
+                </div>
+                {review.comment && <p className="text-sm text-stone-600 leading-relaxed">{review.comment}</p>}
+                <p className="text-xs text-stone-400">
+                  {new Date(review.submittedAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
       )}
     </div>
   );

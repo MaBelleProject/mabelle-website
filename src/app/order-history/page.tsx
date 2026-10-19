@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDown, ChevronUp, Package, RotateCcw } from "lucide-react";
+import { ChevronDown, ChevronUp, Loader2, MessageCircleHeart, Package, RotateCcw } from "lucide-react";
 import { useCustomer } from "@/context/customer-context";
 import { useCart } from "@/context/cart-context";
-import { storefrontApi, type CustomerOrder, fileUrl } from "@/lib/api";
+import { storefrontApi, type CustomerOrder, type OrderFeedback, fileUrl } from "@/lib/api";
 import { trimZeros } from "@/lib/format";
+import FeedbackFormModal from "@/components/feedback-form-modal";
+import FeedbackViewModal from "@/components/feedback-view-modal";
 
 const STATUS_COLORS: Record<string, string> = {
   pending: "bg-amber-100 text-amber-700",
@@ -28,12 +30,22 @@ export default function OrderHistoryPage() {
   const [reorderingId, setReorderingId] = useState<number | null>(null);
   const [reorderMessage, setReorderMessage] = useState<{ orderId: number; text: string } | null>(null);
 
-  useEffect(() => {
-    if (!customer) { router.replace("/login"); return; }
+  // Feedback state
+  const [feedbackFormOrder, setFeedbackFormOrder] = useState<{ orderId: number; orderNumber: string } | null>(null);
+  const [viewFeedback, setViewFeedback] = useState<{ orderNumber: string; feedback: OrderFeedback } | null>(null);
+  const [loadingFeedbackId, setLoadingFeedbackId] = useState<number | null>(null);
+
+  const load = () => {
+    if (!customer) return;
     storefrontApi.customerOrders(customer.id)
       .then(setOrders)
       .catch(() => setOrders([]))
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    if (!customer) { router.replace("/login"); return; }
+    load();
   }, [customer?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleReorder = async (order: CustomerOrder) => {
@@ -69,6 +81,19 @@ export default function OrderHistoryPage() {
       setReorderMessage({ orderId: order.id, text: `${added} item${added !== 1 ? "s" : ""} added to cart.` });
     } else {
       setReorderMessage({ orderId: order.id, text: "All items from this order are currently unavailable." });
+    }
+  };
+
+  const handleViewFeedback = async (order: CustomerOrder) => {
+    if (!customer) return;
+    setLoadingFeedbackId(order.id);
+    try {
+      const feedback = await storefrontApi.getOrderFeedback(customer.id, order.id);
+      if (feedback) setViewFeedback({ orderNumber: order.orderNumber, feedback });
+    } catch {
+      // ignore
+    } finally {
+      setLoadingFeedbackId(null);
     }
   };
 
@@ -205,22 +230,74 @@ export default function OrderHistoryPage() {
                     <p className="text-sm text-[var(--sage)] font-medium">{reorderMessage.text}</p>
                   )}
 
-                  {/* Reorder button */}
-                  {order.items.some(i => i.itemType === "product") && (
-                    <button
-                      onClick={() => handleReorder(order)}
-                      disabled={reorderingId === order.id}
-                      className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-[var(--brand)] hover:bg-[var(--brand-dark)] text-white text-sm font-semibold transition disabled:opacity-60"
-                    >
-                      <RotateCcw className={`w-4 h-4 ${reorderingId === order.id ? "animate-spin" : ""}`} />
-                      {reorderingId === order.id ? "Adding to cart…" : "Reorder"}
-                    </button>
-                  )}
+                  {/* Action buttons */}
+                  <div className="flex flex-col gap-2">
+                    {/* Feedback button for delivered orders */}
+                    {order.status === "delivered" && (
+                      order.feedbackSubmitted ? (
+                        <button
+                          onClick={() => handleViewFeedback(order)}
+                          disabled={loadingFeedbackId === order.id}
+                          className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-[var(--sage-light)] text-[var(--sage)] text-sm font-semibold hover:bg-[var(--sage-light)] transition disabled:opacity-60"
+                        >
+                          {loadingFeedbackId === order.id
+                            ? <Loader2 className="w-4 h-4 animate-spin" />
+                            : <MessageCircleHeart className="w-4 h-4" />}
+                          View Feedback
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => setFeedbackFormOrder({ orderId: order.id, orderNumber: order.orderNumber })}
+                          className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-[var(--brand-light)] hover:bg-[oklch(0.88_0.06_22)] text-[var(--brand)] text-sm font-semibold transition"
+                        >
+                          <MessageCircleHeart className="w-4 h-4" />
+                          Give Feedback
+                        </button>
+                      )
+                    )}
+
+                    {/* Reorder button */}
+                    {order.items.some(i => i.itemType === "product") && (
+                      <button
+                        onClick={() => handleReorder(order)}
+                        disabled={reorderingId === order.id}
+                        className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-[var(--brand)] hover:bg-[var(--brand-dark)] text-white text-sm font-semibold transition disabled:opacity-60"
+                      >
+                        <RotateCcw className={`w-4 h-4 ${reorderingId === order.id ? "animate-spin" : ""}`} />
+                        {reorderingId === order.id ? "Adding to cart…" : "Reorder"}
+                      </button>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
           ))}
         </div>
+      )}
+
+      {/* Feedback form modal */}
+      {feedbackFormOrder && customer && (
+        <FeedbackFormModal
+          customerId={customer.id}
+          orderId={feedbackFormOrder.orderId}
+          orderNumber={feedbackFormOrder.orderNumber}
+          onClose={() => setFeedbackFormOrder(null)}
+          onSubmitted={() => {
+            setFeedbackFormOrder(null);
+            setOrders(prev => prev.map(o =>
+              o.id === feedbackFormOrder.orderId ? { ...o, feedbackSubmitted: true } : o
+            ));
+          }}
+        />
+      )}
+
+      {/* View feedback modal */}
+      {viewFeedback && (
+        <FeedbackViewModal
+          orderNumber={viewFeedback.orderNumber}
+          feedback={viewFeedback.feedback}
+          onClose={() => setViewFeedback(null)}
+        />
       )}
     </div>
   );

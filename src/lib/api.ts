@@ -177,9 +177,47 @@ export interface CustomerOrder {
   offerDiscountAmount: string;
   clientDiscountAmount: string;
   orderDiscountAmount: string;
+  feedbackSubmitted: boolean;
   items: CustomerOrderItem[];
   offers: { offerName: string; discountAmount: string }[];
   createdAt: string;
+}
+
+export interface FeedbackProduct {
+  productId: number;
+  productName: string;
+  productImageUrl: string | null;
+}
+
+export interface ProductFeedbackRating {
+  productId: number;
+  productName: string;
+  productImageUrl?: string | null;
+  rating: number;
+  comment?: string | null;
+}
+
+export interface OrderFeedback {
+  id: number;
+  orderId: number;
+  overallRating: number;
+  writtenFeedback: string | null;
+  submittedAt: string;
+  productRatings: (ProductFeedbackRating & { id: number; feedbackId: number })[];
+}
+
+export interface PublicReview {
+  id: number;
+  overallRating: number;
+  writtenFeedback: string | null;
+  submittedAt: string;
+  displayName: string;
+}
+
+export interface ProductRatingInfo {
+  averageRating: number | null;
+  totalRatings: number;
+  reviews: { id: number; rating: number; comment: string | null; submittedAt: string; displayName: string }[];
 }
 
 /** One cart line as the order API expects it. */
@@ -265,4 +303,18 @@ export const storefrontApi = {
     request<{ sent: boolean }>('/send-change-password-code', { method: 'POST', body: JSON.stringify({ phone, currentPassword }) }),
   changePassword: (phone: string, currentPassword: string, newPassword: string, code: string) =>
     request<{ success: boolean }>('/change-password', { method: 'POST', body: JSON.stringify({ phone, currentPassword, newPassword, code }) }),
+
+  // ─── Feedback ─────────────────────────────────────────────────────────────
+  feedbackPopupStatus: (customerId: number) =>
+    request<{ show: boolean; orderId?: number; orderNumber?: string }>(`/customers/${customerId}/feedback-popup`),
+  dismissFeedbackPopup: (customerId: number, orderId: number) =>
+    request<{ success: boolean }>(`/customers/${customerId}/orders/${orderId}/dismiss-feedback`, { method: 'POST' }),
+  getOrderFeedback: (customerId: number, orderId: number) =>
+    request<OrderFeedback | null>(`/customers/${customerId}/orders/${orderId}/feedback`),
+  getOrderFeedbackProducts: (customerId: number, orderId: number) =>
+    request<FeedbackProduct[]>(`/customers/${customerId}/orders/${orderId}/feedback-products`),
+  submitOrderFeedback: (customerId: number, orderId: number, data: { overallRating: number; writtenFeedback?: string; productRatings: ProductFeedbackRating[] }) =>
+    request<OrderFeedback>(`/customers/${customerId}/orders/${orderId}/feedback`, { method: 'POST', body: JSON.stringify(data) }),
+  publicReviews: () => request<PublicReview[]>('/reviews'),
+  productReviews: (productId: number) => request<ProductRatingInfo>(`/products/${productId}/reviews`),
 };
