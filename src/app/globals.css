@@ -16,8 +16,8 @@
 
 :root {
   /* Coral/salmon — "elle" letters in the logo */
-  --brand: oklch(0.68 0.13 22);
-  --brand-dark: oklch(0.56 0.15 22);
+  --brand: oklch(0.68 0.18 22);
+  --brand-dark: oklch(0.56 0.20 22);
   --brand-light: oklch(0.93 0.04 22);
   /* Olive sage — "Ma" / "Bites" letters and leaves in the logo */
   --sage: oklch(0.54 0.10 138);
@@ -73,4 +73,5 @@
 
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
+  width: 0;
 }

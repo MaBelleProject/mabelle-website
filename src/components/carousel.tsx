@@ -180,7 +180,7 @@ export default function Carousel({ slides, sections = [] }: CarouselProps) {
                 className="w-full h-full object-cover"
                 draggable={false}
               />
-              {(slide.title || slide.description || slide.buttonText) && (
+              {/* {(slide.title || slide.description || slide.buttonText) && (
                 <div className="absolute inset-0 bg-gradient-to-r from-black/50 to-transparent flex items-center">
                   <div className="px-8 sm:px-14 max-w-xl">
                     {slide.title && (
@@ -196,7 +196,7 @@ export default function Carousel({ slides, sections = [] }: CarouselProps) {
                     )}
                   </div>
                 </div>
-              )}
+              )} */}
             </div>
           );
         })}

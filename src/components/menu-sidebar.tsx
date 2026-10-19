@@ -4,7 +4,7 @@ import { useCustomer } from "@/context/customer-context";
 import { useMenu } from "@/context/menu-context";
 import type { SectionGroup } from "@/lib/api";
 import { sectionHref } from "@/lib/sections";
-import { Heart, History, LogOut, X } from "lucide-react";
+import { LogOut, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -33,12 +33,12 @@ export default function MenuSidebar({ sections }: { sections: SectionGroup[] }) 
     <>
       <div
         aria-hidden="true"
-        className="shrink-0"
-        style={{ width: open ? "18rem" : "0", transition: `width ${TRANSITION}` }}
+        className=" shrink-0"
+        style={{ width: open ? "16rem" : "0", transition: `width ${TRANSITION}` }}
       />
 
       <aside
-        className="fixed top-0 left-0 h-full w-72 bg-white shadow-xl z-50 flex flex-col will-change-transform overflow-hidden"
+        className="fixed top-0 left-0 h-full w-64 bg-white shadow-xl z-50 flex flex-col will-change-transform overflow-hidden"
         style={{
           transform: open ? "translateX(0)" : "translateX(-100%)",
           transition: `transform ${TRANSITION}`,
@@ -48,7 +48,7 @@ export default function MenuSidebar({ sections }: { sections: SectionGroup[] }) 
         aria-label="Navigation menu"
       >
         {/* Close button row */}
-        <div className="flex items-center justify-end px-3 h-16 shrink-0">
+        <div className="flex items-center justify-end pl-3 h-10 shrink-0 pt-8">
           <button
             onClick={close}
             className="flex items-center justify-center w-9 h-9 rounded-full hover:bg-[var(--sage-light)] transition"
@@ -59,7 +59,7 @@ export default function MenuSidebar({ sections }: { sections: SectionGroup[] }) 
         </div>
 
         {/* Nav links */}
-        <nav className="flex-1 overflow-y-auto px-3 pb-4 flex flex-col gap-0.5">
+        <nav className="flex-1 overflow-y-auto scrollbar-hide px-3 pb-4 flex flex-col gap-0.5">
           <Link href="/" onClick={close} className="px-4 py-3 rounded-lg text-stone-700 hover:bg-[var(--sage-light)] hover:text-[var(--brand)] text-sm font-medium transition">
             Home
           </Link>
@@ -92,10 +92,10 @@ export default function MenuSidebar({ sections }: { sections: SectionGroup[] }) 
           {customer ? (
             <>
               <Link href="/order-history" onClick={close} className="px-4 py-3 rounded-lg text-stone-700 hover:bg-[var(--sage-light)] hover:text-[var(--brand)] text-sm font-medium transition flex items-center gap-2">
-                <History className="w-4 h-4" /> Order History
+                Order History
               </Link>
               <Link href="/favorites" onClick={close} className="px-4 py-3 rounded-lg text-stone-700 hover:bg-[var(--sage-light)] hover:text-[var(--brand)] text-sm font-medium transition flex items-center gap-2">
-                <Heart className="w-4 h-4" /> My Favorites
+                My Favorites
               </Link>
               <Link href="/change-password" onClick={close} className="px-4 py-3 rounded-lg text-stone-700 hover:bg-[var(--sage-light)] hover:text-[var(--brand)] text-sm font-medium transition">
                 Change Password
