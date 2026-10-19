@@ -49,14 +49,12 @@ async function GiftContent({ params }: PageProps) {
       </nav>
 
       <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
-        <div className="flex flex-col gap-4">
-          <div className="relative aspect-square rounded-2xl overflow-hidden bg-[var(--sage-light)]">
-            {imgUrl ? (
-              <img src={imgUrl} alt={gift.name} className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-stone-300"><Gift className="w-24 h-24" /></div>
-            )}
-          </div>
+        <div className="relative aspect-square rounded-2xl overflow-hidden bg-[var(--sage-light)] self-start">
+          {imgUrl ? (
+            <img src={imgUrl} alt={gift.name} className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-stone-300"><Gift className="w-24 h-24" /></div>
+          )}
         </div>
         <div className="flex flex-col gap-4">
           <h1 className="text-2xl sm:text-3xl font-bold text-stone-800">{gift.name}</h1>

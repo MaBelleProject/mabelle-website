@@ -210,18 +210,22 @@ export default function GiftCustomizer({
               const stock = (p as Product).quantity ?? (p as GiftProduct).stock ?? 0;
               const maxQty = Math.max(sel.quantity, stock);
               return (
-                <li key={sel.productId} className="flex items-center gap-3 bg-white rounded-xl px-3 py-2">
-                  <div className="w-9 h-9 rounded-lg overflow-hidden bg-[var(--sage-light)] shrink-0">
+                <li key={sel.productId} className="flex items-start gap-3 bg-white rounded-xl px-3 py-2.5">
+                  <div className="w-9 h-9 rounded-lg overflow-hidden bg-[var(--sage-light)] shrink-0 mt-0.5">
                     {img ? <img src={img} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-lg">🍬</div>}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-stone-800 font-medium truncate">{p.name}</p>
-                    <p className="text-xs text-stone-400">${parseFloat((p as Product).sellingPrice).toFixed(2)} each</p>
+                    <div className="flex items-center gap-2 mt-1.5">
+                      <p className="text-xs text-stone-400 flex-1 min-w-0 truncate">${parseFloat((p as Product).sellingPrice).toFixed(2)} each</p>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <Stepper value={sel.quantity} min={1} max={maxQty || 99} onChange={(v) => setQty(sel.productId, v)} />
+                        <button type="button" onClick={() => removeProduct(sel.productId)} className="p-1 text-stone-300 hover:text-red-400 transition" aria-label="Remove">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                  <Stepper value={sel.quantity} min={1} max={maxQty || 99} onChange={(v) => setQty(sel.productId, v)} />
-                  <button type="button" onClick={() => removeProduct(sel.productId)} className="p-1 text-stone-300 hover:text-red-400 transition" aria-label="Remove">
-                    <Trash2 className="w-4 h-4" />
-                  </button>
                 </li>
               );
             })}
@@ -278,7 +282,7 @@ export default function GiftCustomizer({
       <div className="flex items-center justify-between gap-4 border-t border-[var(--sage-light)] pt-4">
         <div>
           <p className="text-xs text-stone-400">Price per gift</p>
-          <p className="text-3xl font-bold text-stone-800">${unitPrice.toFixed(2)}</p>
+          <p className="text-2xl sm:text-3xl font-bold text-stone-800">${unitPrice.toFixed(2)}</p>
         </div>
         <Stepper value={quantity} min={1} max={Math.max(1, maxGifts)} onChange={setQuantity} />
       </div>
