@@ -8,6 +8,7 @@ import { useCartQuote } from "@/lib/use-cart-quote";
 import { Minus, Plus, ShoppingBag, Tag, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import BackButton from "@/components/back-button";
 
 export default function CartPage() {
   const { items, update, remove, subtotal, selectedOfferId, selectOffer } = useCart();
@@ -23,13 +24,18 @@ export default function CartPage() {
 
   if (items.length === 0) {
     return (
-      <div className="max-w-lg mx-auto px-4 py-24 text-center">
-        <ShoppingBag className="w-16 h-16 text-stone-200 mx-auto mb-4" />
-        <h2 className="text-xl font-semibold text-stone-700 mb-2">Your cart is empty</h2>
-        <p className="text-stone-400 text-sm mb-6">Add some delicious treats to get started!</p>
-        <Link href="/" className="inline-block px-6 py-2.5 bg-[var(--brand)] text-white font-semibold rounded-full hover:bg-[var(--brand-dark)] transition">
-          Browse Products
-        </Link>
+      <div className="max-w-lg mx-auto px-4 py-8">
+        <div className="mb-8">
+          <BackButton />
+        </div>
+        <div className="text-center py-16">
+          <ShoppingBag className="w-16 h-16 text-stone-200 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-stone-700 mb-2">Your cart is empty</h2>
+          <p className="text-stone-400 text-sm mb-6">Add some delicious treats to get started!</p>
+          <Link href="/" className="inline-block px-6 py-2.5 bg-[var(--brand)] text-white font-semibold rounded-full hover:bg-[var(--brand-dark)] transition">
+            Browse Products
+          </Link>
+        </div>
       </div>
     );
   }
@@ -47,7 +53,10 @@ export default function CartPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-      <h1 className="text-2xl font-bold text-stone-800 mb-6">Your Cart</h1>
+      <div className="flex items-center gap-3 mb-6">
+        <BackButton />
+        <h1 className="text-2xl font-bold text-stone-800">Your Cart</h1>
+      </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Items */}

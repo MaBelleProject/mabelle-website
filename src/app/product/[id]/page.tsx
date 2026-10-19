@@ -1,4 +1,6 @@
-import { fileUrl, storefrontApi } from "@/lib/api";
+import { Suspense } from "react";
+import { fileUrl } from "@/lib/api";
+import { cachedStorefrontApi } from "@/lib/cached-storefront";
 import { trimZeros } from "@/lib/format";
 import { describeOffer, offerBadge, offersForProduct } from "@/lib/offers";
 import { sectionHref } from "@/lib/sections";
@@ -11,13 +13,34 @@ import BackButton from "@/components/back-button";
 
 interface PageProps { params: Promise<{ id: string }> }
 
-export default async function ProductPage({ params }: PageProps) {
+export default function ProductPage(props: PageProps) {
+  return (
+    <Suspense fallback={
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 animate-pulse">
+        <div className="h-4 w-64 bg-stone-100 rounded mb-6" />
+        <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
+          <div className="aspect-square rounded-2xl bg-stone-100" />
+          <div className="flex flex-col gap-4">
+            <div className="h-8 w-3/4 bg-stone-100 rounded-lg" />
+            <div className="h-10 w-1/3 bg-stone-100 rounded-lg" />
+            <div className="h-32 bg-stone-100 rounded-lg" />
+            <div className="h-12 w-full bg-stone-100 rounded-full" />
+          </div>
+        </div>
+      </div>
+    }>
+      <ProductContent {...props} />
+    </Suspense>
+  );
+}
+
+async function ProductContent({ params }: PageProps) {
   const { id } = await params;
   const [product, allOffers, settings, ratingInfo] = await Promise.all([
-    storefrontApi.product(parseInt(id)).catch(() => null),
-    storefrontApi.offers().catch(() => []),
-    storefrontApi.settings().catch(() => null),
-    storefrontApi.productReviews(parseInt(id)).catch(() => null),
+    cachedStorefrontApi.product(parseInt(id)).catch(() => null),
+    cachedStorefrontApi.offers().catch(() => []),
+    cachedStorefrontApi.settings().catch(() => null),
+    cachedStorefrontApi.productReviews(parseInt(id)).catch(() => null),
   ]);
   if (!product) notFound();
   // Every running offer this product counts towards, store-wide ones included.

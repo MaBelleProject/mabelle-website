@@ -1,12 +1,15 @@
 import Link from "next/link";
-import { storefrontApi } from "@/lib/api";
+import { cachedStorefrontApi } from "@/lib/cached-storefront";
 import GiftCustomizer from "../[id]/gift-customizer";
 import BackButton from "@/components/back-button";
+import { cacheLife } from "next/cache";
 
 export default async function CreateGiftPage() {
+  'use cache';
+  cacheLife('minutes');
   const [packagings, allProducts] = await Promise.all([
-    storefrontApi.giftPackaging().catch(() => []),
-    storefrontApi.products().catch(() => []),
+    cachedStorefrontApi.giftPackaging().catch(() => []),
+    cachedStorefrontApi.products().catch(() => []),
   ]);
 
   return (

@@ -7,14 +7,20 @@ import { CustomerProvider } from "@/context/customer-context";
 import { FavoritesProvider } from "@/context/favorites-context";
 import { OffersProvider } from "@/context/offers-context";
 import { ShowStockLeftProvider } from "@/context/settings-context";
-import { storefrontApi } from "@/lib/api";
+import { cachedStorefrontApi } from "@/lib/cached-storefront";
 import Header from "@/components/header";
 import MenuSidebar from "@/components/menu-sidebar";
 import Footer from "@/components/footer";
 import WhatsAppButton from "@/components/whatsapp-button";
 import FeedbackPopup from "@/components/feedback-popup";
+import ScrollToTop from "@/components/scroll-to-top";
+import { Suspense } from "react";
 
 const geist = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
+
+// The layout uses dynamic client hooks (usePathname in MenuSidebar) — opt out of
+// App Shell prerendering validation while retaining 'use cache' stale-based browser caching.
+export const instant = false;
 
 export const metadata: Metadata = {
   title: "Mabelle Bites",
@@ -23,10 +29,10 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const [brands, settings, sections, offers] = await Promise.all([
-    storefrontApi.brands().catch(() => []),
-    storefrontApi.settings().catch(() => null),
-    storefrontApi.sections().catch(() => []),
-    storefrontApi.offers().catch(() => []),
+    cachedStorefrontApi.brands().catch(() => []),
+    cachedStorefrontApi.settings().catch(() => null),
+    cachedStorefrontApi.sections().catch(() => []),
+    cachedStorefrontApi.offers().catch(() => []),
   ]);
 
   return (
@@ -46,6 +52,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
              * inside MenuSidebar that slides in sync with the spacer.
              */}
             <div className="flex min-h-screen">
+              <Suspense fallback={null}><ScrollToTop /></Suspense>
               <MenuSidebar sections={sections} />
               <div className="flex-1 min-w-0 flex flex-col">
                 <Header brands={brands} settings={settings} />

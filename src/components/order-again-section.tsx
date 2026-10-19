@@ -35,7 +35,7 @@ export default function OrderAgainSection() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-2xl font-bold text-stone-800">Order Again</h2>
-          <p className="text-sm text-stone-500 mt-0.5">Products you&apos;ve ordered before</p>
+          {/* <p className="text-sm text-stone-500 mt-0.5">Products you&apos;ve ordered before</p> */}
         </div>
         <div className="flex items-center gap-2">
           {/* <button

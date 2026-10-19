@@ -134,22 +134,22 @@ function ProductsContent() {
       </div>
 
       {/* Search bar */}
-      <div className="relative max-w-lg mb-8">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400 pointer-events-none" />
+      <div className="relative max-w-2xl mb-8">
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400 pointer-events-none" />
         <input
           type="text"
           value={query}
           onChange={e => setQuery(e.target.value)}
           placeholder="Search products, sections, brands…"
-          className="w-full pl-9 pr-9 py-2.5 rounded-full border border-[var(--sage-light)] bg-white text-sm focus:outline-none focus:border-[var(--brand)] focus:ring-1 focus:ring-[var(--brand)] transition"
+          className="w-full pl-12 pr-12 py-4 rounded-full border-2 border-[var(--sage-light)] bg-white text-base shadow-sm focus:outline-none focus:border-[var(--brand)] focus:ring-2 focus:ring-[var(--brand)]/20 transition"
         />
         {query && (
           <button
             onClick={clearAll}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 transition"
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 transition"
             aria-label="Clear search"
           >
-            <X className="w-3.5 h-3.5" />
+            <X className="w-4 h-4" />
           </button>
         )}
       </div>

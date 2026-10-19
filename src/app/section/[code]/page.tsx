@@ -1,6 +1,8 @@
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { storefrontApi, fileUrl } from "@/lib/api";
+import { fileUrl } from "@/lib/api";
+import { cachedStorefrontApi } from "@/lib/cached-storefront";
 import { sameSectionCode, sectionHref } from "@/lib/sections";
 import ProductCard from "@/components/product-card";
 import BackButton from "@/components/back-button";
@@ -9,14 +11,34 @@ interface PageProps { params: Promise<{ code: string }>; searchParams: Promise<{
 
 const decode = (v: string) => { try { return decodeURIComponent(v); } catch { return v; } };
 
+export default function SectionPage(props: PageProps) {
+  return (
+    <Suspense fallback={
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 animate-pulse">
+        <div className="flex items-center gap-3 mb-8">
+          <div className="w-16 h-16 rounded-xl bg-stone-100 shrink-0" />
+          <div className="h-8 w-48 bg-stone-100 rounded-lg" />
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          {Array.from({ length: 10 }).map((_, i) => (
+            <div key={i} className="rounded-2xl bg-stone-100 aspect-square" />
+          ))}
+        </div>
+      </div>
+    }>
+      <SectionContent {...props} />
+    </Suspense>
+  );
+}
+
 /** Every product of a section code, whatever its brand; optional brand chips narrow it down. */
-export default async function SectionPage({ params, searchParams }: PageProps) {
+async function SectionContent({ params, searchParams }: PageProps) {
   const code = decode((await params).code);
   const { brand: brandParam } = await searchParams;
 
   const [sections, products] = await Promise.all([
-    storefrontApi.sections().catch(() => []),
-    storefrontApi.products({ sectionCode: code }).catch(() => []),
+    cachedStorefrontApi.sections().catch(() => []),
+    cachedStorefrontApi.products({ sectionCode: code }).catch(() => []),
   ]);
   const section = sections.find(s => sameSectionCode(s.code, code));
   if (!section) notFound();
@@ -33,7 +55,7 @@ export default async function SectionPage({ params, searchParams }: PageProps) {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
       <div className="flex items-center gap-3 mb-8">
-        <BackButton />
+        <BackButton href="/" scrollTarget="sections-area" />
         {imgUrl && (
           <div className="w-16 h-16 rounded-xl overflow-hidden bg-[var(--sage-light)] shrink-0">
             <img src={imgUrl} alt={section.name} className="w-full h-full object-cover" />
@@ -45,9 +67,9 @@ export default async function SectionPage({ params, searchParams }: PageProps) {
       {/* Brand filter — only when the section spans several brands */}
       {section.brands.length > 1 && (
         <div className="flex flex-wrap gap-2 mb-8">
-          <Link href={sectionHref(section.code)} className={chip(!brandId)}>All Brands</Link>
+          <Link href={sectionHref(section.code)} replace className={chip(!brandId)}>All Brands</Link>
           {section.brands.map(b => (
-            <Link key={b.id} href={`${sectionHref(section.code)}?brand=${b.id}`} className={chip(brandId === b.id)}>
+            <Link key={b.id} href={`${sectionHref(section.code)}?brand=${b.id}`} replace className={chip(brandId === b.id)}>
               {b.name}
             </Link>
           ))}

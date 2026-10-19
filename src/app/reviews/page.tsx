@@ -1,5 +1,7 @@
 import { Star, MessageCircleHeart } from "lucide-react";
-import { storefrontApi, type PublicReview } from "@/lib/api";
+import { type PublicReview } from "@/lib/api";
+import { cachedStorefrontApi } from "@/lib/cached-storefront";
+import { cacheLife } from "next/cache";
 
 function StarDisplay({ value, size = "md" }: { value: number; size?: "sm" | "md" | "lg" }) {
   const sz = size === "sm" ? "w-4 h-4" : size === "lg" ? "w-6 h-6" : "w-5 h-5";
@@ -37,7 +39,9 @@ function ReviewCard({ review }: { review: PublicReview }) {
 }
 
 export default async function ReviewsPage() {
-  const reviews = await storefrontApi.publicReviews().catch(() => [] as PublicReview[]);
+  'use cache';
+  cacheLife('hours');
+  const reviews = await cachedStorefrontApi.publicReviews().catch(() => [] as PublicReview[]);
 
   const avgRating = reviews.length
     ? Math.round((reviews.reduce((sum, r) => sum + r.overallRating, 0) / reviews.length) * 10) / 10

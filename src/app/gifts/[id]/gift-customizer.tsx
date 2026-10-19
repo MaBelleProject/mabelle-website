@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import Link from "next/link";
-import { Check, Minus, Plus, ShoppingCart, Trash2, Search } from "lucide-react";
-import { fileUrl, storefrontApi, type GiftPackage, type GiftPackaging, type GiftProduct, type Product } from "@/lib/api";
 import { useCart } from "@/context/cart-context";
+import { fileUrl, type GiftPackage, type GiftPackaging, type GiftProduct, type Product } from "@/lib/api";
+import { Check, Minus, Plus, Search, ShoppingCart, Trash2 } from "lucide-react";
+import Link from "next/link";
+import { useMemo, useState } from "react";
 
 interface Selection { productId: number; quantity: number }
 
@@ -106,7 +106,8 @@ export default function GiftCustomizer({
     : [];
 
   const [selections, setSelections] = useState<Selection[]>(initialSelections);
-  const [packagingId, setPackagingId] = useState<number | null>(packagings[0]?.id ?? null);
+  const defaultPkg = packagings.find(p => parseFloat(p.price) === 0) ?? packagings[0];
+  const [packagingId, setPackagingId] = useState<number | null>(defaultPkg?.id ?? null);
   const [message, setMessage] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
@@ -144,9 +145,9 @@ export default function GiftCustomizer({
   for (const c of selections) if (c.quantity > 0) perGift.set(c.productId, (perGift.get(c.productId) ?? 0) + c.quantity);
   const maxGifts = perGift.size
     ? Math.min(...[...perGift].map(([pid, q]) => {
-        const p = productMap.get(pid);
-        return Math.floor(((p as Product)?.quantity ?? (p as GiftProduct)?.stock ?? 0) / q);
-      }))
+      const p = productMap.get(pid);
+      return Math.floor(((p as Product)?.quantity ?? (p as GiftProduct)?.stock ?? 0) / q);
+    }))
     : 0;
 
   const empty = selections.length === 0;
@@ -233,27 +234,24 @@ export default function GiftCustomizer({
         <section>
           <p className="text-xs font-semibold text-stone-500 uppercase tracking-wide mb-2">Choose your gift box</p>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-            {[null, ...packagings].map((p) => {
-              const selected = (p?.id ?? null) === packagingId;
-              const outOfStock = !!p && p.stock <= 0;
-              const img = fileUrl(p?.imageUrl);
+            {packagings.map((p) => {
+              const selected = p.id === packagingId;
+              const outOfStock = p.stock <= 0;
+              const img = fileUrl(p.imageUrl);
               return (
                 <button
-                  key={p?.id ?? "none"}
+                  key={p.id}
                   type="button"
-                  onClick={() => { setPackagingId(p?.id ?? null); setAdded(false); }}
+                  onClick={() => { setPackagingId(p.id); setAdded(false); }}
                   className={`relative flex flex-col items-center gap-1 rounded-xl border p-2 text-center transition ${selected ? "border-[var(--brand)] ring-1 ring-[var(--brand)] bg-[var(--cream)]" : "border-stone-200 bg-white hover:border-[var(--brand-light)]"}`}
                 >
                   {selected && <Check className="absolute top-1.5 right-1.5 w-3.5 h-3.5 text-[var(--brand)]" />}
                   <div className="w-14 h-14 rounded-lg overflow-hidden bg-[var(--cream)] flex items-center justify-center">
-                    {img ? <img src={img} alt="" className="w-full h-full object-cover" /> : <span className="text-xl">{p ? "🎀" : "—"}</span>}
+                    {img ? <img src={img} alt="" className="w-full h-full object-cover" /> : <span className="text-xl">🎀</span>}
                   </div>
-                  <span className="text-xs font-medium text-stone-700 line-clamp-1">{p?.name ?? "No box"}</span>
-                  {outOfStock ? (
-                    <span className="text-[10px] text-amber-600 font-medium">Low stock</span>
-                  ) : (
-                    <span className="text-[11px] text-stone-400">{p ? `+$${parseFloat(p.price).toFixed(2)}` : "free"}</span>
-                  )}
+                  <span className="text-xs font-medium text-stone-700 line-clamp-1">{p.name}</span>
+                  <span className="text-[11px] font-semibold text-[var(--brand)]">+${parseFloat(p.price).toFixed(2)}</span>
+                  {outOfStock && <span className="text-[10px] text-amber-600 font-medium">Low stock</span>}
                 </button>
               );
             })}

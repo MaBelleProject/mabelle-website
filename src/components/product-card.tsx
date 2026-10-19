@@ -110,15 +110,18 @@ export default function ProductCard({ product }: ProductCardProps) {
 
       {/* Info */}
       <div className="p-3 flex flex-col gap-2 flex-1">
-        <h3 className="text-sm font-semibold text-stone-800 line-clamp-2 leading-snug">{product.name}</h3>
-        {offer && <p className="text-xs font-medium text-[var(--sage)] line-clamp-1">🎁 {offer.name}</p>}
+        <h3 className="text-sm font-semibold text-stone-800 line-clamp-2 leading-snug min-h-[2.5rem]">{product.name}</h3>
 
-        {showLeft && (
-          <div className="flex items-center gap-1 text-[var(--brand)] text-xs font-medium">
-            <AlertTriangle className="w-3.5 h-3.5" />
-            Only {product.quantity} left
-          </div>
-        )}
+        {/* Always reserve space for the offer line so all cards share the same height */}
+        <p className={`text-xs font-medium line-clamp-1 ${offer ? "text-[var(--sage)]" : "invisible select-none"}`} aria-hidden={!offer || undefined}>
+          🎁 {offer ? offer.name : "offer placeholder"}
+        </p>
+
+        {/* Always reserve space for stock warning so card heights stay uniform */}
+        <div className={`flex items-center gap-1 text-xs font-medium ${showLeft ? "text-[var(--brand)]" : "invisible select-none"}`} aria-hidden={!showLeft || undefined}>
+          <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+          <span>Only {product.quantity} left</span>
+        </div>
 
         <div className="flex items-baseline gap-2 mt-auto">
           {originalPrice ? (

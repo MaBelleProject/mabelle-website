@@ -1,25 +1,28 @@
-import { storefrontApi } from "@/lib/api";
-import Carousel from "@/components/carousel";
-import SectionGrid from "@/components/section-grid";
-import BrandGrid from "@/components/brand-grid";
-import ProductCard from "@/components/product-card";
-import BundleCard from "@/components/bundle-card";
-import OfferCard from "@/components/offer-card";
 import BestSellersList from "@/components/best-sellers-list";
+import BrandGrid from "@/components/brand-grid";
+import BundleCard from "@/components/bundle-card";
+import Carousel from "@/components/carousel";
+import OfferCard from "@/components/offer-card";
 import OrderAgainSection from "@/components/order-again-section";
-import Link from "next/link";
+import ProductCard from "@/components/product-card";
+import SectionGrid from "@/components/section-grid";
+import { cachedStorefrontApi } from "@/lib/cached-storefront";
 import { Gift } from "lucide-react";
+import Link from "next/link";
+import { cacheLife } from "next/cache";
 
 export default async function HomePage() {
+  'use cache';
+  cacheLife('minutes');
   const [slides, brands, sections, offers, products, bundles, gifts, bestSellers] = await Promise.all([
-    storefrontApi.carousel().catch(() => []),
-    storefrontApi.brands().catch(() => []),
-    storefrontApi.sections().catch(() => []),
-    storefrontApi.offers().catch(() => []),
-    storefrontApi.products().catch(() => []),
-    storefrontApi.bundles().catch(() => []),
-    storefrontApi.gifts().catch(() => []),
-    storefrontApi.bestSellers().catch(() => []),
+    cachedStorefrontApi.carousel().catch(() => []),
+    cachedStorefrontApi.brands().catch(() => []),
+    cachedStorefrontApi.sections().catch(() => []),
+    cachedStorefrontApi.offers().catch(() => []),
+    cachedStorefrontApi.products().catch(() => []),
+    cachedStorefrontApi.bundles().catch(() => []),
+    cachedStorefrontApi.gifts().catch(() => []),
+    cachedStorefrontApi.bestSellers().catch(() => []),
   ]);
 
   const featured = products.slice(0, 10);
@@ -44,7 +47,7 @@ export default async function HomePage() {
         <section className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-stone-800">Offers</h2>
-            <Link href="/offers" className="text-sm text-[var(--brand)] font-semibold hover:underline">View all →</Link>
+            {/* <Link href="/offers" className="text-sm text-[var(--brand)] font-semibold hover:underline">View all offers →</Link> */}
           </div>
           <div className="relative">
             <div className="flex overflow-x-auto gap-3 pb-2 scrollbar-hide">
@@ -60,10 +63,14 @@ export default async function HomePage() {
       )}
 
       {/* Sections (one per section code, across brands) */}
-      <SectionGrid sections={sections} />
+      <div id="sections-area">
+        <SectionGrid sections={sections} />
+      </div>
 
       {/* Brands */}
-      <BrandGrid brands={brands} />
+      <div id="brands-area">
+        <BrandGrid brands={brands} />
+      </div>
 
       {/* Featured Products */}
       {featured.length > 0 && (
@@ -71,7 +78,7 @@ export default async function HomePage() {
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-stone-800">Our Products</h2>
             <a href="/products" className="text-sm text-[var(--brand)] font-semibold hover:underline">
-              View all →
+              View all products →
             </a>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
@@ -90,7 +97,7 @@ export default async function HomePage() {
         <section className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-stone-800">Bundles</h2>
-            <Link href="/bundles" className="text-sm text-[var(--brand)] font-semibold hover:underline">View all →</Link>
+            <Link href="/bundles" className="text-sm text-[var(--brand)] font-semibold hover:underline">View all bundles →</Link>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {bundles.slice(0, 5).map(b => <BundleCard key={b.id} bundle={b} />)}

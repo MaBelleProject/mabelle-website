@@ -1,10 +1,13 @@
-import { storefrontApi } from "@/lib/api";
+import { cachedStorefrontApi } from "@/lib/cached-storefront";
 import OfferCard from "@/components/offer-card";
 import BackButton from "@/components/back-button";
+import { cacheLife } from "next/cache";
 
 /** All running offers, highest priority first. Applied automatically at checkout. */
 export default async function OffersPage() {
-  const offers = await storefrontApi.offers().catch(() => []);
+  'use cache';
+  cacheLife('minutes');
+  const offers = await cachedStorefrontApi.offers().catch(() => []);
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
       <div className="flex items-center gap-3 mb-1">

@@ -1,18 +1,38 @@
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { storefrontApi, fileUrl } from "@/lib/api";
+import { fileUrl } from "@/lib/api";
+import { cachedStorefrontApi } from "@/lib/cached-storefront";
 import GiftCustomizer from "./gift-customizer";
 import { Gift } from "lucide-react";
 import BackButton from "@/components/back-button";
 
 interface PageProps { params: Promise<{ id: string }> }
 
-export default async function GiftPage({ params }: PageProps) {
+export default function GiftPage(props: PageProps) {
+  return (
+    <Suspense fallback={
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 animate-pulse">
+        <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
+          <div className="aspect-square rounded-2xl bg-stone-100" />
+          <div className="flex flex-col gap-4">
+            <div className="h-8 w-3/4 bg-stone-100 rounded-lg" />
+            <div className="h-24 bg-stone-100 rounded-lg" />
+          </div>
+        </div>
+      </div>
+    }>
+      <GiftContent {...props} />
+    </Suspense>
+  );
+}
+
+async function GiftContent({ params }: PageProps) {
   const { id } = await params;
   const [gift, packagings, allProducts] = await Promise.all([
-    storefrontApi.gift(parseInt(id)).catch(() => null),
-    storefrontApi.giftPackaging().catch(() => []),
-    storefrontApi.products().catch(() => []),
+    cachedStorefrontApi.gift(parseInt(id)).catch(() => null),
+    cachedStorefrontApi.giftPackaging().catch(() => []),
+    cachedStorefrontApi.products().catch(() => []),
   ]);
   if (!gift) notFound();
   const imgUrl = fileUrl(gift.imageUrl);

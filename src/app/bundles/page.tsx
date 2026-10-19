@@ -1,9 +1,12 @@
-import { storefrontApi } from "@/lib/api";
+import { cachedStorefrontApi } from "@/lib/cached-storefront";
 import BundleCard from "@/components/bundle-card";
 import BackButton from "@/components/back-button";
+import { cacheLife } from "next/cache";
 
 export default async function BundlesPage() {
-  const bundles = await storefrontApi.bundles().catch(() => []);
+  'use cache';
+  cacheLife('minutes');
+  const bundles = await cachedStorefrontApi.bundles().catch(() => []);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">

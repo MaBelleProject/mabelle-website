@@ -1,20 +1,41 @@
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
-import { storefrontApi } from "@/lib/api";
-import ProductCard from "@/components/product-card";
 import { fileUrl } from "@/lib/api";
+import { cachedStorefrontApi } from "@/lib/cached-storefront";
+import ProductCard from "@/components/product-card";
 import Link from "next/link";
 import BackButton from "@/components/back-button";
 
 interface PageProps { params: Promise<{ id: string }>; searchParams: Promise<{ section?: string }> }
 
-export default async function BrandPage({ params, searchParams }: PageProps) {
+export default function BrandPage(props: PageProps) {
+  return (
+    <Suspense fallback={
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 animate-pulse">
+        <div className="flex items-center gap-4 mb-8">
+          <div className="w-16 h-16 rounded-full bg-stone-100 shrink-0" />
+          <div className="h-8 w-48 bg-stone-100 rounded-lg" />
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          {Array.from({ length: 10 }).map((_, i) => (
+            <div key={i} className="rounded-2xl bg-stone-100 aspect-square" />
+          ))}
+        </div>
+      </div>
+    }>
+      <BrandContent {...props} />
+    </Suspense>
+  );
+}
+
+async function BrandContent({ params, searchParams }: PageProps) {
   const { id } = await params;
   const { section: sectionIdStr } = await searchParams;
   const brandId = parseInt(id);
 
   const [brands, products] = await Promise.all([
-    storefrontApi.brands().catch(() => []),
-    storefrontApi.products({
+    cachedStorefrontApi.brands().catch(() => []),
+    cachedStorefrontApi.products({
       categoryId: brandId,
       sectionId: sectionIdStr ? +sectionIdStr : undefined,
     }).catch(() => []),
@@ -30,7 +51,7 @@ export default async function BrandPage({ params, searchParams }: PageProps) {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
       {/* Brand header */}
       <div className="flex items-center gap-4 mb-8">
-        <BackButton />
+        <BackButton href="/" scrollTarget="brands-area" />
         {imgUrl && (
           <div className="w-16 h-16 rounded-full overflow-hidden bg-[var(--sage-light)] shrink-0">
             <img src={imgUrl} alt={brand.name} className="w-full h-full object-cover" />
@@ -47,6 +68,7 @@ export default async function BrandPage({ params, searchParams }: PageProps) {
         <div className="flex flex-wrap gap-2 mb-8">
           <Link
             href={`/brand/${brandId}`}
+            replace
             className={`px-4 py-1.5 rounded-full text-sm font-medium transition border ${
               !sectionIdStr
                 ? "bg-[var(--brand)] text-white border-[var(--brand)]"
@@ -59,6 +81,7 @@ export default async function BrandPage({ params, searchParams }: PageProps) {
             <Link
               key={sec.id}
               href={`/brand/${brandId}?section=${sec.id}`}
+              replace
               className={`px-4 py-1.5 rounded-full text-sm font-medium transition border ${
                 sectionIdStr === String(sec.id)
                   ? "bg-[var(--brand)] text-white border-[var(--brand)]"

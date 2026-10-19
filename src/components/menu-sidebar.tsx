@@ -4,7 +4,7 @@ import { useCustomer } from "@/context/customer-context";
 import { useMenu } from "@/context/menu-context";
 import type { SectionGroup } from "@/lib/api";
 import { sectionHref } from "@/lib/sections";
-import { LogOut, X } from "lucide-react";
+import { LogOut } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -17,6 +17,15 @@ export default function MenuSidebar({ sections }: { sections: SectionGroup[] }) 
   const { customer, logout } = useCustomer();
   const pathname = usePathname();
   const [confirmSignOut, setConfirmSignOut] = useState(false);
+
+  const navClass = (href: string) => {
+    const active = href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(href + "/") || pathname.startsWith(href + "?");
+    return `px-4 py-3 rounded-lg text-sm font-medium transition ${
+      active
+        ? "bg-[var(--sage-light)] text-[var(--brand)]"
+        : "text-stone-700 hover:bg-[var(--sage-light)] hover:text-[var(--brand)]"
+    }`;
+  };
 
   useEffect(() => { close(); }, [pathname]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -31,6 +40,14 @@ export default function MenuSidebar({ sections }: { sections: SectionGroup[] }) 
 
   return (
     <>
+      {/* Backdrop — closes menu when clicking outside the sidebar */}
+      <div
+        aria-hidden="true"
+        className="fixed inset-0 z-40 bg-black/20 transition-opacity duration-300"
+        style={{ opacity: open ? 1 : 0, pointerEvents: open ? "auto" : "none" }}
+        onClick={close}
+      />
+
       <div
         aria-hidden="true"
         className=" shrink-0"
@@ -47,20 +64,9 @@ export default function MenuSidebar({ sections }: { sections: SectionGroup[] }) 
         aria-modal="true"
         aria-label="Navigation menu"
       >
-        {/* Close button row */}
-        <div className="flex items-center justify-end pl-3 h-10 shrink-0 pt-8">
-          <button
-            onClick={close}
-            className="flex items-center justify-center w-9 h-9 rounded-full hover:bg-[var(--sage-light)] transition"
-            aria-label="Close menu"
-          >
-            <X className="w-5 h-5 text-stone-600" />
-          </button>
-        </div>
-
         {/* Nav links */}
-        <nav className="flex-1 overflow-y-auto scrollbar-hide px-3 pb-4 flex flex-col gap-0.5">
-          <Link href="/" onClick={close} className="px-4 py-3 rounded-lg text-stone-700 hover:bg-[var(--sage-light)] hover:text-[var(--brand)] text-sm font-medium transition">
+        <nav className="flex-1 overflow-y-auto scrollbar-hide px-3 pt-8 pb-4 flex flex-col gap-0.5">
+          <Link href="/" onClick={close} className={navClass("/")}>
             Home
           </Link>
 
@@ -69,38 +75,38 @@ export default function MenuSidebar({ sections }: { sections: SectionGroup[] }) 
               key={s.code}
               href={sectionHref(s.code)}
               onClick={close}
-              className="px-4 py-3 rounded-lg text-stone-700 hover:bg-[var(--sage-light)] hover:text-[var(--brand)] text-sm font-medium transition"
+              className={navClass(sectionHref(s.code))}
             >
               {s.name}
             </Link>
           ))}
 
-          <Link href="/bundles" onClick={close} className="px-4 py-3 rounded-lg text-stone-700 hover:bg-[var(--sage-light)] hover:text-[var(--brand)] text-sm font-medium transition">
+          <Link href="/bundles" onClick={close} className={navClass("/bundles")}>
             Bundles
           </Link>
-          <Link href="/gifts" onClick={close} className="px-4 py-3 rounded-lg text-stone-700 hover:bg-[var(--sage-light)] hover:text-[var(--brand)] text-sm font-medium transition">
+          <Link href="/gifts" onClick={close} className={navClass("/gifts")}>
             Gifts
           </Link>
-          <Link href="/offers" onClick={close} className="px-4 py-3 rounded-lg text-stone-700 hover:bg-[var(--sage-light)] hover:text-[var(--brand)] text-sm font-medium transition">
+          {/* <Link href="/offers" onClick={close} className={navClass("/offers")}>
             Offers
-          </Link>
+          </Link> */}
 
-          <Link href="/reviews" onClick={close} className="px-4 py-3 rounded-lg text-stone-700 hover:bg-[var(--sage-light)] hover:text-[var(--brand)] text-sm font-medium transition">
+          <Link href="/reviews" onClick={close} className={navClass("/reviews")}>
             Customer Reviews
           </Link>
-          <Link href="/about" onClick={close} className="px-4 py-3 rounded-lg text-stone-700 hover:bg-[var(--sage-light)] hover:text-[var(--brand)] text-sm font-medium transition">
+          <Link href="/about" onClick={close} className={navClass("/about")}>
             About Us
           </Link>
 
           {customer ? (
             <>
-              <Link href="/order-history" onClick={close} className="px-4 py-3 rounded-lg text-stone-700 hover:bg-[var(--sage-light)] hover:text-[var(--brand)] text-sm font-medium transition flex items-center gap-2">
+              <Link href="/order-history" onClick={close} className={`${navClass("/order-history")} flex items-center gap-2`}>
                 Order History
               </Link>
-              <Link href="/favorites" onClick={close} className="px-4 py-3 rounded-lg text-stone-700 hover:bg-[var(--sage-light)] hover:text-[var(--brand)] text-sm font-medium transition flex items-center gap-2">
+              <Link href="/favorites" onClick={close} className={`${navClass("/favorites")} flex items-center gap-2`}>
                 My Favorites
               </Link>
-              <Link href="/change-password" onClick={close} className="px-4 py-3 rounded-lg text-stone-700 hover:bg-[var(--sage-light)] hover:text-[var(--brand)] text-sm font-medium transition">
+              <Link href="/change-password" onClick={close} className={navClass("/change-password")}>
                 Change Password
               </Link>
               <button
@@ -111,7 +117,7 @@ export default function MenuSidebar({ sections }: { sections: SectionGroup[] }) 
               </button>
             </>
           ) : (
-            <Link href="/login" onClick={close} className="px-4 py-3 rounded-lg text-stone-700 hover:bg-[var(--sage-light)] hover:text-[var(--brand)] text-sm font-medium transition">
+            <Link href="/login" onClick={close} className={navClass("/login")}>
               Login
             </Link>
           )}

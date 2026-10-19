@@ -1,10 +1,14 @@
 import Link from "next/link";
-import { storefrontApi, fileUrl } from "@/lib/api";
+import { fileUrl } from "@/lib/api";
+import { cachedStorefrontApi } from "@/lib/cached-storefront";
 import { Gift, Plus } from "lucide-react";
 import BackButton from "@/components/back-button";
+import { cacheLife } from "next/cache";
 
 export default async function GiftsPage() {
-  const gifts = await storefrontApi.gifts().catch(() => []);
+  'use cache';
+  cacheLife('hours');
+  const gifts = await cachedStorefrontApi.gifts().catch(() => []);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">

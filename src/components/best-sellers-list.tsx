@@ -1,9 +1,8 @@
 "use client";
 
-import type { Product } from "@/lib/api";
 import ProductCard from "@/components/product-card";
+import type { Product } from "@/lib/api";
 import { useRef } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface BestSellersListProps { products: Product[]; }
 
@@ -23,23 +22,23 @@ export default function BestSellersList({ products }: BestSellersListProps) {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-2xl font-bold text-stone-800">Best Sellers</h2>
-          <p className="text-sm text-stone-500 mt-0.5">Most loved by our customers</p>
+          {/* <p className="text-sm text-stone-500 mt-0.5">Most loved by our customers</p> */}
         </div>
         <div className="flex items-center gap-2">
-          <button
+          {/* <button
             onClick={() => scroll("left")}
             className="w-9 h-9 rounded-full border border-stone-200 bg-white flex items-center justify-center hover:bg-[var(--cream)] transition shadow-sm"
             aria-label="Scroll left"
           >
             <ChevronLeft className="w-4 h-4 text-stone-600" />
-          </button>
-          <button
+          </button> */}
+          {/* <button
             onClick={() => scroll("right")}
             className="w-9 h-9 rounded-full border border-stone-200 bg-white flex items-center justify-center hover:bg-[var(--cream)] transition shadow-sm"
             aria-label="Scroll right"
           >
             <ChevronRight className="w-4 h-4 text-stone-600" />
-          </button>
+          </button> */}
         </div>
       </div>
 
@@ -53,7 +52,7 @@ export default function BestSellersList({ products }: BestSellersListProps) {
             key={product.id}
             className="relative snap-start shrink-0 w-44 sm:w-52"
           >
-<ProductCard product={product} />
+            <ProductCard product={product} />
           </div>
         ))}
       </div>
