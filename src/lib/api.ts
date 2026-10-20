@@ -252,6 +252,22 @@ export interface PublicReview {
   displayName: string;
 }
 
+export interface GeneralReview {
+  id: number;
+  rating: number;
+  reviewText: string | null;
+  submittedAt: string;
+  displayName: string;
+}
+
+export interface MyGeneralReview {
+  id: number;
+  rating: number;
+  reviewText: string | null;
+  status: string;
+  submittedAt: string;
+}
+
 export interface ProductRatingInfo {
   averageRating: number | null;
   totalRatings: number;
@@ -355,6 +371,16 @@ export const storefrontApi = {
     request<FeedbackProduct[]>(`/customers/${customerId}/orders/${orderId}/feedback-products`),
   submitOrderFeedback: (customerId: number, orderId: number, data: { overallRating: number; writtenFeedback?: string; productRatings: ProductFeedbackRating[] }) =>
     request<OrderFeedback>(`/customers/${customerId}/orders/${orderId}/feedback`, { method: 'POST', body: JSON.stringify(data) }),
+  updateOrderFeedback: (customerId: number, orderId: number, data: { overallRating: number; writtenFeedback?: string; productRatings: ProductFeedbackRating[] }) =>
+    request<OrderFeedback>(`/customers/${customerId}/orders/${orderId}/feedback`, { method: 'PATCH', body: JSON.stringify(data) }),
   publicReviews: () => request<PublicReview[]>('/reviews'),
   productReviews: (productId: number) => request<ProductRatingInfo>(`/products/${productId}/reviews`),
+  allProductRatings: () => request<{ productId: number; averageRating: number; totalRatings: number }[]>('/products/ratings'),
+  generalReviews: () => request<GeneralReview[]>('/general-reviews'),
+  submitGeneralReview: (data: { customerId?: number; guestEmail?: string; guestPhone?: string; rating: number; reviewText?: string }) =>
+    request<{ id: number; status: string }>('/general-reviews', { method: 'POST', body: JSON.stringify(data) }),
+  updateGeneralReview: (id: number, customerId: number, data: { rating: number; reviewText?: string }) =>
+    request<{ id: number; status: string }>(`/general-reviews/${id}?customerId=${customerId}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  getCustomerGeneralReviews: (customerId: number) =>
+    request<MyGeneralReview[]>(`/customers/${customerId}/general-reviews`),
 };

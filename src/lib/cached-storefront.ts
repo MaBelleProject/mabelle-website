@@ -54,16 +54,30 @@ async function fetchGiftPackaging() {
   return storefrontApi.giftPackaging();
 }
 
+// minutes profile: stale=5 min, revalidate=1 min, expire=1 hr
+// Reviews change when admin approves/hides — use minutes so changes appear quickly.
 async function fetchPublicReviews() {
   'use cache';
-  cacheLife('hours');
+  cacheLife('minutes');
   return storefrontApi.publicReviews();
 }
 
 async function fetchProductReviews(id: number) {
   'use cache';
-  cacheLife('hours');
+  cacheLife('minutes');
   return storefrontApi.productReviews(id);
+}
+
+async function fetchGeneralReviews() {
+  'use cache';
+  cacheLife('minutes');
+  return storefrontApi.generalReviews();
+}
+
+async function fetchAllProductRatings() {
+  'use cache';
+  cacheLife('minutes');
+  return storefrontApi.allProductRatings();
 }
 
 // minutes profile: stale=5 min, revalidate=1 min, expire=1 hr
@@ -120,4 +134,6 @@ export const cachedStorefrontApi = {
   product: fetchProduct,
   publicReviews: fetchPublicReviews,
   productReviews: fetchProductReviews,
+  generalReviews: fetchGeneralReviews,
+  allProductRatings: fetchAllProductRatings,
 };

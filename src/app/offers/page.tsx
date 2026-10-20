@@ -1,7 +1,7 @@
 import { cachedStorefrontApi } from "@/lib/cached-storefront";
-import OfferCard from "@/components/offer-card";
 import BackButton from "@/components/back-button";
 import { cacheLife } from "next/cache";
+import OffersPageClient from "./offers-client";
 
 /** All running offers, highest priority first. Applied automatically at checkout. */
 export default async function OffersPage() {
@@ -21,9 +21,7 @@ export default async function OffersPage() {
           <p className="font-medium">No offers right now — check back soon!</p>
         </div>
       ) : (
-        <div className="grid sm:grid-cols-2 gap-4">
-          {offers.map(o => <OfferCard key={o.id} offer={o} />)}
-        </div>
+        <OffersPageClient offers={offers} />
       )}
     </div>
   );

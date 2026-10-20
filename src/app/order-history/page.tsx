@@ -32,8 +32,8 @@ export default function OrderHistoryPage() {
   const [reorderMessage, setReorderMessage] = useState<{ orderId: number; text: string } | null>(null);
 
   // Feedback state
-  const [feedbackFormOrder, setFeedbackFormOrder] = useState<{ orderId: number; orderNumber: string } | null>(null);
-  const [viewFeedback, setViewFeedback] = useState<{ orderNumber: string; feedback: OrderFeedback } | null>(null);
+  const [feedbackFormOrder, setFeedbackFormOrder] = useState<{ orderId: number; orderNumber: string; initialData?: OrderFeedback } | null>(null);
+  const [viewFeedback, setViewFeedback] = useState<{ orderId: number; orderNumber: string; feedback: OrderFeedback } | null>(null);
   const [loadingFeedbackId, setLoadingFeedbackId] = useState<number | null>(null);
 
   const load = () => {
@@ -90,7 +90,7 @@ export default function OrderHistoryPage() {
     setLoadingFeedbackId(order.id);
     try {
       const feedback = await storefrontApi.getOrderFeedback(customer.id, order.id);
-      if (feedback) setViewFeedback({ orderNumber: order.orderNumber, feedback });
+      if (feedback) setViewFeedback({ orderId: order.id, orderNumber: order.orderNumber, feedback });
     } catch {
       // ignore
     } finally {
@@ -285,12 +285,16 @@ export default function OrderHistoryPage() {
           customerId={customer.id}
           orderId={feedbackFormOrder.orderId}
           orderNumber={feedbackFormOrder.orderNumber}
+          initialData={feedbackFormOrder.initialData}
           onClose={() => setFeedbackFormOrder(null)}
-          onSubmitted={() => {
+          onSubmitted={(updatedFeedback) => {
             setFeedbackFormOrder(null);
             setOrders(prev => prev.map(o =>
               o.id === feedbackFormOrder.orderId ? { ...o, feedbackSubmitted: true } : o
             ));
+            if (feedbackFormOrder.initialData) {
+              setViewFeedback({ orderId: feedbackFormOrder.orderId, orderNumber: feedbackFormOrder.orderNumber, feedback: updatedFeedback });
+            }
           }}
         />
       )}
@@ -301,6 +305,11 @@ export default function OrderHistoryPage() {
           orderNumber={viewFeedback.orderNumber}
           feedback={viewFeedback.feedback}
           onClose={() => setViewFeedback(null)}
+          onEdit={() => {
+            const { orderId, orderNumber, feedback } = viewFeedback;
+            setViewFeedback(null);
+            setFeedbackFormOrder({ orderId, orderNumber, initialData: feedback });
+          }}
         />
       )}
     </div>

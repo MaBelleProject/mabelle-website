@@ -1,15 +1,15 @@
 "use client";
 
-import Link from "next/link";
-import { Heart, Minus, Plus, ShoppingCart, AlertTriangle } from "lucide-react";
-import type { Product } from "@/lib/api";
-import { fileUrl } from "@/lib/api";
-import { useCart, productKey } from "@/context/cart-context";
+import { productKey, useCart } from "@/context/cart-context";
 import { useCustomer } from "@/context/customer-context";
 import { useFavorites } from "@/context/favorites-context";
 import { useOffers } from "@/context/offers-context";
-import { offerBadge, offersForProduct } from "@/lib/offers";
 import { useShowStockLeft } from "@/context/settings-context";
+import type { Product } from "@/lib/api";
+import { fileUrl } from "@/lib/api";
+import { offerBadge, offersForProduct } from "@/lib/offers";
+import { AlertTriangle, Heart, Minus, Plus, ShoppingCart } from "lucide-react";
+import Link from "next/link";
 import CountryFlag from "./country-flag";
 
 interface ProductCardProps { product: Product; }
@@ -30,6 +30,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   const { isFavorite, toggle } = useFavorites();
   // Highest-priority offer aimed at this product (store-wide offers are shown in the offers panel instead).
   const offer = offersForProduct(useOffers(), product.id, true)[0];
+  const rating = useProductRatings().get(product.id);
   const imgUrl = fileUrl(product.imageUrl);
   const { price, originalPrice } = computeDisplay(product);
   const outOfStock = product.quantity <= 0;

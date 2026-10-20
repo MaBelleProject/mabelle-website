@@ -1,7 +1,7 @@
 "use client";
 
 import { createPortal } from "react-dom";
-import { X, Star } from "lucide-react";
+import { X, Star, Pencil } from "lucide-react";
 import { type OrderFeedback, fileUrl } from "@/lib/api";
 import CountryFlag from "./country-flag";
 
@@ -9,6 +9,7 @@ interface Props {
   orderNumber: string;
   feedback: OrderFeedback;
   onClose: () => void;
+  onEdit?: () => void;
 }
 
 function StarDisplay({ value }: { value: number }) {
@@ -24,7 +25,7 @@ function StarDisplay({ value }: { value: number }) {
   );
 }
 
-export default function FeedbackViewModal({ orderNumber, feedback, onClose }: Props) {
+export default function FeedbackViewModal({ orderNumber, feedback, onClose, onEdit }: Props) {
   return createPortal(
     <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
@@ -104,10 +105,19 @@ export default function FeedbackViewModal({ orderNumber, feedback, onClose }: Pr
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-[var(--sage-light)]">
+        <div className="px-6 py-4 border-t border-[var(--sage-light)] flex gap-3">
+          {onEdit && (
+            <button
+              onClick={onEdit}
+              className="flex-1 py-2.5 rounded-xl border border-[var(--brand)] text-[var(--brand)] text-sm font-semibold hover:bg-[var(--brand-light)] transition flex items-center justify-center gap-2"
+            >
+              <Pencil className="w-4 h-4" />
+              Edit Feedback
+            </button>
+          )}
           <button
             onClick={onClose}
-            className="w-full py-2.5 rounded-xl border border-[var(--sage-light)] text-stone-600 text-sm font-semibold hover:bg-[var(--sage-light)] transition"
+            className="flex-1 py-2.5 rounded-xl border border-[var(--sage-light)] text-stone-600 text-sm font-semibold hover:bg-[var(--sage-light)] transition"
           >
             Close
           </button>

@@ -107,13 +107,11 @@ async function ProductContent({ params }: PageProps) {
             </div>
             {ratingInfo && ratingInfo.totalRatings > 0 && (
               <div className="flex items-center gap-2 mt-2">
-                <div className="flex gap-0.5">
-                  {[1, 2, 3, 4, 5].map(n => (
-                    <Star key={n} className={`w-4 h-4 ${n <= Math.round(Number(ratingInfo.averageRating)) ? "fill-amber-400 text-amber-400" : "fill-stone-200 text-stone-200"}`} />
-                  ))}
-                </div>
-                <span className="text-sm font-semibold text-stone-700">{Number(ratingInfo.averageRating).toFixed(1)}</span>
-                <span className="text-sm text-stone-400">({ratingInfo.totalRatings} rating{ratingInfo.totalRatings !== 1 ? "s" : ""})</span>
+                <Star className="w-4 h-4 shrink-0 fill-amber-400 text-amber-400" />
+                <span className="text-sm font-semibold text-stone-700">
+                  {Number(ratingInfo.averageRating).toFixed(1)}
+                  <span className="text-stone-400 font-normal ml-1">({ratingInfo.totalRatings} review{ratingInfo.totalRatings !== 1 ? "s" : ""})</span>
+                </span>
               </div>
             )}
             {product.categoryName && (

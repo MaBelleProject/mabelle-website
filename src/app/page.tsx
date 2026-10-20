@@ -2,7 +2,7 @@ import BestSellersList from "@/components/best-sellers-list";
 import BrandGrid from "@/components/brand-grid";
 import BundleCard from "@/components/bundle-card";
 import Carousel from "@/components/carousel";
-import OfferCard from "@/components/offer-card";
+import HomeOffersSection from "@/components/home-offers-section";
 import OrderAgainSection from "@/components/order-again-section";
 import ProductCard from "@/components/product-card";
 import SectionGrid from "@/components/section-grid";
@@ -50,16 +50,7 @@ export default async function HomePage() {
             <h2 className="text-2xl font-bold text-stone-800">Offers</h2>
             {/* <Link href="/offers" className="text-sm text-[var(--brand)] font-semibold hover:underline">View all offers →</Link> */}
           </div>
-          <div className="relative">
-            <div className="flex overflow-x-auto gap-3 pb-2 scrollbar-hide">
-              {offers.map(o => (
-                <div key={o.id} className="shrink-0 w-[85%] sm:w-[45%] lg:w-[32%]">
-                  <OfferCard offer={o} compact />
-                </div>
-              ))}
-            </div>
-            <div className="absolute right-0 top-0 bottom-2 w-12 bg-gradient-to-l from-[var(--background)] to-transparent pointer-events-none" />
-          </div>
+          <HomeOffersSection offers={offers} />
         </section>
       )}
 

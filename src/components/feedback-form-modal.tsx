@@ -1,9 +1,9 @@
 "use client";
 
+import { fileUrl, storefrontApi, type FeedbackProduct, type ProductFeedbackRating } from "@/lib/api";
+import { Loader2, Star, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { X, Star, Loader2 } from "lucide-react";
-import { storefrontApi, type FeedbackProduct, type ProductFeedbackRating, fileUrl } from "@/lib/api";
 import CountryFlag from "./country-flag";
 
 interface Props {
@@ -11,7 +11,9 @@ interface Props {
   orderId: number;
   orderNumber: string;
   onClose: () => void;
-  onSubmitted: () => void;
+  onSubmitted: (feedback: OrderFeedback) => void;
+  /** When provided, the modal is in edit mode: form is pre-filled and uses the update endpoint. */
+  initialData?: OrderFeedback;
 }
 
 function StarRating({ value, onChange, size = "md" }: { value: number; onChange?: (v: number) => void; size?: "sm" | "md" }) {
@@ -30,11 +32,10 @@ function StarRating({ value, onChange, size = "md" }: { value: number; onChange?
           aria-label={`${n} star${n !== 1 ? "s" : ""}`}
         >
           <Star
-            className={`${sz} transition-colors ${
-              n <= (hover || value)
+            className={`${sz} transition-colors ${n <= (hover || value)
                 ? "fill-amber-400 text-amber-400"
                 : "fill-stone-200 text-stone-200"
-            }`}
+              }`}
           />
         </button>
       ))}
@@ -42,12 +43,18 @@ function StarRating({ value, onChange, size = "md" }: { value: number; onChange?
   );
 }
 
-export default function FeedbackFormModal({ customerId, orderId, orderNumber, onClose, onSubmitted }: Props) {
+export default function FeedbackFormModal({ customerId, orderId, orderNumber, onClose, onSubmitted, initialData }: Props) {
+  const isEditing = !!initialData;
   const [products, setProducts] = useState<FeedbackProduct[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
-  const [overallRating, setOverallRating] = useState(0);
-  const [writtenFeedback, setWrittenFeedback] = useState("");
-  const [productRatings, setProductRatings] = useState<Record<number, { rating: number; comment: string }>>({});
+  const [overallRating, setOverallRating] = useState(initialData?.overallRating ?? 0);
+  const [writtenFeedback, setWrittenFeedback] = useState(initialData?.writtenFeedback ?? "");
+  const [productRatings, setProductRatings] = useState<Record<number, { rating: number; comment: string }>>(() => {
+    if (!initialData) return {};
+    return Object.fromEntries(
+      initialData.productRatings.map(pr => [pr.productId, { rating: pr.rating, comment: pr.comment ?? "" }])
+    );
+  });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -80,12 +87,15 @@ export default function FeedbackFormModal({ customerId, orderId, orderNumber, on
           rating: productRatings[p.productId].rating,
           comment: productRatings[p.productId].comment || undefined,
         }));
-      await storefrontApi.submitOrderFeedback(customerId, orderId, {
+      const payload = {
         overallRating,
         writtenFeedback: writtenFeedback.trim() || undefined,
         productRatings: productRatingList,
-      });
-      onSubmitted();
+      };
+      const result = isEditing
+        ? await storefrontApi.updateOrderFeedback(customerId, orderId, payload)
+        : await storefrontApi.submitOrderFeedback(customerId, orderId, payload);
+      onSubmitted(result);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Failed to submit feedback. Please try again.");
     } finally {
@@ -103,7 +113,7 @@ export default function FeedbackFormModal({ customerId, orderId, orderNumber, on
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-[var(--sage-light)]">
           <div>
-            <h2 className="font-bold text-stone-800 text-lg">Your Feedback</h2>
+            <h2 className="font-bold text-stone-800 text-lg">{isEditing ? "Edit Feedback" : "Your Feedback"}</h2>
             <p className="text-sm text-stone-400 mt-0.5">Order {orderNumber}</p>
           </div>
           <button
@@ -192,7 +202,7 @@ export default function FeedbackFormModal({ customerId, orderId, orderNumber, on
             onClick={onClose}
             className="flex-1 py-2.5 rounded-xl border border-[var(--sage-light)] text-stone-600 text-sm font-semibold hover:bg-[var(--sage-light)] transition"
           >
-            Skip / Cancel
+            {isEditing ? "Cancel" : "Skip / Cancel"}
           </button>
           <button
             onClick={handleSubmit}
@@ -200,7 +210,7 @@ export default function FeedbackFormModal({ customerId, orderId, orderNumber, on
             className="flex-1 py-2.5 rounded-xl bg-[var(--brand)] hover:bg-[var(--brand-dark)] text-white text-sm font-semibold transition disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
-            {submitting ? "Submitting…" : "Submit Feedback"}
+            {submitting ? (isEditing ? "Saving…" : "Submitting…") : (isEditing ? "Save Changes" : "Submit Feedback")}
           </button>
         </div>
       </div>
