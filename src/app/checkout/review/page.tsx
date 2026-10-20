@@ -12,7 +12,7 @@ import { useEffect, useState } from "react";
 interface CheckoutInfo {
   name: string; phone: string; email: string; address: string;
   city: string; floor: string; paymentMethod: string; remark: string;
-  password?: string; customerId?: number; isNonProfit?: boolean;
+  password?: string; customerId?: number; isNonProfit?: boolean; freeDelivery?: boolean;
 }
 
 /** Rough preview until the server quote arrives (which also applies the offer rules): bundles never get a promo code. */
@@ -61,14 +61,16 @@ export default function ReviewPage() {
   if (redirecting || !info) return null;
 
   const isNonProfit = info?.isNonProfit === true;
+  // Free-delivery customers (every non-profit one too) pay no delivery; the server quote has the final say.
+  const freeDelivery = quote?.freeDelivery ?? !!(info?.freeDelivery ?? isNonProfit);
   const shownSubtotal = quote?.subtotal ?? subtotal;
   const promoDiscount = quote?.promoCodeAmount ?? computePromoDiscount(promo, items);
   // Delivery is kept outside the order's net total; the total to pay is netTotal + delivery left after offers.
-  const delivery = quote ? quote.deliveryCharge : deliveryCharge;
-  const deliveryDue = isNonProfit ? 0 : (quote ? quote.deliveryDue : deliveryCharge);
+  const delivery = quote && !freeDelivery ? quote.deliveryCharge : deliveryCharge;
+  const deliveryDue = freeDelivery ? 0 : (quote ? quote.deliveryDue : deliveryCharge);
   const netTotal = quote
-    ? isNonProfit ? quote.totalDue - quote.deliveryDue : quote.totalDue
-    : subtotal + (isNonProfit ? 0 : deliveryCharge) - promoDiscount;
+    ? freeDelivery ? quote.totalDue - quote.deliveryDue : quote.totalDue
+    : subtotal + (freeDelivery ? 0 : deliveryCharge) - promoDiscount;
   const itemOffers = quote?.offers.filter(o => o.offerType !== "free_delivery") ?? [];
   const deliveryOffer = quote?.offers.find(o => o.offerType === "free_delivery");
 
@@ -255,15 +257,13 @@ export default function ReviewPage() {
               <div className="flex justify-between text-stone-400">
                 <span>
                   Delivery
-                  {isNonProfit && <span className="text-green-600"> · Non-profit</span>}
-                  {deliveryOffer && <span className="text-green-600"> · {deliveryOffer.offerName}</span>}
+                  {freeDelivery && <span className="text-green-600"> · {isNonProfit ? "Non-profit" : "Free delivery"}</span>}
+                  {!freeDelivery && deliveryOffer && <span className="text-green-600"> · {deliveryOffer.offerName}</span>}
                 </span>
                 <span>
                   {deliveryDue < delivery
                     ? <><span className="line-through mr-1">${delivery.toFixed(2)}</span><span className="text-green-600">{deliveryDue > 0 ? `$${deliveryDue.toFixed(2)}` : "Free"}</span></>
-                    : isNonProfit && !quote
-                      ? <><span className="line-through mr-1">${delivery.toFixed(2)}</span><span className="text-green-600">Free</span></>
-                      : delivery > 0 ? `$${delivery.toFixed(2)}` : "Free"}
+                    : delivery > 0 ? `$${delivery.toFixed(2)}` : "Free"}
                 </span>
               </div>
               {promoDiscount > 0 && (

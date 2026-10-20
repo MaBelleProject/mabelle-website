@@ -6,7 +6,12 @@ export interface CustomerInfo {
   id: number; name: string; phone: string; email?: string | null;
   address?: string | null; city?: string | null; floor?: string | null;
   isNonProfit?: boolean;
+  /** Never pays delivery (always true for non-profit customers). */
+  freeDelivery?: boolean;
 }
+
+/** Older saved logins have no freeDelivery; non-profit customers always had free delivery. */
+export const hasFreeDelivery = (c: CustomerInfo | null | undefined) => !!(c?.freeDelivery ?? c?.isNonProfit);
 
 interface Ctx {
   customer: CustomerInfo | null;

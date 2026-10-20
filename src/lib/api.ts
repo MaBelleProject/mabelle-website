@@ -274,6 +274,8 @@ export type OrderLine =
 
 /** Server pricing of a cart: offers applied, bundle / gift prices as they will be charged. */
 export interface OrderQuote {
+  /** The customer never pays delivery (deliveryCharge is 0). */
+  freeDelivery?: boolean;
   items: { itemType: string; productName: string; unitPrice: number; quantity: number; totalPrice: number }[];
   subtotal: number; promoCodeAmount: number;
   /** false when the applied offer rules the promo code out; promoNote says why it was limited or not used. */

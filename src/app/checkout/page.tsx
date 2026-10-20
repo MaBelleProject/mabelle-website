@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/context/cart-context";
-import { useCustomer } from "@/context/customer-context";
+import { hasFreeDelivery, useCustomer } from "@/context/customer-context";
 import Link from "next/link";
 import { ArrowLeft, LogIn, LogOut, Eye, EyeOff } from "lucide-react";
 
@@ -73,6 +73,7 @@ export default function CheckoutPage() {
       remark: "",
       customerId: customer.id,
       isNonProfit: customer.isNonProfit ?? false,
+      freeDelivery: hasFreeDelivery(customer),
     }));
     router.replace("/checkout/review");
     setRedirecting(true);
@@ -136,6 +137,7 @@ export default function CheckoutPage() {
       password: !customer ? form.password : undefined,
       customerId: customer?.id,
       isNonProfit: customer?.isNonProfit ?? false,
+      freeDelivery: hasFreeDelivery(customer),
     }));
     router.push("/checkout/review");
   };
@@ -210,9 +212,9 @@ export default function CheckoutPage() {
         </div>
       )}
 
-      {customer?.isNonProfit && (
+      {hasFreeDelivery(customer) && (
         <div className="bg-green-50 border border-green-100 rounded-xl px-4 py-3 mb-6">
-          <span className="text-green-700 text-sm font-medium">Free delivery applied — non-profit account</span>
+          <span className="text-green-700 text-sm font-medium">Free delivery applied{customer?.isNonProfit ? " — non-profit account" : ""}</span>
         </div>
       )}
 
