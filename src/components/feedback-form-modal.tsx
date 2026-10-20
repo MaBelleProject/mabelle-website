@@ -1,6 +1,6 @@
 "use client";
 
-import { fileUrl, storefrontApi, type FeedbackProduct, type ProductFeedbackRating } from "@/lib/api";
+import { fileUrl, storefrontApi, type FeedbackProduct, type OrderFeedback, type ProductFeedbackRating } from "@/lib/api";
 import { Loader2, Star, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
@@ -33,8 +33,8 @@ function StarRating({ value, onChange, size = "md" }: { value: number; onChange?
         >
           <Star
             className={`${sz} transition-colors ${n <= (hover || value)
-                ? "fill-amber-400 text-amber-400"
-                : "fill-stone-200 text-stone-200"
+              ? "fill-amber-400 text-amber-400"
+              : "fill-stone-200 text-stone-200"
               }`}
           />
         </button>

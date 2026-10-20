@@ -4,11 +4,12 @@ import { productKey, useCart } from "@/context/cart-context";
 import { useCustomer } from "@/context/customer-context";
 import { useFavorites } from "@/context/favorites-context";
 import { useOffers } from "@/context/offers-context";
+import { useProductRatings } from "@/context/product-ratings-context";
 import { useShowStockLeft } from "@/context/settings-context";
 import type { Product } from "@/lib/api";
 import { fileUrl } from "@/lib/api";
 import { offerBadge, offersForProduct } from "@/lib/offers";
-import { AlertTriangle, Heart, Minus, Plus, ShoppingCart } from "lucide-react";
+import { AlertTriangle, Heart, Minus, Plus, ShoppingCart, Star } from "lucide-react";
 import Link from "next/link";
 import CountryFlag from "./country-flag";
 
@@ -113,9 +114,15 @@ export default function ProductCard({ product }: ProductCardProps) {
       {/* Info */}
       <div className="p-3 flex flex-col gap-2 flex-1">
         <div className="flex items-start gap-1.5 min-h-[2.5rem]">
-          <h3 className="flex-1 min-w-0 text-sm font-semibold text-stone-800 line-clamp-2 leading-snug">{product.name}</h3>
+          <h3 className="flex-1 min-w-0 text-sm font-semibold text-stone-800 line-clamp-2 leading-snug min-h-[2.5rem]">{product.name}</h3>
           <CountryFlag country={product.madeIn} className="mt-[3px] w-4 h-3" />
         </div>
+        {rating && rating.totalRatings > 0 && (
+          <div className="flex items-center gap-1">
+            <Star className="w-3.5 h-3.5 shrink-0 fill-amber-400 text-amber-400" />
+            <span className="text-xs font-medium text-stone-600">{Number(rating.averageRating).toFixed(1)} <span className="font-normal text-stone-400">({rating.totalRatings})</span></span>
+          </div>
+        )}
 
         {/* Always reserve space for the offer line so all cards share the same height */}
         <p className={`text-xs font-medium line-clamp-1 ${offer ? "text-[var(--sage)]" : "invisible select-none"}`} aria-hidden={!offer || undefined}>

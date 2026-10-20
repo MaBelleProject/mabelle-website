@@ -10,6 +10,7 @@ import { FavoritesProvider } from "@/context/favorites-context";
 import { MenuProvider } from "@/context/menu-context";
 import { OffersProvider } from "@/context/offers-context";
 import { ProductOriginsProvider } from "@/context/product-origins-context";
+import { ProductRatingsProvider } from "@/context/product-ratings-context";
 import { ShowStockLeftProvider } from "@/context/settings-context";
 import { cachedStorefrontApi } from "@/lib/cached-storefront";
 import type { Metadata } from "next";
@@ -29,12 +30,13 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const [brands, settings, sections, offers, products] = await Promise.all([
+  const [brands, settings, sections, offers, products, productRatings] = await Promise.all([
     cachedStorefrontApi.brands().catch(() => []),
     cachedStorefrontApi.settings().catch(() => null),
     cachedStorefrontApi.sections().catch(() => []),
     cachedStorefrontApi.offers().catch(() => []),
     cachedStorefrontApi.products().catch(() => []),
+    cachedStorefrontApi.allProductRatings().catch(() => []),
   ]);
   const origins = Object.fromEntries(products.filter(p => p.madeIn).map(p => [p.id, p.madeIn]));
 
@@ -46,28 +48,30 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <FavoritesProvider>
               <OffersProvider offers={offers}>
                 <ProductOriginsProvider origins={origins}>
-                  <ShowStockLeftProvider value={settings?.showStockLeft ?? false}>
-                    <MenuProvider>
-                      {/*
+                  <ProductRatingsProvider ratings={productRatings}>
+                    <ShowStockLeftProvider value={settings?.showStockLeft ?? false}>
+                      <MenuProvider>
+                        {/*
              * Flex row: [sidebar spacer] [content column]
              * The sidebar spacer's width transitions 0 ↔ 18rem, which
              * causes the content column (flex-1) to shrink/grow — the
              * "push" effect. The actual visible sidebar is a fixed panel
              * inside MenuSidebar that slides in sync with the spacer.
              */}
-                      <div className="flex min-h-screen">
-                        <Suspense fallback={null}><ScrollToTop /></Suspense>
-                        <MenuSidebar sections={sections} />
-                        <div className="flex-1 min-w-0 flex flex-col">
-                          <Header brands={brands} settings={settings} />
-                          <main className="flex-1">{children}</main>
-                          <Footer settings={settings} />
-                          <WhatsAppButton phoneNumber={settings?.phoneNumber} />
-                          <FeedbackPopup />
+                        <div className="flex min-h-screen">
+                          <Suspense fallback={null}><ScrollToTop /></Suspense>
+                          <MenuSidebar sections={sections} />
+                          <div className="flex-1 min-w-0 flex flex-col">
+                            <Header brands={brands} settings={settings} />
+                            <main className="flex-1">{children}</main>
+                            <Footer settings={settings} />
+                            <WhatsAppButton phoneNumber={settings?.phoneNumber} />
+                            <FeedbackPopup />
+                          </div>
                         </div>
-                      </div>
-                    </MenuProvider>
-                  </ShowStockLeftProvider>
+                      </MenuProvider>
+                    </ShowStockLeftProvider>
+                  </ProductRatingsProvider>
                 </ProductOriginsProvider>
               </OffersProvider>
             </FavoritesProvider>
