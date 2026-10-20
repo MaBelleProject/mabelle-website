@@ -79,7 +79,7 @@ export default async function Footer({ settings }: FooterProps) {
           )}
         </div>
       </div>
-      <div className="border-t border-[#b5d49e] py-4 text-center text-xs text-[#4a6a30]">
+      <div suppressHydrationWarning className="border-t border-[#b5d49e] py-4 text-center text-xs text-[#4a6a30]">
         © {new Date().getFullYear()} {settings?.companyName ?? "Mabelle Bites"}. All rights reserved.
       </div>
     </footer>
