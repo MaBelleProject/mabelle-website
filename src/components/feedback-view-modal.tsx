@@ -3,6 +3,7 @@
 import { createPortal } from "react-dom";
 import { X, Star } from "lucide-react";
 import { type OrderFeedback, fileUrl } from "@/lib/api";
+import CountryFlag from "./country-flag";
 
 interface Props {
   orderNumber: string;
@@ -79,7 +80,10 @@ export default function FeedbackViewModal({ orderNumber, feedback, onClose }: Pr
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-stone-800 line-clamp-2 mb-1">{pr.productName}</p>
+                        <div className="flex items-start gap-1.5 mb-1">
+                          <p className="min-w-0 text-sm font-medium text-stone-800 line-clamp-2">{pr.productName}</p>
+                          <CountryFlag productId={pr.productId} className="mt-[3px] w-4 h-3" />
+                        </div>
                         <div className="flex gap-0.5 mb-1">
                           {[1, 2, 3, 4, 5].map(n => (
                             <Star key={n} className={`w-4 h-4 ${n <= pr.rating ? "fill-amber-400 text-amber-400" : "fill-stone-200 text-stone-200"}`} />

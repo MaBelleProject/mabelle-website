@@ -1,5 +1,6 @@
 "use client";
 
+import CountryFlag from "@/components/country-flag";
 import { useCart } from "@/context/cart-context";
 import { fileUrl, type GiftPackage, type GiftPackaging, type GiftProduct, type Product } from "@/lib/api";
 import { Check, Minus, Plus, Search, ShoppingCart, Trash2 } from "lucide-react";
@@ -69,7 +70,10 @@ function ProductPicker({ allProducts, selected, onAdd }: {
               <div className="w-7 h-7 rounded-md overflow-hidden bg-[var(--sage-light)] shrink-0 flex items-center justify-center">
                 {img ? <img src={img} alt="" className="w-full h-full object-cover" /> : <span>🍬</span>}
               </div>
-              <span className="flex-1 truncate text-stone-700">{p.name}</span>
+              <span className="flex-1 min-w-0 flex items-center gap-1.5">
+                <span className="truncate text-stone-700">{p.name}</span>
+                <CountryFlag country={p.madeIn} interactive={false} className="w-3.5 h-2.5" />
+              </span>
               <span className="text-stone-400 shrink-0">${parseFloat(p.sellingPrice).toFixed(2)}</span>
               {alreadyIn
                 ? <span className="text-[10px] text-[var(--brand)] font-semibold shrink-0">Added</span>
@@ -215,7 +219,10 @@ export default function GiftCustomizer({
                     {img ? <img src={img} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-lg">🍬</div>}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-stone-800 font-medium truncate">{p.name}</p>
+                    <div className="flex items-center gap-1.5">
+                      <p className="min-w-0 text-sm text-stone-800 font-medium truncate">{p.name}</p>
+                      <CountryFlag productId={sel.productId} className="w-4 h-3" />
+                    </div>
                     <div className="flex items-center gap-2 mt-1.5">
                       <p className="text-xs text-stone-400 flex-1 min-w-0 truncate">${parseFloat((p as Product).sellingPrice).toFixed(2)} each</p>
                       <div className="flex items-center gap-1.5 shrink-0">

@@ -9,6 +9,7 @@ import { Minus, Plus, ShoppingBag, Tag, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import BackButton from "@/components/back-button";
+import CountryFlag from "@/components/country-flag";
 
 export default function CartPage() {
   const { items, update, remove, subtotal, selectedOfferId, selectOffer } = useCart();
@@ -82,9 +83,12 @@ export default function CartPage() {
                   {item.itemType !== "product" && (
                     <span className="text-[10px] font-semibold uppercase tracking-wide text-[var(--brand)]">{item.itemType}</span>
                   )}
-                  <Link href={cartItemHref(item)} className="block text-sm font-semibold text-stone-800 hover:text-[var(--brand)] transition line-clamp-2">
-                    {item.productName}
-                  </Link>
+                  <div className="flex items-start gap-1.5">
+                    <Link href={cartItemHref(item)} className="min-w-0 text-sm font-semibold text-stone-800 hover:text-[var(--brand)] transition line-clamp-2">
+                      {item.productName}
+                    </Link>
+                    {item.itemType === "product" && <CountryFlag productId={item.productId} className="mt-[3px] w-4 h-3" />}
+                  </div>
                   {item.contents?.length ? <p className="text-xs text-stone-500 mt-0.5 line-clamp-2">{item.contents.join(" · ")}</p> : null}
                   {item.packagingName && <p className="text-xs text-stone-500">Packaging: {item.packagingName}</p>}
                   {item.giftMessage && <p className="text-xs text-stone-400 italic line-clamp-1">"{item.giftMessage}"</p>}

@@ -1,10 +1,12 @@
 import type { Brand } from "@/lib/api";
 import { fileUrl } from "@/lib/api";
 import Link from "next/link";
+import CountryFlag from "./country-flag";
 
-interface BrandGridProps { brands: Brand[]; }
+/** `countries` maps brand id → its "Made In" country. */
+interface BrandGridProps { brands: Brand[]; countries?: Record<number, string>; }
 
-export default function BrandGrid({ brands }: BrandGridProps) {
+export default function BrandGrid({ brands, countries = {} }: BrandGridProps) {
   if (!brands.length) return null;
   return (
     <section className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
@@ -29,6 +31,10 @@ export default function BrandGrid({ brands }: BrandGridProps) {
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center text-4xl">🏷️</div>
                 )}
+                <CountryFlag
+                  country={countries[brand.id]}
+                  className="absolute bottom-1.5 right-1.5 sm:bottom-2 sm:right-2 z-10 w-5 h-[15px] sm:w-6 sm:h-[18px] shadow-sm"
+                />
               </Link>
             );
           })}

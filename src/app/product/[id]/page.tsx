@@ -10,6 +10,7 @@ import { notFound } from "next/navigation";
 import AddToCartButton from "./add-to-cart-button";
 import ProductInfoTabs from "./product-info-tabs";
 import BackButton from "@/components/back-button";
+import CountryFlag from "@/components/country-flag";
 
 interface PageProps { params: Promise<{ id: string }> }
 
@@ -100,7 +101,10 @@ async function ProductContent({ params }: PageProps) {
             ) : (
               <span className="text-xs font-medium text-[var(--brand)] uppercase tracking-wide">{product.sectionName}</span>
             ))}
-            <h1 className="text-2xl sm:text-3xl font-bold text-stone-800 mt-1">{product.name}</h1>
+            <div className="flex items-start gap-3 mt-1">
+              <h1 className="flex-1 min-w-0 text-2xl sm:text-3xl font-bold text-stone-800">{product.name}</h1>
+              <CountryFlag country={product.madeIn} className="mt-1.5 sm:mt-2 w-7 h-5 sm:w-8 sm:h-6" />
+            </div>
             {ratingInfo && ratingInfo.totalRatings > 0 && (
               <div className="flex items-center gap-2 mt-2">
                 <div className="flex gap-0.5">

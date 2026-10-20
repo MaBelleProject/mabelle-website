@@ -7,6 +7,7 @@ import { useCustomer } from "@/context/customer-context";
 import { useCart } from "@/context/cart-context";
 import { storefrontApi, type CustomerOrder, type OrderFeedback, fileUrl } from "@/lib/api";
 import { trimZeros } from "@/lib/format";
+import CountryFlag from "@/components/country-flag";
 import FeedbackFormModal from "@/components/feedback-form-modal";
 import FeedbackViewModal from "@/components/feedback-view-modal";
 
@@ -161,7 +162,10 @@ export default function OrderHistoryPage() {
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-stone-800 line-clamp-1">{item.productName}</p>
+                          <div className="flex items-center gap-1.5">
+                            <p className="min-w-0 text-sm font-medium text-stone-800 line-clamp-1">{item.productName}</p>
+                            {item.itemType === "product" && <CountryFlag productId={item.productId} className="w-4 h-3" />}
+                          </div>
                           <p className="text-xs text-stone-500">
                             {item.quantity} × ${trimZeros(item.unitPrice)}
                           </p>

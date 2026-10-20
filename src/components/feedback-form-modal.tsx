@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { X, Star, Loader2 } from "lucide-react";
 import { storefrontApi, type FeedbackProduct, type ProductFeedbackRating, fileUrl } from "@/lib/api";
+import CountryFlag from "./country-flag";
 
 interface Props {
   customerId: number;
@@ -159,7 +160,10 @@ export default function FeedbackFormModal({ customerId, orderId, orderNumber, on
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-stone-800 line-clamp-2">{p.productName}</p>
+                          <div className="flex items-start gap-1.5">
+                            <p className="min-w-0 text-sm font-medium text-stone-800 line-clamp-2">{p.productName}</p>
+                            <CountryFlag productId={p.productId} className="mt-[3px] w-4 h-3" />
+                          </div>
                           <StarRating value={currentRating} onChange={v => setProductRating(p.productId, v)} size="sm" />
                         </div>
                       </div>

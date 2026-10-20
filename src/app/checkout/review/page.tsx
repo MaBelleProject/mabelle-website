@@ -1,5 +1,6 @@
 "use client";
 
+import CountryFlag from "@/components/country-flag";
 import OfferPicker from "@/components/offer-picker";
 import { toOrderLine, useCart, type CartItem } from "@/context/cart-context";
 import { useCustomer } from "@/context/customer-context";
@@ -176,6 +177,7 @@ export default function ReviewPage() {
               <div key={item.key} className="flex items-center gap-3 px-5 py-3 border-b border-[var(--sage-light)] last:border-0">
                 <span className="text-stone-500 text-sm flex-1 min-w-0">
                   <span className="font-medium text-stone-800">{item.productName}</span>
+                  {item.itemType === "product" && <CountryFlag productId={item.productId} className="ml-1.5 align-[-1px] w-4 h-3" />}
                   <span className="text-stone-400"> × {item.quantity}</span>
                   {item.contents?.length ? <span className="block text-xs text-stone-400">{item.contents.join(" · ")}</span> : null}
                   {item.packagingName && <span className="block text-xs text-stone-400">Packaging: {item.packagingName}</span>}

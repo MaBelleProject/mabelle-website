@@ -3,6 +3,7 @@ import { fileUrl } from "@/lib/api";
 import { cachedStorefrontApi } from "@/lib/cached-storefront";
 import { Gift, Plus } from "lucide-react";
 import BackButton from "@/components/back-button";
+import CountryFlag from "@/components/country-flag";
 import { cacheLife } from "next/cache";
 
 export default async function GiftsPage() {
@@ -53,7 +54,14 @@ export default async function GiftsPage() {
               </div>
               <div className="p-3 flex flex-col gap-2 flex-1">
                 <h3 className="text-sm font-semibold text-stone-800 line-clamp-2 leading-snug">{g.name}</h3>
-                <p className="text-xs text-stone-500 line-clamp-2">{g.items.map((s) => `${s.quantity} × ${s.product.name}`).join(" · ")}</p>
+                <p className="text-xs text-stone-500 line-clamp-2">
+                  {g.items.map((s, n) => (
+                    <span key={s.id}>
+                      {n > 0 && " · "}{s.quantity} × {s.product.name}
+                      <CountryFlag productId={s.productId} className="ml-1 align-[-1px] w-3.5 h-2.5" />
+                    </span>
+                  ))}
+                </p>
                 <p className="mt-auto text-stone-800 font-bold text-base"><span className="text-xs font-normal text-stone-400">from </span>${parseFloat(g.defaultPrice).toFixed(2)}</p>
                 <span className="flex items-center justify-center w-full py-2 rounded-xl bg-[var(--brand)] group-hover:bg-[var(--brand-dark)] text-white text-sm font-semibold transition">
                   Customize

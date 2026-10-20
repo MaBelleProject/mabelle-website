@@ -7,6 +7,7 @@ import OrderAgainSection from "@/components/order-again-section";
 import ProductCard from "@/components/product-card";
 import SectionGrid from "@/components/section-grid";
 import { cachedStorefrontApi } from "@/lib/cached-storefront";
+import { brandCountries } from "@/lib/countries";
 import { Gift } from "lucide-react";
 import Link from "next/link";
 import { cacheLife } from "next/cache";
@@ -69,7 +70,7 @@ export default async function HomePage() {
 
       {/* Brands */}
       <div id="brands-area">
-        <BrandGrid brands={brands} />
+        <BrandGrid brands={brands} countries={brandCountries(products)} />
       </div>
 
       {/* Featured Products */}

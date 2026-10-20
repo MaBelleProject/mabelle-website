@@ -6,6 +6,7 @@ import { Check, Minus, Plus, ShoppingCart, Layers } from "lucide-react";
 import type { Bundle, BundleReplacementProduct } from "@/lib/api";
 import { fileUrl } from "@/lib/api";
 import { useCart, bundleKey } from "@/context/cart-context";
+import CountryFlag from "./country-flag";
 
 interface BundleSwap { bundleItemId: number; productId: number }
 
@@ -130,7 +131,10 @@ export function BundleCartControlWithSwaps({ bundle }: { bundle: Bundle }) {
                     {img ? <img src={img} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center">🍬</div>}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-stone-800 font-medium truncate">{chosen?.name ?? item.productName}</p>
+                    <div className="flex items-center gap-1.5">
+                      <p className="min-w-0 text-sm text-stone-800 font-medium truncate">{chosen?.name ?? item.productName}</p>
+                      <CountryFlag productId={chosenId} className="w-4 h-3" />
+                    </div>
                     <p className="text-xs text-stone-400">${parseFloat(chosen?.sellingPrice ?? item.sellingPrice).toFixed(2)} · {item.quantity} included</p>
                   </div>
                   <span className="text-sm font-semibold text-stone-700 shrink-0">× {item.quantity}</span>
@@ -143,9 +147,10 @@ export function BundleCartControlWithSwaps({ bundle }: { bundle: Bundle }) {
                         key={opt.productId}
                         type="button"
                         onClick={() => setSwap(item.id, opt.productId)}
-                        className={`px-2.5 py-1 rounded-full text-xs border transition ${opt.productId === chosenId ? "bg-[var(--brand)] text-white border-[var(--brand)]" : "bg-white text-stone-600 border-stone-200 hover:border-[var(--brand)]"}`}
+                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs border transition ${opt.productId === chosenId ? "bg-[var(--brand)] text-white border-[var(--brand)]" : "bg-white text-stone-600 border-stone-200 hover:border-[var(--brand)]"}`}
                       >
                         {opt.name}
+                        <CountryFlag productId={opt.productId} interactive={false} className="w-3.5 h-2.5" />
                         {opt.productId === item.productId && <span className="ml-1 opacity-60">(default)</span>}
                       </button>
                     ))}
@@ -222,7 +227,14 @@ export default function BundleCard({ bundle }: { bundle: Bundle }) {
       </div>
       <div className="p-3 flex flex-col gap-2 flex-1">
         <h3 className="text-sm font-semibold text-stone-800 line-clamp-2 leading-snug">{bundle.name}</h3>
-        <p className="text-xs text-stone-500 line-clamp-2">{bundle.items.map((i) => `${i.quantity} × ${i.productName}`).join(" · ")}</p>
+        <p className="text-xs text-stone-500 line-clamp-2">
+          {bundle.items.map((i, n) => (
+            <span key={i.id}>
+              {n > 0 && " · "}{i.quantity} × {i.productName}
+              <CountryFlag productId={i.productId} className="ml-1 align-[-1px] w-3.5 h-2.5" />
+            </span>
+          ))}
+        </p>
         <div className="flex items-baseline gap-2 mt-auto">
           <span className="text-stone-800 font-bold text-base">${price.toFixed(2)}</span>
           {value > price && <span className="text-stone-400 text-sm line-through">${value.toFixed(2)}</span>}

@@ -6,6 +6,7 @@ import { MenuProvider } from "@/context/menu-context";
 import { CustomerProvider } from "@/context/customer-context";
 import { FavoritesProvider } from "@/context/favorites-context";
 import { OffersProvider } from "@/context/offers-context";
+import { ProductOriginsProvider } from "@/context/product-origins-context";
 import { ShowStockLeftProvider } from "@/context/settings-context";
 import { cachedStorefrontApi } from "@/lib/cached-storefront";
 import Header from "@/components/header";
@@ -28,12 +29,14 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const [brands, settings, sections, offers] = await Promise.all([
+  const [brands, settings, sections, offers, products] = await Promise.all([
     cachedStorefrontApi.brands().catch(() => []),
     cachedStorefrontApi.settings().catch(() => null),
     cachedStorefrontApi.sections().catch(() => []),
     cachedStorefrontApi.offers().catch(() => []),
+    cachedStorefrontApi.products().catch(() => []),
   ]);
+  const origins = Object.fromEntries(products.filter(p => p.madeIn).map(p => [p.id, p.madeIn]));
 
   return (
     <html lang="en" className={geist.variable}>
@@ -42,6 +45,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <CustomerProvider>
           <FavoritesProvider>
           <OffersProvider offers={offers}>
+          <ProductOriginsProvider origins={origins}>
           <ShowStockLeftProvider value={settings?.showStockLeft ?? false}>
           <MenuProvider>
             {/*
@@ -64,6 +68,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             </div>
           </MenuProvider>
           </ShowStockLeftProvider>
+          </ProductOriginsProvider>
           </OffersProvider>
           </FavoritesProvider>
           </CustomerProvider>
