@@ -17,7 +17,7 @@ interface PageProps { params: Promise<{ id: string }> }
 export default function ProductPage(props: PageProps) {
   return (
     <Suspense fallback={
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 animate-pulse">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 py-8 animate-pulse">
         <div className="h-4 w-64 bg-stone-100 rounded mb-6" />
         <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
           <div className="aspect-square rounded-2xl bg-stone-100" />
@@ -58,7 +58,7 @@ async function ProductContent({ params }: PageProps) {
   const highlights = product.specifications.filter(s => s.specType === "boolean" && s.valueBoolean);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+    <div className="max-w-7xl mx-auto px-2 sm:px-4 py-8">
       {/* Breadcrumb */}
       <nav className="text-xs text-stone-400 mb-6 flex items-center gap-1.5">
         <BackButton />

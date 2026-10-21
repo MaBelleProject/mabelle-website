@@ -18,7 +18,7 @@ export default function HomeSearch() {
   };
 
   return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
+    <section className="max-w-7xl mx-auto px-2 sm:px-4 py-4">
       {/* Icon + input share a single container; clicking anywhere focuses the input */}
       <label className="flex items-center gap-2 w-full max-w-lg px-4 py-2.5 rounded-full border border-[var(--sage-light)] bg-white cursor-text transition hover:border-stone-300 focus-within:border-[var(--brand)] focus-within:ring-1 focus-within:ring-[var(--brand)]">
         <Search className="w-4 h-4 text-stone-400 shrink-0" />

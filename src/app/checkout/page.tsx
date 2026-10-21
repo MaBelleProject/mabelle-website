@@ -146,7 +146,7 @@ export default function CheckoutPage() {
   const loggedInNoAddress = !!customer && !customer.address;
 
   return (
-    <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
+    <div className="max-w-2xl mx-auto px-2 sm:px-4 py-8">
       <Link href="/cart" className="inline-flex items-center gap-1.5 text-sm text-stone-400 hover:text-[var(--brand)] mb-6 transition">
         <ArrowLeft className="w-4 h-4" /> Back to Cart
       </Link>

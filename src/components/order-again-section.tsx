@@ -5,6 +5,9 @@ import { useCustomer } from "@/context/customer-context";
 import { storefrontApi, type Product } from "@/lib/api";
 import { useEffect, useRef, useState } from "react";
 
+const CACHE_TTL = 2 * 60 * 1000; // 2 minutes
+const cache = new Map<number, { products: Product[]; at: number }>();
+
 export default function OrderAgainSection() {
   const { customer } = useCustomer();
   const [products, setProducts] = useState<Product[]>([]);
@@ -17,9 +20,18 @@ export default function OrderAgainSection() {
       setLoaded(true);
       return;
     }
+    const hit = cache.get(customer.id);
+    if (hit && Date.now() - hit.at < CACHE_TTL) {
+      setProducts(hit.products);
+      setLoaded(true);
+      return;
+    }
     setLoaded(false);
     storefrontApi.customerOrderAgain(customer.id)
-      .then(setProducts)
+      .then(data => {
+        cache.set(customer.id, { products: data, at: Date.now() });
+        setProducts(data);
+      })
       .catch(() => setProducts([]))
       .finally(() => setLoaded(true));
   }, [customer?.id]);
@@ -31,7 +43,7 @@ export default function OrderAgainSection() {
   };
 
   return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+    <section className="max-w-7xl mx-auto px-2 sm:px-4 py-8">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-2xl font-bold text-stone-800">Order Again</h2>

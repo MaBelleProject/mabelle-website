@@ -142,7 +142,7 @@ export default function ReviewPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+    <div className="max-w-7xl mx-auto px-2 sm:px-4 py-8">
       {!info.customerId && (
         <button
           onClick={() => { sessionStorage.setItem("checkout_edit", "1"); router.push("/checkout"); }}

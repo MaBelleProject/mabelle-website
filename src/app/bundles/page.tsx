@@ -9,7 +9,7 @@ export default async function BundlesPage() {
   const bundles = await cachedStorefrontApi.bundles().catch(() => []);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+    <div className="max-w-7xl mx-auto px-2 sm:px-4 py-8">
       <div className="flex items-center gap-3 mb-2">
         <BackButton />
         <h1 className="text-3xl font-bold text-stone-800">Bundles</h1>

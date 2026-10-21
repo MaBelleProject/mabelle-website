@@ -1,9 +1,9 @@
 "use client";
 
 import { useCart } from "@/context/cart-context";
-import { useMenu } from "@/context/menu-context";
 import { useCustomer } from "@/context/customer-context";
 import { useFavorites } from "@/context/favorites-context";
+import { useMenu } from "@/context/menu-context";
 import type { Brand, Settings } from "@/lib/api";
 import { fileUrl } from "@/lib/api";
 import { Heart, Menu, Search, ShoppingCart } from "lucide-react";
@@ -16,21 +16,21 @@ interface HeaderProps {
 
 export default function Header({ brands: _brands, settings }: HeaderProps) {
   const { count } = useCart();
-  const { toggle } = useMenu();
+  const { toggle, open } = useMenu();
   const { customer } = useCustomer();
   const { count: favCount } = useFavorites();
   const logoUrl = settings?.companyLogo ? fileUrl(settings.companyLogo) : undefined;
 
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-[var(--sage-light)] shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4">
         <div className="relative flex items-center justify-between py-4">
-          {/* Left: menu + search icons */}
-          <div className="flex items-center gap-1">
+          {/* Left: menu + search icons — hidden while sidebar is open (X inside sidebar handles close) */}
+          <div className={`flex items-center gap-1 transition-opacity duration-200 ${open ? "opacity-0 pointer-events-none" : ""}`}>
             <button
               className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-[var(--sage-light)] transition"
               onClick={toggle}
-              aria-label="Toggle menu"
+              aria-label="Open menu"
             >
               <Menu className="w-5 h-5" />
             </button>

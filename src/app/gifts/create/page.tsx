@@ -13,7 +13,7 @@ export default async function CreateGiftPage() {
   ]);
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+    <div className="max-w-6xl mx-auto px-2 sm:px-4 py-8">
       <nav className="text-xs text-stone-400 mb-6 flex items-center gap-1.5">
         <BackButton />
         <Link href="/" className="hover:text-[var(--brand)]">Home</Link>

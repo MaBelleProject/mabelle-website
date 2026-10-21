@@ -18,7 +18,7 @@ export default function BestSellersList({ products }: BestSellersListProps) {
   };
 
   return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+    <section className="max-w-7xl mx-auto px-2 sm:px-4 py-8">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-2xl font-bold text-stone-800">Best Sellers</h2>

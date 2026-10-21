@@ -14,11 +14,13 @@ export default function BackButton({ href, scrollTarget }: BackButtonProps) {
   const router = useRouter();
 
   const handleClick = () => {
-    if (href) {
-      if (scrollTarget) sessionStorage.setItem("homeScrollTo", scrollTarget);
-      router.push(href);
-    } else {
+    if (scrollTarget) sessionStorage.setItem("homeScrollTo", scrollTarget);
+    // Use router.back() when there's history (avoids remounting the previous page).
+    // Fall back to router.push only when this is the first page in the tab.
+    if (window.history.length > 1) {
       router.back();
+    } else if (href) {
+      router.push(href);
     }
   };
 

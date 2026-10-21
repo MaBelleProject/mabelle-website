@@ -12,7 +12,7 @@ interface PageProps { params: Promise<{ id: string }> }
 export default function GiftPage(props: PageProps) {
   return (
     <Suspense fallback={
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 animate-pulse">
+      <div className="max-w-6xl mx-auto px-2 sm:px-4 py-8 animate-pulse">
         <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
           <div className="aspect-square rounded-2xl bg-stone-100" />
           <div className="flex flex-col gap-4">
@@ -38,7 +38,7 @@ async function GiftContent({ params }: PageProps) {
   const imgUrl = fileUrl(gift.imageUrl);
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+    <div className="max-w-6xl mx-auto px-2 sm:px-4 py-8">
       <nav className="text-xs text-stone-400 mb-6 flex items-center gap-1.5">
         <BackButton />
         <Link href="/" className="hover:text-[var(--brand)]">Home</Link>

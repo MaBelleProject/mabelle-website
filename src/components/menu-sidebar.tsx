@@ -4,7 +4,7 @@ import { useCustomer } from "@/context/customer-context";
 import { useMenu } from "@/context/menu-context";
 import type { SectionGroup } from "@/lib/api";
 import { sectionHref } from "@/lib/sections";
-import { LogOut } from "lucide-react";
+import { LogOut, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -51,11 +51,11 @@ export default function MenuSidebar({ sections }: { sections: SectionGroup[] }) 
       <div
         aria-hidden="true"
         className=" shrink-0"
-        style={{ width: open ? "16rem" : "0", transition: `width ${TRANSITION}` }}
+        style={{ width: open ? "18rem" : "0", transition: `width ${TRANSITION}` }}
       />
 
       <aside
-        className="fixed top-0 left-0 h-full w-64 bg-white shadow-xl z-50 flex flex-col will-change-transform overflow-hidden"
+        className="fixed top-0 left-0 h-full w-72 bg-white shadow-xl z-50 flex flex-col will-change-transform overflow-hidden"
         style={{
           transform: open ? "translateX(0)" : "translateX(-100%)",
           transition: `transform ${TRANSITION}`,
@@ -64,8 +64,19 @@ export default function MenuSidebar({ sections }: { sections: SectionGroup[] }) 
         aria-modal="true"
         aria-label="Navigation menu"
       >
+        {/* Close button */}
+        <div className="flex items-center justify-end px-3 pt-3 pb-1 shrink-0">
+          <button
+            onClick={close}
+            aria-label="Close menu"
+            className="flex items-center justify-center w-9 h-9 rounded-full hover:bg-[var(--sage-light)] transition"
+          >
+            <X className="w-5 h-5 text-stone-500" />
+          </button>
+        </div>
+
         {/* Nav links */}
-        <nav className="flex-1 overflow-y-auto scrollbar-hide px-3 pt-8 pb-4 flex flex-col gap-0.5">
+        <nav className="flex-1 overflow-y-auto scrollbar-hide px-3 pt-1 pb-4 flex flex-col gap-0.5">
           <Link href="/" onClick={close} className={navClass("/")}>
             Home
           </Link>

@@ -28,7 +28,7 @@ export default async function AboutPage() {
   const whatsappHref = phone ? `https://wa.me/${phone}` : null;
   const instaHref = settings?.instagramPage ?? null;
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+    <div className="max-w-7xl mx-auto px-2 sm:px-4 py-6">
       {/* Title */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-stone-800">About MaBelle Bites</h1>

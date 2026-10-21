@@ -1,20 +1,19 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
-import Link from "next/link";
 import { fileUrl } from "@/lib/api";
 import { cachedStorefrontApi } from "@/lib/cached-storefront";
-import { sameSectionCode, sectionHref } from "@/lib/sections";
-import ProductCard from "@/components/product-card";
+import { sameSectionCode } from "@/lib/sections";
 import BackButton from "@/components/back-button";
+import { SectionBrandFilter } from "./section-brand-filter";
 
-interface PageProps { params: Promise<{ code: string }>; searchParams: Promise<{ brand?: string }> }
+interface PageProps { params: Promise<{ code: string }> }
 
 const decode = (v: string) => { try { return decodeURIComponent(v); } catch { return v; } };
 
 export default function SectionPage(props: PageProps) {
   return (
     <Suspense fallback={
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 animate-pulse">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 py-8 animate-pulse">
         <div className="flex items-center gap-3 mb-8">
           <div className="w-16 h-16 rounded-xl bg-stone-100 shrink-0" />
           <div className="h-8 w-48 bg-stone-100 rounded-lg" />
@@ -31,29 +30,21 @@ export default function SectionPage(props: PageProps) {
   );
 }
 
-/** Every product of a section code, whatever its brand; optional brand chips narrow it down. */
-async function SectionContent({ params, searchParams }: PageProps) {
+async function SectionContent({ params }: PageProps) {
   const code = decode((await params).code);
-  const { brand: brandParam } = await searchParams;
 
   const [sections, products] = await Promise.all([
     cachedStorefrontApi.sections().catch(() => []),
     cachedStorefrontApi.products({ sectionCode: code }).catch(() => []),
   ]);
+
   const section = sections.find(s => sameSectionCode(s.code, code));
   if (!section) notFound();
 
-  const brandId = brandParam ? parseInt(brandParam) : undefined;
-  const shown = brandId ? products.filter(p => p.categoryId === brandId) : products;
   const imgUrl = fileUrl(section.imageUrl);
-  const chip = (active: boolean) => `px-4 py-1.5 rounded-full text-sm font-medium transition border ${
-    active
-      ? "bg-[var(--brand)] text-white border-[var(--brand)]"
-      : "bg-white text-stone-600 border-[var(--sage-light)] hover:border-[var(--brand)] hover:text-[var(--brand)]"
-  }`;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+    <div className="max-w-7xl mx-auto px-2 sm:px-4 py-8">
       <div className="flex items-center gap-3 mb-8">
         <BackButton href="/" scrollTarget="sections-area" />
         {imgUrl && (
@@ -64,31 +55,7 @@ async function SectionContent({ params, searchParams }: PageProps) {
         <h1 className="text-3xl font-bold text-stone-800">{section.name}</h1>
       </div>
 
-      {/* Brand filter — only when the section spans several brands */}
-      {section.brands.length > 1 && (
-        <div className="flex flex-wrap gap-2 mb-8">
-          <Link href={sectionHref(section.code)} replace className={chip(!brandId)}>All Brands</Link>
-          {section.brands.map(b => (
-            <Link key={b.id} href={`${sectionHref(section.code)}?brand=${b.id}`} replace className={chip(brandId === b.id)}>
-              {b.name}
-            </Link>
-          ))}
-        </div>
-      )}
-
-      {shown.length === 0 ? (
-        <div className="text-center py-20 text-stone-400">
-          <p className="text-4xl mb-3">📦</p>
-          <p className="font-medium">No products found in this section.</p>
-        </div>
-      ) : (
-        <>
-          <p className="text-sm text-stone-500 mb-4">{shown.length} product{shown.length !== 1 ? "s" : ""}</p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {shown.map(p => <ProductCard key={p.id} product={p} />)}
-          </div>
-        </>
-      )}
+      <SectionBrandFilter brands={section.brands} products={products} />
     </div>
   );
 }
