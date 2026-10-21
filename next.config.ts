@@ -12,6 +12,10 @@ const nextConfig: NextConfig = {
         port: "4000",
         pathname: "/api/uploads/**",
       },
+      {
+        protocol: "https",
+        hostname: "res.cloudinary.com",
+      },
     ],
   },
 };
