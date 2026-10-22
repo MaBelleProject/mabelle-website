@@ -10,7 +10,7 @@ interface SectionGridProps { sections: SectionGroup[]; }
 export default function SectionGrid({ sections }: SectionGridProps) {
   if (!sections.length) return null;
   return (
-    <section className="max-w-7xl mx-auto px-2 sm:px-4 py-8">
+    <section className="max-w-7xl mx-auto px-2 sm:px-4 pt-2 pb-8">
       <h2 className="text-2xl font-bold text-stone-800 mb-6">Discover Our Snacks</h2>
       <div className="relative">
         <div className="flex overflow-x-auto gap-2 pb-2 scrollbar-hide">
@@ -20,14 +20,14 @@ export default function SectionGrid({ sections }: SectionGridProps) {
               <Link
                 key={sec.code}
                 href={sectionHref(sec.code)}
-                className="group relative shrink-0 w-[calc(25%-6px)] sm:w-[calc(20%-6px)] aspect-square overflow-hidden rounded-2xl bg-[var(--sage-light)] hover:shadow-md transition"
+                className="group relative shrink-0 w-[calc(33%-6px)] sm:w-[calc(20%-6px)] aspect-square overflow-hidden rounded-2xl bg-[var(--sage-light)] hover:shadow-md transition"
               >
                 {imgUrl ? (
                   <Image
                     src={imgUrl}
                     alt={sec.name}
                     fill
-                    sizes="(max-width: 640px) 25vw, 20vw"
+                    sizes="(max-width: 640px) 33vw, 20vw"
                     className="object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                 ) : (

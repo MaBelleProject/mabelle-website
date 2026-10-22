@@ -4,7 +4,7 @@ import { useCustomer } from "@/context/customer-context";
 import { useMenu } from "@/context/menu-context";
 import type { SectionGroup } from "@/lib/api";
 import { sectionHref } from "@/lib/sections";
-import { LogOut, X } from "lucide-react";
+import { ChevronDown, LogOut, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -17,6 +17,7 @@ export default function MenuSidebar({ sections }: { sections: SectionGroup[] }) 
   const { customer, logout } = useCustomer();
   const pathname = usePathname();
   const [confirmSignOut, setConfirmSignOut] = useState(false);
+  const [sectionsOpen, setSectionsOpen] = useState(false);
 
   const navClass = (href: string) => {
     const active = href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(href + "/") || pathname.startsWith(href + "?");
@@ -32,6 +33,12 @@ export default function MenuSidebar({ sections }: { sections: SectionGroup[] }) 
   // Close the confirm dialog whenever the sidebar closes
   useEffect(() => { if (!open) setConfirmSignOut(false); }, [open]);
 
+  // Lock body scroll while menu is open
+  useEffect(() => {
+    document.body.style.overflow = open ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [open]);
+
   const handleSignOut = () => {
     logout();
     setConfirmSignOut(false);
@@ -46,12 +53,6 @@ export default function MenuSidebar({ sections }: { sections: SectionGroup[] }) 
         className="fixed inset-0 z-40 bg-black/20 transition-opacity duration-300"
         style={{ opacity: open ? 1 : 0, pointerEvents: open ? "auto" : "none" }}
         onClick={close}
-      />
-
-      <div
-        aria-hidden="true"
-        className=" shrink-0"
-        style={{ width: open ? "18rem" : "0", transition: `width ${TRANSITION}` }}
       />
 
       <aside
@@ -81,16 +82,37 @@ export default function MenuSidebar({ sections }: { sections: SectionGroup[] }) 
             Home
           </Link>
 
-          {sections.map(s => (
-            <Link
-              key={s.code}
-              href={sectionHref(s.code)}
-              onClick={close}
-              className={navClass(sectionHref(s.code))}
-            >
-              {s.name}
-            </Link>
-          ))}
+          {sections.length > 0 && (
+            <div>
+              <button
+                onClick={() => setSectionsOpen(v => !v)}
+                className="w-full px-4 py-3 rounded-lg text-sm font-medium transition text-stone-700 hover:bg-[var(--sage-light)] hover:text-[var(--brand)] flex items-center justify-between"
+              >
+                <span>Sections</span>
+                <ChevronDown
+                  className="w-4 h-4 transition-transform duration-300"
+                  style={{ transform: sectionsOpen ? "rotate(180deg)" : "rotate(0deg)" }}
+                />
+              </button>
+              <div
+                className="overflow-hidden transition-all duration-300"
+                style={{ maxHeight: sectionsOpen ? `${sections.length * 52}px` : "0px" }}
+              >
+                <div className="flex flex-col gap-0.5 pl-3 pt-0.5 pb-1">
+                  {sections.map(s => (
+                    <Link
+                      key={s.code}
+                      href={sectionHref(s.code)}
+                      onClick={close}
+                      className={navClass(sectionHref(s.code))}
+                    >
+                      {s.name}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
 
           <Link href="/bundles" onClick={close} className={navClass("/bundles")}>
             Bundles

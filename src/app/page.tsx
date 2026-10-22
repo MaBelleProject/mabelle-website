@@ -66,7 +66,7 @@ export default async function HomePage() {
 
       {/* Featured Products */}
       {featured.length > 0 && (
-        <section className="max-w-7xl mx-auto px-2 sm:px-4 py-4">
+        <section className="max-w-7xl mx-auto px-2 sm:px-4 pt-2 pb-8">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-stone-800">Our Products</h2>
             <a href="/products" className="text-sm text-[var(--brand)] font-semibold hover:underline">
