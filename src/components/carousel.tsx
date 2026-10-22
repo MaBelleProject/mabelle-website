@@ -146,7 +146,7 @@ export default function Carousel({ slides, sections = [] }: CarouselProps) {
   return (
     <div
       className="relative w-full overflow-hidden rounded-2xl select-none cursor-grab active:cursor-grabbing min-h-[200px]"
-      style={{ aspectRatio: "16/7" }}
+      style={{ aspectRatio: "16/7", transform: "translateZ(0)" }}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
