@@ -1,17 +1,17 @@
-import { Suspense } from "react";
+import BackButton from "@/components/back-button";
+import CountryFlag from "@/components/country-flag";
 import { fileUrl } from "@/lib/api";
-import Image from "next/image";
 import { cachedStorefrontApi } from "@/lib/cached-storefront";
 import { trimZeros } from "@/lib/format";
 import { describeOffer, offerBadge, offersForProduct } from "@/lib/offers";
 import { sectionHref } from "@/lib/sections";
 import { AlertTriangle, Check, Star } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import AddToCartButton from "./add-to-cart-button";
 import ProductInfoTabs from "./product-info-tabs";
-import BackButton from "@/components/back-button";
-import CountryFlag from "@/components/country-flag";
 
 interface PageProps { params: Promise<{ id: string }> }
 
@@ -82,14 +82,14 @@ async function ProductContent({ params }: PageProps) {
           ) : (
             <div className="w-full h-full flex items-center justify-center text-stone-300 text-8xl">🍬</div>
           )}
-          {(isDiscounted || offers.length > 0) && (
+          {/* {(isDiscounted || offers.length > 0) && (
             <div className="absolute top-3 left-3 flex flex-col items-start gap-1.5">
               {isDiscounted && <span className="bg-[var(--brand)] text-white text-xs font-bold px-3 py-1 rounded-full">SALE</span>}
               {offers.length > 0 && (
                 <span className="bg-[var(--sage-light)] text-[var(--sage)] text-xs font-bold px-3 py-1 rounded-full uppercase">{offerBadge(offers[0])}</span>
               )}
             </div>
-          )}
+          )} */}
         </div>
 
         {/* Details */}
