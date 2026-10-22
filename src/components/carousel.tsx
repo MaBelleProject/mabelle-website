@@ -145,8 +145,8 @@ export default function Carousel({ slides, sections = [] }: CarouselProps) {
 
   return (
     <div
-      className="relative w-full overflow-hidden rounded-2xl select-none cursor-grab active:cursor-grabbing min-h-[200px]"
-      style={{ aspectRatio: "16/7", transform: "translateZ(0)" }}
+      className="relative w-full select-none cursor-grab active:cursor-grabbing min-h-[200px]"
+      style={{ aspectRatio: "16/7", clipPath: "inset(0 round 1rem)" }}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
@@ -180,7 +180,7 @@ export default function Carousel({ slides, sections = [] }: CarouselProps) {
                 alt={slide.title ?? ""}
                 fill
                 sizes="(max-width: 1280px) 100vw, 1280px"
-                className="object-cover"
+                className="object-cover rounded-2xl"
                 priority={idx === 0}
                 draggable={false}
               />
