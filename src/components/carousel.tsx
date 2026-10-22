@@ -5,7 +5,7 @@ import { fileUrl } from "@/lib/api";
 import Image from "next/image";
 import { sectionHref, sectionOfId } from "@/lib/sections";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 
 interface CarouselProps { slides: CarouselSlide[]; sections?: SectionGroup[]; }
 
@@ -145,8 +145,8 @@ export default function Carousel({ slides, sections = [] }: CarouselProps) {
 
   return (
     <div
-      className="relative w-full select-none cursor-grab active:cursor-grabbing min-h-[200px]"
-      style={{ aspectRatio: "16/7", clipPath: "inset(0 round 1rem)" }}
+      className="relative w-full overflow-hidden rounded-2xl select-none cursor-grab active:cursor-grabbing min-h-[200px]"
+      style={{ aspectRatio: "16/7", WebkitMaskImage: "-webkit-radial-gradient(white, black)" } as React.CSSProperties}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
