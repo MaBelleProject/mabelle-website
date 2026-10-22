@@ -2,6 +2,7 @@
 
 import type { CarouselSlide, SectionGroup } from "@/lib/api";
 import { fileUrl } from "@/lib/api";
+import Image from "next/image";
 import { sectionHref, sectionOfId } from "@/lib/sections";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -144,8 +145,8 @@ export default function Carousel({ slides, sections = [] }: CarouselProps) {
 
   return (
     <div
-      className="relative overflow-hidden rounded-2xl select-none cursor-grab active:cursor-grabbing"
-      style={{ aspectRatio: "16/6" }}
+      className="relative overflow-hidden rounded-2xl select-none cursor-grab active:cursor-grabbing min-h-[200px]"
+      style={{ aspectRatio: "16/7" }}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
@@ -166,7 +167,7 @@ export default function Carousel({ slides, sections = [] }: CarouselProps) {
           willChange: "transform",
         }}
       >
-        {slides.map((slide) => {
+        {slides.map((slide, idx) => {
           const url = fileUrl(slide.imageUrl) ?? slide.imageUrl;
           const clickable = isClickable(slide);
           return (
@@ -174,10 +175,13 @@ export default function Carousel({ slides, sections = [] }: CarouselProps) {
               key={slide.id}
               className={`carousel-slide relative ${clickable ? "cursor-pointer" : ""}`}
             >
-              <img
+              <Image
                 src={url}
                 alt={slide.title ?? ""}
-                className="w-full h-full object-cover"
+                fill
+                sizes="(max-width: 1280px) 100vw, 1280px"
+                className="object-cover"
+                priority={idx === 0}
                 draggable={false}
               />
               {/* {(slide.title || slide.description || slide.buttonText) && (

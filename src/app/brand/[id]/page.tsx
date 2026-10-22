@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { fileUrl } from "@/lib/api";
+import Image from "next/image";
 import { cachedStorefrontApi } from "@/lib/cached-storefront";
 import BackButton from "@/components/back-button";
 import { BrandFlavorFilter } from "./brand-flavor-filter";
@@ -46,8 +47,8 @@ async function BrandContent({ params }: PageProps) {
       <div className="flex items-center gap-4 mb-8">
         <BackButton href="/" scrollTarget="brands-area" />
         {imgUrl && (
-          <div className="w-16 h-16 rounded-full overflow-hidden bg-[var(--sage-light)] shrink-0">
-            <img src={imgUrl} alt={brand.name} className="w-full h-full object-cover" />
+          <div className="relative w-16 h-16 rounded-full overflow-hidden bg-[var(--sage-light)] shrink-0">
+            <Image src={imgUrl} alt={brand.name} fill sizes="64px" className="object-cover" />
           </div>
         )}
         <h1 className="text-3xl font-bold text-stone-800">{brand.name}</h1>

@@ -5,16 +5,21 @@ const nextConfig: NextConfig = {
   partialPrefetching: true,
   devIndicators: false,
   images: {
+    formats: ["image/avif", "image/webp"],
     remotePatterns: [
       {
         protocol: "http",
         hostname: "localhost",
         port: "4000",
-        pathname: "/api/uploads/**",
+        pathname: "/uploads/**",
       },
       {
         protocol: "https",
         hostname: "res.cloudinary.com",
+      },
+      {
+        protocol: "https",
+        hostname: "br-fancy-darkness-b46tipgm.storage.c-6.us-east-2.aws.neon.tech",
       },
     ],
   },

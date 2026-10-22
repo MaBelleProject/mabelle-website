@@ -15,6 +15,8 @@ export const hasFreeDelivery = (c: CustomerInfo | null | undefined) => !!(c?.fre
 
 interface Ctx {
   customer: CustomerInfo | null;
+  /** True once the stored session has been read from localStorage. */
+  customerReady: boolean;
   login: (phone: string, password: string) => Promise<void>;
   signup: (name: string, phone: string, email: string | undefined, password: string, address?: string, city?: string, floor?: string) => Promise<void>;
   logout: () => void;
@@ -22,6 +24,7 @@ interface Ctx {
 
 const CustomerContext = createContext<Ctx>({
   customer: null,
+  customerReady: false,
   login: async () => {},
   signup: async () => {},
   logout: () => {},
@@ -31,12 +34,14 @@ const STORAGE_KEY = "mabelle_customer";
 
 export function CustomerProvider({ children }: { children: ReactNode }) {
   const [customer, setCustomerState] = useState<CustomerInfo | null>(null);
+  const [customerReady, setCustomerReady] = useState(false);
 
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) setCustomerState(JSON.parse(raw));
     } catch { /* ignore corrupt storage */ }
+    setCustomerReady(true);
   }, []);
 
   const setCustomer = (c: CustomerInfo | null) => {
@@ -70,7 +75,7 @@ export function CustomerProvider({ children }: { children: ReactNode }) {
   const logout = () => setCustomer(null);
 
   return (
-    <CustomerContext.Provider value={{ customer, login, signup, logout }}>
+    <CustomerContext.Provider value={{ customer, customerReady, login, signup, logout }}>
       {children}
     </CustomerContext.Provider>
   );

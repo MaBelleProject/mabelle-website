@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { fileUrl } from "@/lib/api";
 import { cachedStorefrontApi } from "@/lib/cached-storefront";
 import { Gift, Plus } from "lucide-react";
@@ -46,7 +47,7 @@ export default async function GiftsPage() {
             <Link key={g.id} href={`/gifts/${g.id}`} className="group flex flex-col bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition border border-[var(--sage-light)]">
               <div className="relative aspect-square bg-[var(--sage-light)] overflow-hidden">
                 {img ? (
-                  <img src={img} alt={g.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                  <Image src={img} alt={g.name} fill sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw" className="object-cover group-hover:scale-105 transition-transform duration-300" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-stone-300"><Gift className="w-12 h-12" /></div>
                 )}

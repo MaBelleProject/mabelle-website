@@ -1,5 +1,6 @@
 import type { Brand } from "@/lib/api";
 import { fileUrl } from "@/lib/api";
+import Image from "next/image";
 import Link from "next/link";
 import CountryFlag from "./country-flag";
 
@@ -22,11 +23,12 @@ export default function BrandGrid({ brands, countries = {} }: BrandGridProps) {
                 className="group relative shrink-0 w-[calc(25%-6px)] sm:w-[calc(20%-6px)] aspect-square overflow-hidden rounded-2xl bg-[var(--sage-light)] hover:shadow-md transition"
               >
                 {imgUrl ? (
-                  <img
+                  <Image
                     src={imgUrl}
                     alt={brand.name}
-                    loading="lazy"
-                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    fill
+                    sizes="(max-width: 640px) 25vw, 20vw"
+                    className="object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center text-4xl">🏷️</div>

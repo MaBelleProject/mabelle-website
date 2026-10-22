@@ -9,8 +9,8 @@ import SectionGrid from "@/components/section-grid";
 import { cachedStorefrontApi } from "@/lib/cached-storefront";
 import { brandCountries } from "@/lib/countries";
 import { Gift } from "lucide-react";
-import Link from "next/link";
 import { cacheLife } from "next/cache";
+import Link from "next/link";
 
 export default async function HomePage() {
   'use cache';
@@ -32,7 +32,7 @@ export default async function HomePage() {
     <div className="pb-16">
       {/* Carousel */}
       {slides.length > 0 && (
-        <section className="max-w-7xl mx-auto px-2 sm:px-4 pt-4 pb-8">
+        <section className="max-w-7xl mx-auto px-2 sm:px-4 pt-10 pb-6">
           <Carousel slides={slides} sections={sections} />
         </section>
       )}
@@ -45,7 +45,7 @@ export default async function HomePage() {
 
       {/* Offers (highest priority first) */}
       {offers.length > 0 && (
-        <section className="max-w-7xl mx-auto px-2 sm:px-4 py-8">
+        <section className="max-w-7xl mx-auto px-2 sm:px-4 py-4">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-stone-800">Offers</h2>
             {/* <Link href="/offers" className="text-sm text-[var(--brand)] font-semibold hover:underline">View all offers →</Link> */}
@@ -66,7 +66,7 @@ export default async function HomePage() {
 
       {/* Featured Products */}
       {featured.length > 0 && (
-        <section className="max-w-7xl mx-auto px-2 sm:px-4 py-8">
+        <section className="max-w-7xl mx-auto px-2 sm:px-4 py-4">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-stone-800">Our Products</h2>
             <a href="/products" className="text-sm text-[var(--brand)] font-semibold hover:underline">
@@ -86,7 +86,7 @@ export default async function HomePage() {
 
       {/* Bundles */}
       {bundles.length > 0 && (
-        <section className="max-w-7xl mx-auto px-2 sm:px-4 py-8">
+        <section className="max-w-7xl mx-auto px-2 sm:px-4 py-4">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-stone-800">Bundles</h2>
             <Link href="/bundles" className="text-sm text-[var(--brand)] font-semibold hover:underline">View all bundles →</Link>
@@ -99,7 +99,7 @@ export default async function HomePage() {
 
       {/* Gifts */}
       {gifts.length > 0 && (
-        <section className="max-w-7xl mx-auto px-2 sm:px-4 py-8">
+        <section className="max-w-7xl mx-auto px-2 sm:px-4 py-4">
           <Link href="/gifts" className="flex items-center gap-4 rounded-2xl bg-[var(--cream)] border border-[var(--brand-light)] px-6 py-5 hover:shadow-md transition">
             <span className="w-12 h-12 rounded-full bg-white flex items-center justify-center shrink-0"><Gift className="w-6 h-6 text-[var(--brand)]" /></span>
             <span className="flex-1">

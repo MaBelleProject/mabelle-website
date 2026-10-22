@@ -1,6 +1,7 @@
 "use client";
 
 import { fileUrl, storefrontApi, type FeedbackProduct, type OrderFeedback, type ProductFeedbackRating } from "@/lib/api";
+import Image from "next/image";
 import { Loader2, Star, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
@@ -162,9 +163,9 @@ export default function FeedbackFormModal({ customerId, orderId, orderNumber, on
                   return (
                     <div key={p.productId} className="rounded-xl border border-[var(--sage-light)] p-4 flex flex-col gap-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-xl bg-[var(--background)] overflow-hidden shrink-0 border border-[var(--sage-light)]">
+                        <div className="relative w-12 h-12 rounded-xl bg-[var(--background)] overflow-hidden shrink-0 border border-[var(--sage-light)]">
                           {imgUrl ? (
-                            <img src={imgUrl} alt={p.productName} className="w-full h-full object-cover" />
+                            <Image src={imgUrl} alt={p.productName} fill sizes="48px" className="object-cover" loading="lazy" />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-stone-300 text-xl">🍬</div>
                           )}

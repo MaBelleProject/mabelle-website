@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Check, Minus, Plus, ShoppingCart, Layers } from "lucide-react";
 import type { Bundle, BundleReplacementProduct } from "@/lib/api";
 import { fileUrl } from "@/lib/api";
@@ -127,8 +128,8 @@ export function BundleCartControlWithSwaps({ bundle }: { bundle: Bundle }) {
             return (
               <li key={item.id} className="flex flex-col gap-2">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg overflow-hidden bg-white shrink-0">
-                    {img ? <img src={img} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center">🍬</div>}
+                  <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-white shrink-0">
+                    {img ? <Image src={img} alt="" fill sizes="40px" className="object-cover" loading="lazy" /> : <div className="w-full h-full flex items-center justify-center">🍬</div>}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
@@ -141,7 +142,7 @@ export function BundleCartControlWithSwaps({ bundle }: { bundle: Bundle }) {
                 </div>
 
                 {allOptions.length > 1 && (
-                  <div className="flex flex-wrap gap-1.5 pl-13">
+                  <div className="flex flex-wrap gap-1.5 sm:pl-[52px]">
                     {allOptions.map((opt) => (
                       <button
                         key={opt.productId}
@@ -171,7 +172,7 @@ export function BundleCartControlWithSwaps({ bundle }: { bundle: Bundle }) {
       {soldOut ? (
         <p className="text-sm font-medium text-stone-500 bg-[var(--sage-light)] rounded-full px-3 py-1 w-fit">Out of stock</p>
       ) : qty > 0 ? (
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-1 bg-[var(--sage-light)] rounded-full p-0.5">
             <button onClick={() => update(cartKey, qty - 1)} className="w-8 h-8 rounded-full bg-white shadow flex items-center justify-center hover:bg-[var(--brand-light)] transition" aria-label="Decrease">
               <Minus className="w-3.5 h-3.5" />
@@ -190,11 +191,11 @@ export function BundleCartControlWithSwaps({ bundle }: { bundle: Bundle }) {
           <Link href="/cart" className="text-sm text-[var(--brand)] font-semibold hover:underline">View cart →</Link>
         </div>
       ) : (
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <button
             type="button"
             onClick={addToCart}
-            className="flex items-center justify-center gap-2 flex-1 max-w-xs py-3 rounded-full bg-[var(--brand)] hover:bg-[var(--brand-dark)] text-white font-semibold transition"
+            className="flex items-center justify-center gap-2 flex-1 min-w-[180px] py-3 rounded-full bg-[var(--brand)] hover:bg-[var(--brand-dark)] text-white font-semibold transition"
           >
             {added ? <Check className="w-5 h-5" /> : <ShoppingCart className="w-5 h-5" />}
             {added ? "Added!" : `Add to Cart · $${parseFloat(bundle.price).toFixed(2)}`}
@@ -214,7 +215,7 @@ export default function BundleCard({ bundle }: { bundle: Bundle }) {
     <Link href={`/bundles/${bundle.id}`} className="group flex flex-col bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition border border-[var(--sage-light)]">
       <div className="relative aspect-square bg-[var(--sage-light)] overflow-hidden">
         {imgUrl ? (
-          <img src={imgUrl} alt={bundle.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+          <Image src={imgUrl} alt={bundle.name} fill sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw" className="object-cover group-hover:scale-105 transition-transform duration-300" />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-stone-300"><Layers className="w-12 h-12" /></div>
         )}

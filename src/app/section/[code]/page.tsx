@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { fileUrl } from "@/lib/api";
+import Image from "next/image";
 import { cachedStorefrontApi } from "@/lib/cached-storefront";
 import { sameSectionCode } from "@/lib/sections";
 import BackButton from "@/components/back-button";
@@ -48,8 +49,8 @@ async function SectionContent({ params }: PageProps) {
       <div className="flex items-center gap-3 mb-8">
         <BackButton href="/" scrollTarget="sections-area" />
         {imgUrl && (
-          <div className="w-16 h-16 rounded-xl overflow-hidden bg-[var(--sage-light)] shrink-0">
-            <img src={imgUrl} alt={section.name} className="w-full h-full object-cover" />
+          <div className="relative w-16 h-16 rounded-xl overflow-hidden bg-[var(--sage-light)] shrink-0">
+            <Image src={imgUrl} alt={section.name} fill sizes="64px" className="object-cover" />
           </div>
         )}
         <h1 className="text-3xl font-bold text-stone-800">{section.name}</h1>

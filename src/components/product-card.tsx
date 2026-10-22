@@ -10,6 +10,7 @@ import type { Product } from "@/lib/api";
 import { fileUrl } from "@/lib/api";
 import { offerBadge, offersForProduct } from "@/lib/offers";
 import { AlertTriangle, Heart, Minus, Plus, ShoppingCart, Star } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import CountryFlag from "./country-flag";
 
@@ -73,11 +74,12 @@ export default function ProductCard({ product }: ProductCardProps) {
       {/* Image */}
       <div className="relative aspect-square bg-[var(--cream)] overflow-hidden">
         {imgUrl ? (
-          <img
+          <Image
             src={imgUrl}
             alt={product.name}
-            loading="lazy"
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            fill
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            className="object-cover group-hover:scale-105 transition-transform duration-300"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-stone-300 text-5xl">🍬</div>
@@ -117,13 +119,6 @@ export default function ProductCard({ product }: ProductCardProps) {
           <h3 className="flex-1 min-w-0 text-sm font-semibold text-stone-800 line-clamp-2 leading-snug min-h-[2.5rem]">{product.name}</h3>
           <CountryFlag country={product.madeIn} className="mt-[3px] w-4 h-3" />
         </div>
-        {rating && rating.totalRatings > 0 && (
-          <div className="flex items-center gap-1">
-            <Star className="w-3.5 h-3.5 shrink-0 fill-amber-400 text-amber-400" />
-            <span className="text-xs font-medium text-stone-600">{Number(rating.averageRating).toFixed(1)} <span className="font-normal text-stone-400">({rating.totalRatings})</span></span>
-          </div>
-        )}
-
         {/* Always reserve space for the offer line so all cards share the same height */}
         <p className={`text-xs font-medium line-clamp-1 ${offer ? "text-[var(--sage)]" : "invisible select-none"}`} aria-hidden={!offer || undefined}>
           🎁 {offer ? offer.name : "offer placeholder"}
@@ -135,14 +130,22 @@ export default function ProductCard({ product }: ProductCardProps) {
           <span>Only {product.quantity} left</span>
         </div>
 
-        <div className="flex items-baseline gap-2 mt-auto">
-          {originalPrice ? (
-            <>
-              <span className="text-[var(--brand)] font-bold text-base">${price.toFixed(2)}</span>
-              <span className="text-stone-400 text-sm line-through">${originalPrice.toFixed(2)}</span>
-            </>
-          ) : (
-            <span className="text-stone-800 font-bold text-base">${price.toFixed(2)}</span>
+        <div className="flex items-center justify-between gap-2 mt-auto">
+          <div className="flex items-baseline gap-2">
+            {originalPrice ? (
+              <>
+                <span className="text-[var(--brand)] font-bold text-base">${price.toFixed(2)}</span>
+                <span className="text-stone-400 text-sm line-through">${originalPrice.toFixed(2)}</span>
+              </>
+            ) : (
+              <span className="text-stone-800 font-bold text-base">${price.toFixed(2)}</span>
+            )}
+          </div>
+          {rating && rating.totalRatings > 0 && (
+            <div className="flex items-center gap-0.5 shrink-0">
+              <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+              <span className="text-xs font-medium text-stone-600">{Number(rating.averageRating).toFixed(1)}</span>
+            </div>
           )}
         </div>
 

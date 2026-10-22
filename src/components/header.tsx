@@ -6,6 +6,7 @@ import { useFavorites } from "@/context/favorites-context";
 import { useMenu } from "@/context/menu-context";
 import type { Brand, Settings } from "@/lib/api";
 import { fileUrl } from "@/lib/api";
+import Image from "next/image";
 import { Heart, Menu, Search, ShoppingCart } from "lucide-react";
 import Link from "next/link";
 
@@ -46,7 +47,7 @@ export default function Header({ brands: _brands, settings }: HeaderProps) {
           {/* Logo — absolutely centered */}
           <Link href="/" className="absolute left-1/2 -translate-x-1/2">
             {logoUrl ? (
-              <img src={logoUrl} alt={settings?.companyName ?? "Mabelle Bites"} className="h-20 w-auto object-contain" />
+              <Image src={logoUrl} alt={settings?.companyName ?? "Mabelle Bites"} height={80} width={200} className="h-20 w-auto object-contain" priority />
             ) : (
               <span className="text-2xl font-bold text-[var(--brand-dark)]">
                 {settings?.companyName ?? "Mabelle Bites"}

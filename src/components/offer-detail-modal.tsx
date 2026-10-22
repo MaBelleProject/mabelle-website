@@ -2,6 +2,7 @@
 
 import { productKey, useCart } from "@/context/cart-context";
 import { fileUrl, type Offer, type ProductDetail, storefrontApi } from "@/lib/api";
+import Image from "next/image";
 import { trimZeros } from "@/lib/format";
 import { describeOffer, offerBadge, offerEnds, offerScope } from "@/lib/offers";
 import { ArrowRight, BadgePercent, Loader2, ShoppingCart, X } from "lucide-react";
@@ -151,9 +152,9 @@ export default function OfferDetailModal({ offer, onClose }: Props) {
 
                   return (
                     <div key={product.id} className="flex items-center gap-3 rounded-xl border border-[var(--sage-light)] p-3">
-                      <div className="w-12 h-12 rounded-xl bg-[var(--background)] overflow-hidden shrink-0 border border-[var(--sage-light)]">
+                      <div className="relative w-12 h-12 rounded-xl bg-[var(--background)] overflow-hidden shrink-0 border border-[var(--sage-light)]">
                         {imgUrl ? (
-                          <img src={imgUrl} alt={product.name} className="w-full h-full object-cover" />
+                          <Image src={imgUrl} alt={product.name} fill sizes="48px" className="object-cover" loading="lazy" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-stone-300 text-xl">🍬</div>
                         )}

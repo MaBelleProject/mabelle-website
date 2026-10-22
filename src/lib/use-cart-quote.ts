@@ -9,12 +9,12 @@ import { useEffect, useMemo, useState } from "react";
  * bundle and gift prices.
  * `quote` is null until the server has answered for the current cart.
  */
-export function useCartQuote(items: CartItem[], opts: { customerId?: number; procodeId?: number; selectedOfferId?: number | null } = {}) {
+export function useCartQuote(items: CartItem[], opts: { customerId?: number; procodeId?: number; selectedOfferId?: number | null; skip?: boolean } = {}) {
   const request = useMemo(
-    () => (items.length
+    () => (items.length && !opts.skip
       ? { customerId: opts.customerId, procodeId: opts.procodeId, selectedOfferId: opts.selectedOfferId ?? undefined, items: items.map(toOrderLine) }
       : null),
-    [items, opts.customerId, opts.procodeId, opts.selectedOfferId],
+    [items, opts.customerId, opts.procodeId, opts.selectedOfferId, opts.skip],
   );
   const key = request ? JSON.stringify(request) : "";
   const [state, setState] = useState<{ key: string; quote?: OrderQuote; error?: string } | null>(null);

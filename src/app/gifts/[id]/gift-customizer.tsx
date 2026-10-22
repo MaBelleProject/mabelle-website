@@ -4,6 +4,7 @@ import CountryFlag from "@/components/country-flag";
 import { useCart } from "@/context/cart-context";
 import { fileUrl, type GiftPackage, type GiftPackaging, type GiftProduct, type Product } from "@/lib/api";
 import { Check, Minus, Plus, Search, ShoppingCart, Trash2 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
@@ -67,8 +68,8 @@ function ProductPicker({ allProducts, selected, onAdd }: {
               disabled={alreadyIn}
               className="w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-[var(--sage-light)] transition disabled:opacity-50 text-left"
             >
-              <div className="w-7 h-7 rounded-md overflow-hidden bg-[var(--sage-light)] shrink-0 flex items-center justify-center">
-                {img ? <img src={img} alt="" className="w-full h-full object-cover" /> : <span>🍬</span>}
+              <div className="relative w-7 h-7 rounded-md overflow-hidden bg-[var(--sage-light)] shrink-0 flex items-center justify-center">
+                {img ? <Image src={img} alt="" fill sizes="28px" className="object-cover" loading="lazy" /> : <span>🍬</span>}
               </div>
               <span className="flex-1 min-w-0 flex items-center gap-1.5">
                 <span className="truncate text-stone-700">{p.name}</span>
@@ -215,17 +216,17 @@ export default function GiftCustomizer({
               const maxQty = Math.max(sel.quantity, stock);
               return (
                 <li key={sel.productId} className="flex items-start gap-3 bg-white rounded-xl px-3 py-2.5">
-                  <div className="w-9 h-9 rounded-lg overflow-hidden bg-[var(--sage-light)] shrink-0 mt-0.5">
-                    {img ? <img src={img} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-lg">🍬</div>}
+                  <div className="relative w-9 h-9 rounded-lg overflow-hidden bg-[var(--sage-light)] shrink-0 mt-0.5">
+                    {img ? <Image src={img} alt="" fill sizes="36px" className="object-cover" loading="lazy" /> : <div className="w-full h-full flex items-center justify-center text-lg">🍬</div>}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
                       <p className="min-w-0 text-sm text-stone-800 font-medium truncate">{p.name}</p>
                       <CountryFlag productId={sel.productId} className="w-4 h-3" />
                     </div>
-                    <div className="flex items-center gap-2 mt-1.5">
-                      <p className="text-xs text-stone-400 flex-1 min-w-0 truncate">${parseFloat((p as Product).sellingPrice).toFixed(2)} each</p>
-                      <div className="flex items-center gap-1.5 shrink-0">
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 mt-1.5">
+                      <p className="text-xs text-stone-400 shrink-0">${parseFloat((p as Product).sellingPrice).toFixed(2)} each</p>
+                      <div className="flex items-center gap-1.5 ml-auto shrink-0">
                         <Stepper value={sel.quantity} min={1} max={maxQty || 99} onChange={(v) => setQty(sel.productId, v)} />
                         <button type="button" onClick={() => removeProduct(sel.productId)} className="p-1 text-stone-300 hover:text-red-400 transition" aria-label="Remove">
                           <Trash2 className="w-4 h-4" />
@@ -257,8 +258,8 @@ export default function GiftCustomizer({
                   className={`relative flex flex-col items-center gap-1 rounded-xl border p-2 text-center transition ${selected ? "border-[var(--brand)] ring-1 ring-[var(--brand)] bg-[var(--cream)]" : "border-stone-200 bg-white hover:border-[var(--brand-light)]"}`}
                 >
                   {selected && <Check className="absolute top-1.5 right-1.5 w-3.5 h-3.5 text-[var(--brand)]" />}
-                  <div className="w-14 h-14 rounded-lg overflow-hidden bg-[var(--cream)] flex items-center justify-center">
-                    {img ? <img src={img} alt="" className="w-full h-full object-cover" /> : <span className="text-xl">🎀</span>}
+                  <div className="relative w-14 h-14 rounded-lg overflow-hidden bg-[var(--cream)] flex items-center justify-center">
+                    {img ? <Image src={img} alt="" fill sizes="56px" className="object-cover" loading="lazy" /> : <span className="text-xl">🎀</span>}
                   </div>
                   <span className="text-xs font-medium text-stone-700 line-clamp-1">{p.name}</span>
                   <span className="text-[11px] font-semibold text-[var(--brand)]">+${parseFloat(p.price).toFixed(2)}</span>
@@ -286,21 +287,21 @@ export default function GiftCustomizer({
       </section>
 
       {/* Price & add */}
-      <div className="flex items-center justify-between gap-4 border-t border-[var(--sage-light)] pt-4">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-t border-[var(--sage-light)] pt-4">
         <div>
           <p className="text-xs text-stone-400">Price per gift</p>
-          <p className="text-2xl sm:text-3xl font-bold text-stone-800">${unitPrice.toFixed(2)}</p>
+          <p className="text-2xl font-bold text-stone-800">${unitPrice.toFixed(2)}</p>
         </div>
         <Stepper value={quantity} min={1} max={Math.max(1, maxGifts)} onChange={setQuantity} />
       </div>
       {empty && <p className="text-sm text-amber-600">Add at least one product to your gift.</p>}
       {!empty && maxGifts < 1 && <p className="text-sm font-medium text-stone-500 bg-[var(--sage-light)] rounded-full px-3 py-1 w-fit">Not enough stock for this selection</p>}
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <button
           type="button"
           onClick={addToCart}
           disabled={empty || maxGifts < 1}
-          className="flex items-center justify-center gap-2 flex-1 max-w-xs py-3 rounded-full bg-[var(--brand)] hover:bg-[var(--brand-dark)] text-white font-semibold transition disabled:opacity-40 disabled:cursor-not-allowed"
+          className="flex items-center justify-center gap-2 flex-1 min-w-[180px] py-3 rounded-full bg-[var(--brand)] hover:bg-[var(--brand-dark)] text-white font-semibold transition disabled:opacity-40 disabled:cursor-not-allowed"
         >
           {added ? <Check className="w-5 h-5" /> : <ShoppingCart className="w-5 h-5" />}
           {added ? "Added!" : `Add to Cart · $${(unitPrice * quantity).toFixed(2)}`}

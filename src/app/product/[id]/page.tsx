@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { fileUrl } from "@/lib/api";
+import Image from "next/image";
 import { cachedStorefrontApi } from "@/lib/cached-storefront";
 import { trimZeros } from "@/lib/format";
 import { describeOffer, offerBadge, offersForProduct } from "@/lib/offers";
@@ -77,7 +78,7 @@ async function ProductContent({ params }: PageProps) {
         {/* Image */}
         <div className="relative aspect-square rounded-2xl overflow-hidden bg-[var(--cream)]">
           {imgUrl ? (
-            <img src={imgUrl} alt={product.name} className="w-full h-full object-cover" />
+            <Image src={imgUrl} alt={product.name} fill priority sizes="(max-width: 768px) 100vw, 50vw" className="object-cover" />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-stone-300 text-8xl">🍬</div>
           )}

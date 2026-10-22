@@ -3,6 +3,7 @@
 import { createPortal } from "react-dom";
 import { X, Star, Pencil } from "lucide-react";
 import { type OrderFeedback, fileUrl } from "@/lib/api";
+import Image from "next/image";
 import CountryFlag from "./country-flag";
 
 interface Props {
@@ -73,9 +74,9 @@ export default function FeedbackViewModal({ orderNumber, feedback, onClose, onEd
                   const imgUrl = fileUrl(pr.productImageUrl ?? undefined);
                   return (
                     <div key={pr.id} className="rounded-xl border border-[var(--sage-light)] p-4 flex gap-3">
-                      <div className="w-12 h-12 rounded-xl bg-[var(--background)] overflow-hidden shrink-0 border border-[var(--sage-light)]">
+                      <div className="relative w-12 h-12 rounded-xl bg-[var(--background)] overflow-hidden shrink-0 border border-[var(--sage-light)]">
                         {imgUrl ? (
-                          <img src={imgUrl} alt={pr.productName} className="w-full h-full object-cover" />
+                          <Image src={imgUrl} alt={pr.productName} fill sizes="48px" className="object-cover" loading="lazy" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-stone-300 text-xl">🍬</div>
                         )}

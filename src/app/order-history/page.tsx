@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { ChevronDown, ChevronUp, Loader2, MessageCircleHeart, Package, RotateCcw } from "lucide-react";
 import { useCustomer } from "@/context/customer-context";
 import { useCart } from "@/context/cart-context";
@@ -154,9 +155,9 @@ export default function OrderHistoryPage() {
                   <div className="flex flex-col gap-3">
                     {order.items.map(item => (
                       <div key={item.id} className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-xl bg-[var(--cream)] overflow-hidden shrink-0 border border-[var(--sage-light)]">
+                        <div className="relative w-12 h-12 rounded-xl bg-[var(--cream)] overflow-hidden shrink-0 border border-[var(--sage-light)]">
                           {item.imageUrl ? (
-                            <img src={fileUrl(item.imageUrl)} alt={item.productName} className="w-full h-full object-cover" />
+                            <Image src={fileUrl(item.imageUrl)!} alt={item.productName} fill sizes="48px" className="object-cover" loading="lazy" />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-stone-300 text-xl">🍬</div>
                           )}
