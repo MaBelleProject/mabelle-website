@@ -50,7 +50,7 @@ export default function BestSellersList({ products }: BestSellersListProps) {
         {products.map((product, index) => (
           <div
             key={product.id}
-            className="relative snap-start shrink-0 w-44 sm:w-52"
+            className="relative snap-start shrink-0 w-48 sm:w-52"
           >
             <ProductCard product={product} />
           </div>
