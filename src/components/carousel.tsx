@@ -135,6 +135,9 @@ export default function Carousel({ slides, sections = [] }: CarouselProps) {
       case "subsection":
         router.push(`/products?subsectionId=${slide.destinationId}`);
         break;
+      case "country":
+        router.push(`/products?countryId=${slide.destinationId}`);
+        break;
     }
   };
 

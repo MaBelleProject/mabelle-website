@@ -6,7 +6,7 @@ import { toOrderLine, useCart, type CartItem } from "@/context/cart-context";
 import { useCustomer } from "@/context/customer-context";
 import { storefrontApi, type PromoCode } from "@/lib/api";
 import { useCartQuote } from "@/lib/use-cart-quote";
-import { ArrowLeft, CheckCircle, Tag, XCircle } from "lucide-react";
+import { ArrowLeft, CheckCircle, Star, Tag, XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -39,8 +39,15 @@ export default function ReviewPage() {
   const [placing, setPlacing] = useState(false);
   const [error, setError] = useState("");
   const [redirecting, setRedirecting] = useState(false);
+  // Loyalty points: the customer chooses how many to use (the server limits it to their balance and the order total)
+  const [usePoints, setUsePoints] = useState(false);
+  const [pointsInput, setPointsInput] = useState<string | null>(null);
+  const [maxPoints, setMaxPoints] = useState(0);
+  const requestedPoints = usePoints ? (pointsInput === null ? maxPoints : Math.max(0, Math.floor(Number(pointsInput)) || 0)) : 0;
   // Exact totals from the server: offers applied automatically, bundle / gift prices
-  const { quote, error: quoteError } = useCartQuote(items, { customerId: info?.customerId, procodeId: promo?.id, selectedOfferId });
+  const { quote, error: quoteError } = useCartQuote(items, { customerId: info?.customerId, procodeId: promo?.id, selectedOfferId, loyaltyPointsUsed: requestedPoints });
+  const quotedMax = quote?.maxRedeemablePoints;
+  useEffect(() => { if (quotedMax !== undefined) setMaxPoints(quotedMax); }, [quotedMax]);
 
   useEffect(() => {
     if (items.length === 0) {
@@ -72,6 +79,11 @@ export default function ReviewPage() {
   const netTotal = quote
     ? freeDelivery ? quote.totalDue - quote.deliveryDue : quote.totalDue
     : subtotal + (freeDelivery ? 0 : deliveryCharge) - promoDiscount;
+  const availablePoints = quote?.availablePoints ?? 0;
+  const pointsPerDollar = quote?.pointsPerDollar ?? 20;
+  const showPoints = !!info.customerId && !isNonProfit && availablePoints > 0;
+  const loyaltyDiscount = quote?.loyaltyDiscountAmount ?? 0;
+  const promoCodeInUse = promo?.code ?? quote?.promoCode ?? null;
   const itemOffers = quote?.offers.filter(o => o.offerType !== "free_delivery") ?? [];
   const deliveryOffer = quote?.offers.find(o => o.offerType === "free_delivery");
 
@@ -109,6 +121,7 @@ export default function ReviewPage() {
         remark: info.remark || undefined,
         procodeId: promo?.id,
         selectedOfferId: selectedOfferId ?? undefined,
+        loyaltyPointsUsed: quote?.loyaltyPointsUsed || undefined,
         items: orderItems,
         orderType: "order",
       };
@@ -208,7 +221,7 @@ export default function ReviewPage() {
         <div className="lg:col-span-2 flex flex-col gap-4">
           {/* Promo Code */}
           {!isNonProfit && <div className="bg-white rounded-2xl border border-[var(--sage-light)] shadow-sm px-5 py-4">
-            <h2 className="font-semibold text-stone-800 mb-3">Promo Code</h2>
+            <h2 className="font-semibold text-stone-800 mb-3">Promo Code <span className="ml-1 text-xs font-normal text-stone-400">(not applicable to bundles)</span></h2>
             {promo ? (
               <div className="flex items-center gap-2">
                 <CheckCircle className="w-5 h-5 text-green-500 shrink-0" />
@@ -223,6 +236,14 @@ export default function ReviewPage() {
                 <button onClick={() => { setPromo(null); setPromoInput(""); }} className="text-stone-300 hover:text-red-400 transition">
                   <XCircle className="w-4 h-4" />
                 </button>
+              </div>
+            ) : quote?.promoCode && quote.promoApplied && quote.promoIsFamily ? (
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-5 h-5 text-green-500 shrink-0" />
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-green-700">{quote.promoCode}</p>
+                  <p className="text-xs text-stone-500">Family discount, applied automatically</p>
+                </div>
               </div>
             ) : (
               <div className="relative flex items-center">
@@ -250,12 +271,64 @@ export default function ReviewPage() {
             )}
           </div>}
 
+          {/* Loyalty points */}
+          {showPoints && (
+            <div className="bg-white rounded-2xl border border-[var(--sage-light)] shadow-sm px-5 py-4">
+              <h2 className="font-semibold text-stone-800 mb-1 flex items-center gap-1.5"><Star className="w-4 h-4 text-amber-500" /> Loyalty Points</h2>
+              <p className="text-xs text-stone-500 mb-3">
+                {availablePoints} pts available (${(Math.floor(availablePoints / pointsPerDollar * 100) / 100).toFixed(2)}) · {pointsPerDollar} pts = $1 discount
+              </p>
+              <label className="flex items-center gap-2 text-sm text-stone-700 cursor-pointer">
+                <input type="checkbox" checked={usePoints} onChange={e => { setUsePoints(e.target.checked); setPointsInput(null); }} className="rounded border-stone-300" />
+                Use My Points
+              </label>
+              {usePoints && (
+                <div className="mt-3 flex items-center gap-2">
+                  <input
+                    type="number" min={0} max={maxPoints} step={1}
+                    value={pointsInput ?? String(maxPoints)}
+                    onChange={e => setPointsInput(e.target.value === "" ? "" : String(Math.min(maxPoints, Math.max(0, Math.floor(Number(e.target.value)) || 0))))}
+                    onBlur={() => setPointsInput(String(Math.min(maxPoints, requestedPoints)))}
+                    className="w-28 px-3 py-2 rounded-lg border border-stone-200 text-sm focus:outline-none focus:border-[var(--brand)] transition"
+                  />
+                  <span className="text-xs text-stone-500">of max {maxPoints}</span>
+                  <button type="button" onClick={() => setPointsInput(String(maxPoints))} className="ml-auto text-xs font-medium text-[var(--brand)] hover:underline">Use max</button>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Totals */}
           <div className="bg-white rounded-2xl border border-[var(--sage-light)] shadow-sm px-5 py-4">
             <h2 className="font-semibold text-stone-800 mb-4">Order Total</h2>
             <OfferPicker quote={quote} onSelect={selectOffer} />
             <div className="flex flex-col gap-2 text-sm text-stone-600">
               <div className="flex justify-between"><span>Subtotal</span><span>${shownSubtotal.toFixed(2)}</span></div>
+              {promoDiscount > 0 && (
+                <div>
+                  <div className="flex justify-between text-green-600"><span>Promo{promoCodeInUse ? ` (${promoCodeInUse})` : ""}</span><span>-${promoDiscount.toFixed(2)}</span></div>
+                  <p className="text-xs text-stone-400 mt-0.5">Promo code is not applicable to bundles.</p>
+                </div>
+              )}
+              {itemOffers.map(o => (
+                <div key={o.offerId}>
+                  <div className="flex justify-between text-green-600">
+                    <span className="flex items-center gap-1"><Tag className="w-3.5 h-3.5" /> {o.offerName}</span>
+                    <span>-${o.discountAmount.toFixed(2)}</span>
+                  </div>
+                  {promoCodeInUse && (
+                    <p className="text-xs text-stone-400 mt-0.5">
+                      {promoDiscount > 0 ? `Promo code applied: ${promoCodeInUse}` : `Promo code ${promoCodeInUse} can't be combined with this offer`}
+                    </p>
+                  )}
+                </div>
+              ))}
+              {loyaltyDiscount > 0 && (
+                <div className="flex justify-between text-green-600">
+                  <span className="flex items-center gap-1"><Star className="w-3.5 h-3.5" /> Loyalty points ({quote!.loyaltyPointsUsed})</span>
+                  <span>-${loyaltyDiscount.toFixed(2)}</span>
+                </div>
+              )}
               <div className="flex justify-between text-stone-400">
                 <span>
                   Delivery
@@ -268,15 +341,6 @@ export default function ReviewPage() {
                     : delivery > 0 ? `$${delivery.toFixed(2)}` : "Free"}
                 </span>
               </div>
-              {promoDiscount > 0 && (
-                <div className="flex justify-between text-green-600"><span>Promo ({promo!.code})</span><span>-${promoDiscount.toFixed(2)}</span></div>
-              )}
-              {itemOffers.map(o => (
-                <div key={o.offerId} className="flex justify-between text-green-600">
-                  <span className="flex items-center gap-1"><Tag className="w-3.5 h-3.5" /> {o.offerName}</span>
-                  <span>-${o.discountAmount.toFixed(2)}</span>
-                </div>
-              ))}
               {quoteError && <p className="text-xs text-red-500">{quoteError}</p>}
             </div>
             <div className="flex justify-between font-bold text-stone-800 text-base border-t border-[var(--sage-light)] mt-3 pt-3">

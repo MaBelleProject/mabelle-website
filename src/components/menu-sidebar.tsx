@@ -136,6 +136,9 @@ export default function MenuSidebar({ sections }: { sections: SectionGroup[] }) 
               <Link href="/order-history" onClick={close} className={`${navClass("/order-history")} flex items-center gap-2`}>
                 Order History
               </Link>
+              <Link href="/profile" onClick={close} className={`${navClass("/profile")} flex items-center gap-2`}>
+                My Profile
+              </Link>
               <Link href="/favorites" onClick={close} className={`${navClass("/favorites")} flex items-center gap-2`}>
                 My Favorites
               </Link>

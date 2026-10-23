@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Suspense } from "react";
-import { storefrontApi, type Product, type Brand } from "@/lib/api";
+import { storefrontApi, fileUrl, type Product, type Brand, type OriginCountry } from "@/lib/api";
+import { countryInfo, madeInLabel } from "@/lib/countries";
 import ProductCard from "@/components/product-card";
 import { ArrowLeft, Search, X } from "lucide-react";
 
@@ -57,6 +58,19 @@ function buildMaps(brands: Brand[]) {
   return { brandMap, sectionMap };
 }
 
+// The uploaded flag wins; otherwise the ISO code, or the code guessed from the name.
+function countryFlagSrc(c: OriginCountry): string | undefined {
+  if (c.flagImageUrl) return fileUrl(c.flagImageUrl) ?? c.flagImageUrl;
+  const code = c.isoCode || countryInfo(c.name)?.code;
+  return code ? `https://flagcdn.com/w80/${code.toLowerCase()}.png` : undefined;
+}
+
+/** "Made in France" ("Proudly Made in Lebanon"), like the product flags say. */
+function countryHeading(c: OriginCountry): string {
+  const code = c.isoCode || countryInfo(c.name)?.code;
+  return code ? madeInLabel({ code: code.toUpperCase(), name: c.name }) : `Made in ${c.name}`;
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 function ProductsContent() {
@@ -67,8 +81,10 @@ function ProductsContent() {
   const sectionId = params.get("sectionId") ?? undefined;
   const subsectionId = params.get("subsectionId") ?? undefined;
   const sectionCode = params.get("sectionCode") ?? undefined;
+  const countryId = params.get("countryId") ?? undefined;
 
   const [allProducts, setAllProducts] = useState<EnrichedProduct[]>([]);
+  const [country, setCountry] = useState<OriginCountry | null>(null);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState(search);
   const mounted = useRef(false);
@@ -95,6 +111,7 @@ function ProductsContent() {
         sectionId: sectionId ? +sectionId : undefined,
         subsectionId: subsectionId ? +subsectionId : undefined,
         sectionCode,
+        countryId: countryId ? +countryId : undefined,
       }),
       storefrontApi.brands(),
     ]).then(([products, brands]) => {
@@ -105,7 +122,14 @@ function ProductsContent() {
         sectionName: p.sectionId ? (sectionMap.get(p.sectionId) ?? "") : "",
       })));
     }).finally(() => setLoading(false));
-  }, [categoryId, sectionId, subsectionId, sectionCode]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [categoryId, sectionId, subsectionId, sectionCode, countryId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // "Made in <country>" page (carousel link): the country's name and flag head the page.
+  useEffect(() => {
+    setCountry(null);
+    if (!countryId) return;
+    storefrontApi.country(+countryId).then(setCountry).catch(() => {});
+  }, [countryId]);
 
   // Client-side fuzzy filter (runs instantly on every keystroke, no network round-trip)
   const products = query.trim()
@@ -130,7 +154,16 @@ function ProductsContent() {
         >
           <ArrowLeft className="w-4 h-4 text-stone-400" />
         </button>
-        <h1 className="text-3xl font-bold text-stone-800">All Products</h1>
+        {country ? (
+          <h1 className="flex items-center gap-3 text-3xl font-bold text-stone-800">
+            {countryFlagSrc(country) && (
+              <img src={countryFlagSrc(country)} alt="" className="w-10 h-[30px] object-cover rounded ring-1 ring-black/10 shrink-0" />
+            )}
+            {countryHeading(country)}
+          </h1>
+        ) : (
+          <h1 className="text-3xl font-bold text-stone-800">All Products</h1>
+        )}
       </div>
 
       {/* Search bar */}

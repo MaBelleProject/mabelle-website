@@ -206,6 +206,12 @@ export default function OrderHistoryPage() {
                         <span>−${trimZeros(order.orderDiscountAmount)}</span>
                       </div>
                     )}
+                    {order.loyaltyPointsUsed > 0 && (
+                      <div className="flex justify-between text-[var(--sage)]">
+                        <span>Loyalty points discount ({order.loyaltyPointsUsed} pts)</span>
+                        <span>−${trimZeros(order.loyaltyDiscountAmount)}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between text-stone-600">
                       <span>Delivery</span>
                       <span>{Number(order.deliveryDue) > 0 ? `$${trimZeros(order.deliveryDue)}` : "Free"}</span>
@@ -213,6 +219,16 @@ export default function OrderHistoryPage() {
                     <div className="flex justify-between font-bold text-stone-800 text-base border-t border-[var(--sage-light)] pt-2 mt-1">
                       <span>Total</span>
                       <span>${trimZeros(order.totalDue)}</span>
+                    </div>
+                  </div>
+
+                  {/* Loyalty points */}
+                  <div className="border-t border-[var(--sage-light)] pt-3 flex flex-col gap-1.5 text-sm text-stone-600">
+                    <div className="flex justify-between"><span>Points used</span><span>{order.loyaltyPointsUsed}</span></div>
+                    <div className="flex justify-between"><span>Points discount</span><span>${trimZeros(order.loyaltyDiscountAmount)}</span></div>
+                    <div className="flex justify-between">
+                      <span>Points earned</span>
+                      <span>{order.status === "delivered" ? order.loyaltyPointsEarned : order.status === "cancelled" || order.status === "refunded" ? 0 : `${Math.floor(Number(order.netTotal))} (once delivered)`}</span>
                     </div>
                   </div>
 

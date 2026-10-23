@@ -69,6 +69,9 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+/** A "Made In" country; isoCode gives the flag, flagImageUrl is an uploaded one for countries without a code. */
+export interface OriginCountry { id: number; name: string; isoCode: string | null; flagImageUrl: string | null; }
+
 export interface CarouselSlide {
   id: number; position: number; isActive: boolean;
   imageUrl: string; title?: string | null; description?: string | null; buttonText?: string | null;
@@ -117,6 +120,8 @@ export interface Settings {
   instagramQrCode: string | null; whatsappQrCode: string | null; instagramPage: string | null; deliveryCharge: string | null; updatedAt: string | null;
   /** Show "Only X left" on product cards and pages (set in the dashboard). */
   showStockLeft?: boolean;
+  /** Loyalty points worth $1 off an order (set in the dashboard). */
+  pointsPerDollarDiscount?: number;
 }
 
 export interface PromoCode {
@@ -213,6 +218,9 @@ export interface CustomerOrder {
   netTotal: string;
   totalDue: string;
   offerDiscountAmount: string;
+  loyaltyPointsUsed: number;
+  loyaltyDiscountAmount: string;
+  loyaltyPointsEarned: number;
   clientDiscountAmount: string;
   orderDiscountAmount: string;
   feedbackSubmitted: boolean;
@@ -294,15 +302,35 @@ export interface OrderQuote {
   freeDelivery?: boolean;
   items: { itemType: string; productName: string; unitPrice: number; quantity: number; totalPrice: number }[];
   subtotal: number; promoCodeAmount: number;
+  /** Code of the promo the server applied (also the family promo added automatically) and whether it is the family one. */
+  promoCode?: string | null; promoIsFamily?: boolean;
   /** false when the applied offer rules the promo code out; promoNote says why it was limited or not used. */
   promoApplied: boolean; promoNote: string | null;
   offerDiscountAmount: number; deliveryDiscountAmount: number;
+  /** Points actually redeemed (limited to the balance and the order total) and their discount. */
+  loyaltyPointsUsed: number; loyaltyDiscountAmount: number;
+  /** The most points this order can redeem now, the customer's balance, and points per $1. */
+  maxRedeemablePoints: number; availablePoints: number; pointsPerDollar: number;
   totalCharges: number; netTotal: number;
   /** Delivery is outside netTotal; totalDue = netTotal + deliveryDue is what the customer pays. */
   deliveryCharge: number; deliveryDue: number; totalDue: number;
   offers: { offerId: number; offerName: string; offerType: Offer['offerType']; discountAmount: number }[];
   /** Every offer the cart qualifies for, default (highest priority) first; only one is applied, and the customer may pick it. */
   availableOffers: { offerId: number; offerName: string; offerType: Offer['offerType']; priority: number; discountAmount: number }[];
+}
+
+export interface LoyaltySummary {
+  availablePoints: number;
+  pointsPerDollar: number;
+  /** Dollar value of the available points. */
+  availableValue: number;
+  totalEarned: number;
+  totalRedeemed: number;
+  history: {
+    id: number; type: 'earned' | 'redeemed'; points: number; amount: string;
+    /** No longer counts (the order was cancelled, edited or is no longer delivered). */
+    isReversed: boolean; createdAt: string; orderId: number; orderNumber: string;
+  }[];
 }
 
 // ─── API calls ────────────────────────────────────────────────────────────────
@@ -312,7 +340,7 @@ export const storefrontApi = {
   brands: () => request<Brand[]>('/brands'),
   sections: () => request<SectionGroup[]>('/sections'),
   bestSellers: () => request<Product[]>('/products/best-sellers'),
-  products: (params?: { search?: string; categoryId?: number; sectionId?: number; subsectionId?: number; sectionCode?: string }) => {
+  products: (params?: { search?: string; categoryId?: number; sectionId?: number; subsectionId?: number; sectionCode?: string; countryId?: number }) => {
     const qs = new URLSearchParams(
       Object.entries(params ?? {})
         .filter(([, v]) => v !== undefined && v !== '')
@@ -321,13 +349,14 @@ export const storefrontApi = {
     return request<Product[]>(`/products${qs ? `?${qs}` : ''}`);
   },
   product: (id: number) => request<ProductDetail>(`/products/${id}`),
+  country: (id: number) => request<OriginCountry>(`/countries/${id}`),
   bundles: () => request<Bundle[]>('/bundles'),
   bundle: (id: number) => request<Bundle>(`/bundles/${id}`),
   gifts: () => request<GiftPackage[]>('/gifts'),
   gift: (id: number) => request<GiftPackage>(`/gifts/${id}`),
   giftPackaging: () => request<GiftPackaging[]>('/gifts/packaging'),
   offers: () => request<Offer[]>('/offers'),
-  quote: (data: { customerId?: number; procodeId?: number; selectedOfferId?: number; items: OrderLine[] }) =>
+  quote: (data: { customerId?: number; procodeId?: number; selectedOfferId?: number; loyaltyPointsUsed?: number; items: OrderLine[] }) =>
     request<OrderQuote>('/orders/quote', { method: 'POST', body: JSON.stringify(data) }),
   settings: () => request<Settings | null>('/settings'),
   validatePromo: (code: string, phone?: string) =>
@@ -338,13 +367,14 @@ export const storefrontApi = {
     customerId?: number;
     newCustomer?: { name: string; phone: string; email?: string; address?: string; password?: string };
     phoneNumber?: string; address?: string; paymentMethod: string; remark?: string;
-    procodeId?: number; selectedOfferId?: number; items: OrderLine[];
+    procodeId?: number; selectedOfferId?: number; loyaltyPointsUsed?: number; items: OrderLine[];
     orderType?: string;
   }) => request<{ id: number; orderNumber: string; netTotal: string; totalDue: string }>('/orders', {
     method: 'POST',
     body: JSON.stringify(data),
   }),
   customerOrders: (customerId: number) => request<CustomerOrder[]>(`/customers/${customerId}/orders`),
+  loyalty: (customerId: number) => request<LoyaltySummary>(`/customers/${customerId}/loyalty`),
   customerOrderAgain: (customerId: number) => request<Product[]>(`/customers/${customerId}/order-again`),
   getFavorites: (customerId: number) => request<number[]>(`/customers/${customerId}/favorites`),
   addFavorite: (customerId: number, productId: number) =>

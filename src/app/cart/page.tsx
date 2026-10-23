@@ -5,7 +5,7 @@ import { cartItemHref, useCart } from "@/context/cart-context";
 import { hasFreeDelivery, useCustomer } from "@/context/customer-context";
 import { fileUrl, storefrontApi } from "@/lib/api";
 import { useCartQuote } from "@/lib/use-cart-quote";
-import { Minus, Plus, ShoppingBag, Tag, Trash2 } from "lucide-react";
+import { Minus, Plus, ShoppingBag, Star, Tag, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import BackButton from "@/components/back-button";
@@ -53,6 +53,9 @@ export default function CartPage() {
     : subtotal + (freeDelivery ? 0 : deliveryCharge);
   const itemOffers = quote?.offers.filter(o => o.offerType !== "free_delivery") ?? [];
   const deliveryOffer = quote?.offers.find(o => o.offerType === "free_delivery");
+  const availablePoints = quote?.availablePoints ?? 0;
+  const pointsValue = Math.floor(availablePoints / (quote?.pointsPerDollar ?? 20) * 100) / 100;
+  const showPoints = !!customer && !isNonProfit && availablePoints > 0;
 
   return (
     <div className="max-w-7xl mx-auto px-2 sm:px-4 py-8">
@@ -138,10 +141,28 @@ export default function CartPage() {
             <span>${shownSubtotal.toFixed(2)}</span>
           </div>
           <OfferPicker quote={quote} onSelect={selectOffer} />
+          {quote && quote.promoCode && quote.promoApplied && quote.promoCodeAmount > 0 && (
+            <div className="mb-3">
+              <div className="flex justify-between text-sm text-green-600">
+                <span className="flex items-center gap-1"><Tag className="w-3.5 h-3.5" /> {quote.promoIsFamily ? "Family discount" : "Promo"} ({quote.promoCode})</span>
+                <span>-${quote.promoCodeAmount.toFixed(2)}</span>
+              </div>
+              <p className="text-xs text-stone-400 mt-0.5">Promo code is not applicable to bundles.</p>
+            </div>
+          )}
           {itemOffers.map(o => (
-            <div key={o.offerId} className="flex justify-between text-sm text-green-600 mb-3">
-              <span className="flex items-center gap-1"><Tag className="w-3.5 h-3.5" /> {o.offerName}</span>
-              <span>-${o.discountAmount.toFixed(2)}</span>
+            <div key={o.offerId} className="mb-3">
+              <div className="flex justify-between text-sm text-green-600">
+                <span className="flex items-center gap-1"><Tag className="w-3.5 h-3.5" /> {o.offerName}</span>
+                <span>-${o.discountAmount.toFixed(2)}</span>
+              </div>
+              {quote?.promoCode && (
+                <p className="text-xs text-stone-400 mt-0.5">
+                  {quote.promoApplied && quote.promoCodeAmount > 0
+                    ? `Promo code applied: ${quote.promoCode}`
+                    : `Promo code ${quote.promoCode} can't be combined with this offer`}
+                </p>
+              )}
             </div>
           ))}
           <div className="flex justify-between text-sm text-stone-400 mb-6">
@@ -160,6 +181,14 @@ export default function CartPage() {
                   : delivery > 0 ? `$${delivery.toFixed(2)}` : "Free"}
             </span>
           </div>
+          {showPoints && (
+            <div className="mb-6 text-sm">
+              <p className="flex items-center gap-1.5 font-medium text-amber-700">
+                <Star className="w-3.5 h-3.5" /> {availablePoints} pts available (${pointsValue.toFixed(2)})
+              </p>
+              <p className="text-xs text-stone-400 mt-1">Points and promo codes are applied when placing your order.</p>
+            </div>
+          )}
           <div className="flex justify-between font-bold text-stone-800 text-base border-t border-[var(--sage-light)] pt-4 mb-6">
             <span>Total</span>
             <span>${total.toFixed(2)}</span>
