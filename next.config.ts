@@ -21,6 +21,10 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "br-fancy-darkness-b46tipgm.storage.c-6.us-east-2.aws.neon.tech",
       },
+      {
+        protocol: "https",
+        hostname: "pub-8bbc8532a235419a91cbc47ea9ffc310.r2.dev",
+      },
     ],
   },
 };
