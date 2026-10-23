@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { fileUrl } from "@/lib/api";
 import { cachedStorefrontApi } from "@/lib/cached-storefront";
 import GiftCustomizer from "../[id]/gift-customizer";
 import BackButton from "@/components/back-button";
@@ -7,9 +8,10 @@ import { cacheLife } from "next/cache";
 export default async function CreateGiftPage() {
   'use cache';
   cacheLife('minutes');
-  const [packagings, allProducts] = await Promise.all([
+  const [packagings, allProducts, giftCards] = await Promise.all([
     cachedStorefrontApi.giftPackaging().catch(() => []),
     cachedStorefrontApi.products().catch(() => []),
+    cachedStorefrontApi.giftCards().catch(() => []),
   ]);
 
   return (
@@ -39,7 +41,7 @@ export default async function CreateGiftPage() {
         <div className="flex flex-col gap-4">
           <h1 className="text-2xl sm:text-3xl font-bold text-stone-800">Create Your Own Gift</h1>
           <p className="text-stone-500 text-sm">Pick exactly what you want — no restrictions, your perfect gift.</p>
-          <GiftCustomizer gift={null} packagings={packagings} allProducts={allProducts} />
+          <GiftCustomizer gift={null} packagings={packagings} allProducts={allProducts} giftCardImage={fileUrl(giftCards[0]?.imageUrl)} />
         </div>
       </div>
     </div>

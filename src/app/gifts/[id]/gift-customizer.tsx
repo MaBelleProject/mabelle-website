@@ -2,6 +2,7 @@
 
 import CountryFlag from "@/components/country-flag";
 import { useCart } from "@/context/cart-context";
+import { useCustomer } from "@/context/customer-context";
 import { fileUrl, type GiftPackage, type GiftPackaging, type GiftProduct, type Product } from "@/lib/api";
 import { Check, Minus, Plus, Search, ShoppingCart, Trash2 } from "lucide-react";
 import Image from "next/image";
@@ -11,6 +12,22 @@ import { useMemo, useState } from "react";
 interface Selection { productId: number; quantity: number }
 
 const MESSAGE_MAX = 500;
+
+// Gift card messages are plain text: drop emoji and their joiners/variation selectors.
+const stripEmoji = (s: string) => s.replace(/[\p{Extended_Pictographic}\p{Regional_Indicator}‍️⃣]/gu, "");
+
+// Longest prefix of `value` that fits in the textarea without scrolling (it is not allowed to scroll).
+function fitToBox(el: HTMLTextAreaElement, value: string) {
+  const fits = (v: string) => { el.value = v; return el.scrollHeight <= el.clientHeight + 1; };
+  if (fits(value)) return value;
+  let lo = 0, hi = value.length - 1;
+  while (lo < hi) {
+    const mid = Math.ceil((lo + hi) / 2);
+    if (fits(value.slice(0, mid))) lo = mid; else hi = mid - 1;
+  }
+  el.value = value.slice(0, lo);
+  return el.value;
+}
 
 function hash(s: string) {
   let h = 5381;
@@ -92,12 +109,17 @@ export default function GiftCustomizer({
   gift,
   packagings,
   allProducts,
+  giftCardImage,
 }: {
   gift: GiftPackage | null;
   packagings: GiftPackaging[];
   allProducts: Product[];
+  giftCardImage?: string | null;
 }) {
   const { add } = useCart();
+  const { customer } = useCustomer();
+  // Non-profit customers pay the gift box's cost price (same as price when no cost is set).
+  const boxPrice = (p: GiftPackaging) => parseFloat(customer?.isNonProfit ? p.cost ?? p.price : p.price);
 
   const productMap = useMemo(() => {
     const m = new Map<number, Product | GiftProduct>();
@@ -144,7 +166,7 @@ export default function GiftCustomizer({
     const p = productMap.get(c.productId);
     return s + (p ? parseFloat((p as Product).sellingPrice) * c.quantity : 0);
   }, 0);
-  const unitPrice = contentsPrice + (packaging ? parseFloat(packaging.price) : 0);
+  const unitPrice = contentsPrice + (packaging ? boxPrice(packaging) : 0);
 
   const perGift = new Map<number, number>();
   for (const c of selections) if (c.quantity > 0) perGift.set(c.productId, (perGift.get(c.productId) ?? 0) + c.quantity);
@@ -262,7 +284,7 @@ export default function GiftCustomizer({
                     {img ? <Image src={img} alt="" fill sizes="56px" className="object-cover" loading="lazy" /> : <span className="text-xl">🎀</span>}
                   </div>
                   <span className="text-xs font-medium text-stone-700 line-clamp-1">{p.name}</span>
-                  <span className="text-[11px] font-semibold text-[var(--brand)]">+${parseFloat(p.price).toFixed(2)}</span>
+                  <span className="text-[11px] font-semibold text-[var(--brand)]">+${boxPrice(p).toFixed(2)}</span>
                   {outOfStock && <span className="text-[10px] text-amber-600 font-medium">Low stock</span>}
                 </button>
               );
@@ -274,15 +296,32 @@ export default function GiftCustomizer({
       {/* Message */}
       <section>
         <label htmlFor="gift-message" className="text-xs font-semibold text-stone-500 uppercase tracking-wide">Gift card message (optional)</label>
-        <textarea
-          id="gift-message"
-          value={message}
-          maxLength={MESSAGE_MAX}
-          onChange={(e) => { setMessage(e.target.value); setAdded(false); }}
-          rows={3}
-          placeholder="Write a personal note for the gift card…"
-          className="mt-2 w-full px-4 py-2.5 rounded-xl border border-stone-200 text-sm focus:outline-none focus:border-[var(--brand)] focus:ring-1 focus:ring-[var(--brand)] transition resize-none"
-        />
+        <span className="ml-2 text-[11px] italic text-stone-400">Handwritten</span>
+        {giftCardImage ? (
+          // The textarea sits on the card where the message is written; text scales with the card width.
+          <div className="mt-2 relative w-full overflow-hidden rounded-xl shadow-sm [container-type:inline-size]">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={giftCardImage} alt="Gift card" className="block w-full h-auto select-none" draggable={false} />
+            <textarea
+              id="gift-message"
+              value={message}
+              maxLength={MESSAGE_MAX}
+              onChange={(e) => { setMessage(fitToBox(e.currentTarget, stripEmoji(e.target.value))); setAdded(false); }}
+              placeholder="Write a personal note…"
+              className="absolute left-[33%] right-[8%] top-[30%] bottom-[22%] bg-transparent border-0 p-0 text-stone-800 placeholder:text-stone-400 focus:outline-none resize-none overflow-hidden leading-snug text-[max(12px,5cqw)]"
+            />
+          </div>
+        ) : (
+          <textarea
+            id="gift-message"
+            value={message}
+            maxLength={MESSAGE_MAX}
+            onChange={(e) => { setMessage(stripEmoji(e.target.value)); setAdded(false); }}
+            rows={3}
+            placeholder="Write a personal note for the gift card…"
+            className="mt-2 w-full px-4 py-2.5 rounded-xl border border-stone-200 text-sm focus:outline-none focus:border-[var(--brand)] focus:ring-1 focus:ring-[var(--brand)] transition resize-none"
+          />
+        )}
         <p className="text-[11px] text-stone-400 text-right">{message.length}/{MESSAGE_MAX}</p>
       </section>
 

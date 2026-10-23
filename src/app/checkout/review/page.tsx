@@ -39,6 +39,7 @@ export default function ReviewPage() {
   const [placing, setPlacing] = useState(false);
   const [error, setError] = useState("");
   const [redirecting, setRedirecting] = useState(false);
+  const [orderNote, setOrderNote] = useState("");
   // Loyalty points: the customer chooses how many to use (the server limits it to their balance and the order total)
   const [usePoints, setUsePoints] = useState(false);
   const [pointsInput, setPointsInput] = useState<string | null>(null);
@@ -57,7 +58,11 @@ export default function ReviewPage() {
     }
     const raw = sessionStorage.getItem("checkout_info");
     if (!raw) { router.replace("/checkout"); setRedirecting(true); return; }
-    try { setInfo(JSON.parse(raw)); } catch { router.replace("/checkout"); setRedirecting(true); }
+    try {
+      const saved = JSON.parse(raw);
+      setInfo(saved);
+      if (saved.remark) setOrderNote(String(saved.remark).slice(0, 200));
+    } catch { router.replace("/checkout"); setRedirecting(true); }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -118,7 +123,7 @@ export default function ReviewPage() {
         phoneNumber: info.phone,
         address: fullAddress,
         paymentMethod: info.paymentMethod,
-        remark: info.remark || undefined,
+        remark: orderNote.trim() || undefined,
         procodeId: promo?.id,
         selectedOfferId: selectedOfferId ?? undefined,
         loyaltyPointsUsed: quote?.loyaltyPointsUsed || undefined,
@@ -158,7 +163,11 @@ export default function ReviewPage() {
     <div className="max-w-7xl mx-auto px-2 sm:px-4 py-8">
       {!info.customerId && (
         <button
-          onClick={() => { sessionStorage.setItem("checkout_edit", "1"); router.push("/checkout"); }}
+          onClick={() => {
+            sessionStorage.setItem("checkout_info", JSON.stringify({ ...info, remark: orderNote }));
+            sessionStorage.setItem("checkout_edit", "1");
+            router.push("/checkout");
+          }}
           className="inline-flex items-center gap-1.5 text-sm text-stone-400 hover:text-[var(--brand)] mb-6 transition"
         >
           <ArrowLeft className="w-4 h-4" /> Edit Information
@@ -212,8 +221,24 @@ export default function ReviewPage() {
               {info.email && <InfoRow label="Email" value={info.email} />}
               <InfoRow label="Address" value={[info.address, info.floor, info.city].filter(Boolean).join(", ")} />
               <InfoRow label="Payment" value="Cash on Delivery" />
-              {info.remark && <InfoRow label="Remarks" value={info.remark} />}
             </div>
+          </div>
+
+          {/* Order Note */}
+          <div className="bg-white rounded-2xl border border-[var(--sage-light)] shadow-sm px-5 py-4">
+            <label htmlFor="order-note" className="block font-semibold text-stone-800 mb-3">
+              Order Note <span className="ml-1 text-xs font-normal text-stone-400">(optional)</span>
+            </label>
+            <textarea
+              id="order-note"
+              value={orderNote}
+              onChange={e => setOrderNote(e.target.value)}
+              maxLength={200}
+              rows={3}
+              placeholder="Any special instructions for your order…"
+              className="w-full px-3 py-2 rounded-lg border border-stone-200 text-sm focus:outline-none focus:border-[var(--brand)] transition resize-none"
+            />
+            <p className="text-xs text-stone-400 mt-1 text-right">{orderNote.length}/200</p>
           </div>
         </div>
 

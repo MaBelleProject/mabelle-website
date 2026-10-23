@@ -30,10 +30,11 @@ export default function GiftPage(props: PageProps) {
 
 async function GiftContent({ params }: PageProps) {
   const { id } = await params;
-  const [gift, packagings, allProducts] = await Promise.all([
+  const [gift, packagings, allProducts, giftCards] = await Promise.all([
     cachedStorefrontApi.gift(parseInt(id)).catch(() => null),
     cachedStorefrontApi.giftPackaging().catch(() => []),
     cachedStorefrontApi.products().catch(() => []),
+    cachedStorefrontApi.giftCards().catch(() => []),
   ]);
   if (!gift) notFound();
   const imgUrl = fileUrl(gift.imageUrl);
@@ -60,7 +61,7 @@ async function GiftContent({ params }: PageProps) {
         <div className="flex flex-col gap-4 min-w-0">
           <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-stone-800">{gift.name}</h1>
           {gift.description && <p className="text-stone-600 text-sm leading-relaxed">{gift.description}</p>}
-          <GiftCustomizer gift={gift} packagings={packagings} allProducts={allProducts} />
+          <GiftCustomizer gift={gift} packagings={packagings} allProducts={allProducts} giftCardImage={fileUrl(giftCards[0]?.imageUrl)} />
         </div>
       </div>
     </div>

@@ -48,6 +48,12 @@ async function fetchGift(id: number) {
   return storefrontApi.gift(id);
 }
 
+async function fetchGiftCards() {
+  'use cache';
+  cacheLife('minutes');
+  return storefrontApi.giftCards();
+}
+
 async function fetchGiftPackaging() {
   'use cache';
   cacheLife('hours');
@@ -130,6 +136,7 @@ export const cachedStorefrontApi = {
   gifts: fetchGifts,
   gift: fetchGift,
   giftPackaging: fetchGiftPackaging,
+  giftCards: fetchGiftCards,
   products: fetchProducts,
   product: fetchProduct,
   publicReviews: fetchPublicReviews,

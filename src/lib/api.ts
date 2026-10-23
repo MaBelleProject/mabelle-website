@@ -124,6 +124,9 @@ export interface Settings {
   pointsPerDollarDiscount?: number;
 }
 
+/** A gift card image uploaded in the dashboard; the customer's message is written on it. */
+export interface GiftCard { id: number; name: string; imageUrl?: string | null; }
+
 export interface PromoCode {
   id: number; code: string; isActive: boolean; welcomePromo: boolean;
   promoDiscountPercentage: string; promoDiscountAmount: string;
@@ -170,6 +173,8 @@ export interface GiftPackage {
 
 export interface GiftPackaging {
   id: number; name: string; imageUrl?: string | null; price: string;
+  /** What non-profit customers pay; null = same as price. */
+  cost?: string | null;
   /** Boxes in stock; may be ≤ 0 (out of stock) but customers can still select and order them. */
   stock: number;
 }
@@ -355,6 +360,7 @@ export const storefrontApi = {
   gifts: () => request<GiftPackage[]>('/gifts'),
   gift: (id: number) => request<GiftPackage>(`/gifts/${id}`),
   giftPackaging: () => request<GiftPackaging[]>('/gifts/packaging'),
+  giftCards: () => request<GiftCard[]>('/gifts/cards'),
   offers: () => request<Offer[]>('/offers'),
   quote: (data: { customerId?: number; procodeId?: number; selectedOfferId?: number; loyaltyPointsUsed?: number; items: OrderLine[] }) =>
     request<OrderQuote>('/orders/quote', { method: 'POST', body: JSON.stringify(data) }),

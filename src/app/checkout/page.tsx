@@ -248,16 +248,6 @@ export default function CheckoutPage() {
           <input type="text" value={form.address} onChange={e => set("address", e.target.value)} placeholder="Street, building, landmark…" className={inputCls(!!errors.address)} />
         </Field>
 
-        <Field label="Remarks (optional)">
-          <textarea
-            value={form.remark}
-            onChange={e => set("remark", e.target.value)}
-            placeholder="Any special instructions…"
-            rows={3}
-            className="w-full px-4 py-2.5 rounded-xl border border-stone-200 text-sm focus:outline-none focus:border-[var(--brand)] focus:ring-1 focus:ring-[var(--brand)] transition resize-none"
-          />
-        </Field>
-
         {/* Password — guests only */}
         {!customer && (
           <>
