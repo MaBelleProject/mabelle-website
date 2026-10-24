@@ -2,7 +2,7 @@
 
 import ProductCard from "@/components/product-card";
 import type { Product } from "@/lib/api";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface BestSellersListProps { products: Product[]; }
 
@@ -10,6 +10,16 @@ export default function BestSellersList({ products }: BestSellersListProps) {
   if (!products.length) return null;
 
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const check = () => setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 8);
+    check();
+    el.addEventListener("scroll", check, { passive: true });
+    return () => el.removeEventListener("scroll", check);
+  }, [products]);
 
   const scroll = (dir: "left" | "right") => {
     const el = scrollRef.current;
@@ -54,15 +64,17 @@ export default function BestSellersList({ products }: BestSellersListProps) {
             </div>
           ))}
         </div>
-        <button
-          onClick={() => scroll("right")}
-          className="absolute right-1 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center rounded-full bg-white/60 backdrop-blur-sm shadow hover:bg-white/80 transition touch-manipulation"
-          aria-label="Scroll right"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-stone-600">
-            <path d="M9 18l6-6-6-6" />
-          </svg>
-        </button>
+        {canScrollRight && (
+          <button
+            onClick={() => scroll("right")}
+            className="absolute right-1 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center rounded-full bg-white/60 backdrop-blur-sm shadow hover:bg-white/80 transition touch-manipulation"
+            aria-label="Scroll right"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-stone-600">
+              <path d="M9 18l6-6-6-6" />
+            </svg>
+          </button>
+        )}
       </div>
     </section>
   );

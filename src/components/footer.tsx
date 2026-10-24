@@ -30,28 +30,28 @@ export default async function Footer({ settings }: FooterProps) {
   const instaHref = settings?.instagramPage ?? undefined;
 
   return (
-    <footer className="bg-[#7aaa42] text-white mt-20">
+    <footer className="bg-[var(--mint-light)] text-stone-700 mt-20">
       <div className="max-w-7xl mx-auto px-2 sm:px-4 py-12 grid grid-cols-1 sm:grid-cols-3 gap-8 text-center">
         <div>
-          <p className="text-white font-semibold text-lg mb-2">{settings?.companyName ?? "Mabelle Bites"}</p>
-          {settings?.slogan && <p className="text-sm text-white/80 italic">{settings.slogan}</p>}
+          <p className="text-stone-800 font-semibold text-lg mb-2">{settings?.companyName ?? "Mabelle Bites"}</p>
+          {settings?.slogan && <p className="text-sm text-stone-500 italic">{settings.slogan}</p>}
           {settings?.companyDescription && (
-            <p className="text-sm text-white/80 mt-3 leading-relaxed">{settings.companyDescription}</p>
+            <p className="text-sm text-stone-500 mt-3 leading-relaxed">{settings.companyDescription}</p>
           )}
         </div>
 
         <div>
-          <p className="text-white font-semibold mb-3">Quick Links</p>
+          <p className="text-stone-800 font-semibold mb-3">Quick Links</p>
           <ul className="space-y-2 text-sm">
-            <li><Link href="/" className="text-white/75 hover:text-white transition">Home</Link></li>
-            <li><Link href="/products" className="text-white/75 hover:text-white transition">All Products</Link></li>
-            <li><Link href="/about" className="text-white/75 hover:text-white transition">About Us</Link></li>
-            <li><Link href="/cart" className="text-white/75 hover:text-white transition">Cart</Link></li>
+            <li><Link href="/" className="text-stone-500 hover:text-stone-800 transition">Home</Link></li>
+            <li><Link href="/products" className="text-stone-500 hover:text-stone-800 transition">All Products</Link></li>
+            <li><Link href="/about" className="text-stone-500 hover:text-stone-800 transition">About Us</Link></li>
+            <li><Link href="/cart" className="text-stone-500 hover:text-stone-800 transition">Cart</Link></li>
           </ul>
         </div>
 
         <div>
-          <p className="text-white font-semibold mb-3">Connect</p>
+          <p className="text-stone-800 font-semibold mb-3">Connect</p>
           <div className="flex gap-3 justify-center">
             {whatsappHref && (
               <a
@@ -75,11 +75,11 @@ export default async function Footer({ settings }: FooterProps) {
             )}
           </div>
           {settings?.phoneNumber && (
-            <p className="text-sm text-white/75 mt-3">📞 {settings.phoneNumber}</p>
+            <p className="text-sm text-stone-500 mt-3">📞 {settings.phoneNumber}</p>
           )}
         </div>
       </div>
-      <div suppressHydrationWarning className="border-t border-white/20 py-4 text-center text-xs text-white/60">
+      <div suppressHydrationWarning className="border-t border-stone-200 py-4 text-center text-xs text-stone-400">
         © {new Date().getFullYear()} {settings?.companyName ?? "Mabelle Bites"}. All rights reserved.
       </div>
     </footer>
