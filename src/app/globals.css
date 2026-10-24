@@ -75,10 +75,3 @@
   display: none;
   width: 0;
 }
-
-/* iOS Safari: overflow:hidden clips position:absolute images incorrectly on page load/reload.
-   Forcing GPU compositing on the clipping container fixes the artifact. */
-.overflow-hidden {
-  -webkit-transform: translateZ(0);
-  transform: translateZ(0);
-}

@@ -67,16 +67,26 @@ export default function OrderAgainSection() {
         </div>
       </div>
 
-      <div
-        ref={scrollRef}
-        className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-2 scrollbar-hide"
-        style={{ scrollbarWidth: "none" }}
-      >
-        {products.map(product => (
-          <div key={product.id} className="snap-start shrink-0 w-48 sm:w-52">
-            <ProductCard product={product} />
-          </div>
-        ))}
+      <div className="relative">
+        <div
+          ref={scrollRef}
+          className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-2 scrollbar-hide"
+          style={{ scrollbarWidth: "none" }}
+        >
+          {products.map(product => (
+            <div key={product.id} className="snap-start shrink-0 w-44 sm:w-52">
+              <ProductCard product={product} />
+            </div>
+          ))}
+        </div>
+        <div
+          className="pointer-events-none absolute right-0 top-0 bottom-2 w-6 flex items-center justify-end"
+          style={{ background: "linear-gradient(to left, var(--background) 40%, transparent)" }}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-stone-400">
+            <path d="M9 18l6-6-6-6" />
+          </svg>
+        </div>
       </div>
     </section>
   );

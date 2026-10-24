@@ -30,7 +30,7 @@ export default async function Footer({ settings }: FooterProps) {
   const instaHref = settings?.instagramPage ?? undefined;
 
   return (
-    <footer className="bg-[#5a8032] text-white mt-20">
+    <footer className="bg-[#7aaa42] text-white mt-20">
       <div className="max-w-7xl mx-auto px-2 sm:px-4 py-12 grid grid-cols-1 sm:grid-cols-3 gap-8 text-center">
         <div>
           <p className="text-white font-semibold text-lg mb-2">{settings?.companyName ?? "Mabelle Bites"}</p>
