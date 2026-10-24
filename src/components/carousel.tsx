@@ -79,6 +79,7 @@ export default function Carousel({ slides, sections = [] }: CarouselProps) {
   // ── pointer events (mouse + stylus) ──────────────────────────────────────
 
   const onPointerDown = (e: React.PointerEvent) => {
+    if ((e.target as Element).closest("button")) return; // let nav/dot buttons handle their own clicks
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
     startDrag(e.clientX);
   };
@@ -89,7 +90,10 @@ export default function Carousel({ slides, sections = [] }: CarouselProps) {
 
   // ── touch events (for momentum feel on mobile) ────────────────────────────
 
-  const onTouchStart = (e: React.TouchEvent) => startDrag(e.touches[0].clientX);
+  const onTouchStart = (e: React.TouchEvent) => {
+    if ((e.target as Element).closest("button")) return; // let nav/dot buttons handle their own clicks
+    startDrag(e.touches[0].clientX);
+  };
   const onTouchMove = (e: React.TouchEvent) => moveDrag(e.touches[0].clientX);
   const onTouchEnd = () => endDrag();
 
@@ -213,8 +217,6 @@ export default function Carousel({ slides, sections = [] }: CarouselProps) {
       {total > 1 && (
         <>
           <button
-            onPointerDown={e => e.stopPropagation()}
-            onTouchStart={e => e.stopPropagation()}
             onClick={(e) => { e.stopPropagation(); prev(); }}
             className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center rounded-full bg-white/60 backdrop-blur-sm shadow hover:bg-white/80 transition-all duration-200 text-gray-700 touch-manipulation"
             aria-label="Previous slide"
@@ -224,8 +226,6 @@ export default function Carousel({ slides, sections = [] }: CarouselProps) {
             </svg>
           </button>
           <button
-            onPointerDown={e => e.stopPropagation()}
-            onTouchStart={e => e.stopPropagation()}
             onClick={(e) => { e.stopPropagation(); next(); }}
             className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center rounded-full bg-white/60 backdrop-blur-sm shadow hover:bg-white/80 transition-all duration-200 text-gray-700 touch-manipulation"
             aria-label="Next slide"
@@ -239,12 +239,11 @@ export default function Carousel({ slides, sections = [] }: CarouselProps) {
 
       {/* Dots */}
       {total > 1 && (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 bg-black/10 backdrop-blur-sm rounded-full px-2 py-1.5">
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5  rounded-full px-2 py-1.5">
           {slides.map((_, i) => (
             <button
               key={i}
-              onPointerDown={e => e.stopPropagation()}
-              onClick={() => go(i)}
+              onClick={(e) => { e.stopPropagation(); go(i); }}
               className={`h-2 rounded-full transition-all duration-300 ${i === current ? "bg-[var(--mint)] w-3" : "bg-white/70 w-2"}`}
               aria-label={`Slide ${i + 1}`}
             />

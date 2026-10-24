@@ -43,9 +43,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en" className={geist.variable}>
       <head>
-        {/* iOS Safari restores scroll position before React hydrates, briefly cropping images.
-            Setting scrollRestoration="manual" synchronously here prevents that flash. */}
-        <script dangerouslySetInnerHTML={{ __html: `if("scrollRestoration"in history)history.scrollRestoration="manual";document.addEventListener("DOMContentLoaded",function(){window.scrollTo(0,0);});window.addEventListener("pageshow",function(e){if(e.persisted)window.scrollTo(0,0);});` }} />
+        {/* iOS Safari restores scroll after the load event (after images load), not at DOMContentLoaded.
+            We fire scrollTo(0,0) at both points, plus a rAF after load to catch any post-load restoration. */}
+        <script dangerouslySetInnerHTML={{ __html: `(function(){if("scrollRestoration"in history)history.scrollRestoration="manual";function r(){if(window.pageYOffset>0)window.scrollTo(0,0);}document.addEventListener("DOMContentLoaded",r);window.addEventListener("load",function(){r();requestAnimationFrame(r);});window.addEventListener("pageshow",function(e){if(e.persisted)r();});})();` }} />
       </head>
       <body>
         <CartProvider>
