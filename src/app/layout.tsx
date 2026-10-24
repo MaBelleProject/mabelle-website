@@ -45,7 +45,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <head>
         {/* iOS Safari restores scroll after the load event (after images load), not at DOMContentLoaded.
             We fire scrollTo(0,0) at both points, plus a rAF after load to catch any post-load restoration. */}
-        <script dangerouslySetInnerHTML={{ __html: `(function(){if("scrollRestoration"in history)history.scrollRestoration="manual";function r(){if(window.pageYOffset>0)window.scrollTo(0,0);}document.addEventListener("DOMContentLoaded",r);window.addEventListener("load",function(){var t=Date.now()+600;(function p(){r();if(Date.now()<t)requestAnimationFrame(p);})();});window.addEventListener("pageshow",function(e){if(e.persisted)r();});})();` }} />
+        <script dangerouslySetInnerHTML={{ __html: `(function(){if("scrollRestoration"in history)history.scrollRestoration="manual";function r(){if(window.pageYOffset>0)window.scrollTo(0,0);}document.addEventListener("DOMContentLoaded",r);window.addEventListener("load",function(){r();[0,50,150,300,500].forEach(function(ms){setTimeout(r,ms);});});window.addEventListener("pageshow",function(e){if(e.persisted)r();});})();` }} />
       </head>
       <body>
         <CartProvider>
