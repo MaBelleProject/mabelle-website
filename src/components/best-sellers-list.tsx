@@ -59,8 +59,8 @@ export default function BestSellersList({ products }: BestSellersListProps) {
           style={{ scrollbarWidth: "none" }}
         >
           {products.map((product) => (
-            <div key={product.id} className="relative snap-start shrink-0 w-44 sm:w-52">
-              <ProductCard product={product} />
+            <div key={product.id} className="relative snap-start shrink-0 w-36 sm:w-44">
+              <ProductCard product={product} compact />
             </div>
           ))}
         </div>

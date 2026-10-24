@@ -32,7 +32,7 @@ export default async function HomePage() {
     <div className="pb-16">
       {/* Carousel */}
       {slides.length > 0 && (
-        <section className="max-w-7xl mx-auto px-2 sm:px-4 pt-10 pb-6">
+        <section className="max-w-7xl mx-auto px-2 sm:px-4 pt-6 pb-6">
           <Carousel slides={slides} sections={sections} />
         </section>
       )}
