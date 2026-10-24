@@ -32,6 +32,8 @@ export default function ProfilePage() {
         {customer.email && <><span className="text-stone-400">Email</span><span className="text-stone-700 font-medium">{customer.email}</span></>}
       </div>
 
+
+
       <div className="bg-white rounded-2xl border border-[var(--sage-light)] shadow-sm overflow-hidden">
         <div className="px-5 py-4 border-b border-[var(--sage-light)]">
           <h2 className="font-semibold text-stone-800 flex items-center gap-1.5">
