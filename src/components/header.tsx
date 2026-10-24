@@ -9,7 +9,6 @@ import { fileUrl } from "@/lib/api";
 import Image from "next/image";
 import { Heart, Menu, Search, ShoppingCart } from "lucide-react";
 import Link from "next/link";
-import { useLayoutEffect, useRef } from "react";
 
 interface HeaderProps {
   brands: Brand[];
@@ -19,23 +18,12 @@ interface HeaderProps {
 export default function Header({ brands: _brands, settings }: HeaderProps) {
   const { count } = useCart();
   const { toggle, open } = useMenu();
-  const headerRef = useRef<HTMLElement>(null);
-
-  useLayoutEffect(() => {
-    const el = headerRef.current;
-    if (!el) return;
-    const update = () => document.documentElement.style.setProperty("--header-h", el.offsetHeight + "px");
-    update();
-    const ro = new ResizeObserver(update);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
   const { customer } = useCustomer();
   const { count: favCount } = useFavorites();
   const logoUrl = settings?.companyLogo ? fileUrl(settings.companyLogo) : undefined;
 
   return (
-    <header ref={headerRef} className="fixed top-0 left-0 right-0 w-full z-40 bg-white/95 backdrop-blur border-b border-[var(--sage-light)] shadow-sm">
+    <header className="fixed top-0 left-0 right-0 w-full z-40 bg-white/95 backdrop-blur border-b border-[var(--sage-light)] shadow-sm">
       <div className="max-w-7xl mx-auto px-2 sm:px-4">
         <div className="relative flex items-center justify-between py-4">
           {/* Left: menu + search icons — hidden while sidebar is open (X inside sidebar handles close) */}
