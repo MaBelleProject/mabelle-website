@@ -64,7 +64,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                         <div className="flex min-h-screen">
                           <Suspense fallback={null}><ScrollToTop /></Suspense>
                           <MenuSidebar sections={sections} />
-                          <div className="flex-1 min-w-0 flex flex-col" style={{ paddingTop: "7rem" }}>
+                          <div className="flex-1 min-w-0 flex flex-col" style={{ paddingTop: "80px" }}>
                             <Header brands={brands} settings={settings} />
                             <main className="flex-1">{children}</main>
                             <Footer settings={settings} />
