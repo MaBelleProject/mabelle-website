@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { Star } from "lucide-react";
 import { useCustomer } from "@/context/customer-context";
 import { storefrontApi, type LoyaltySummary } from "@/lib/api";
+import { Star } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export default function ProfilePage() {
   const { customer } = useCustomer();
