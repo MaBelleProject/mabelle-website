@@ -43,7 +43,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en" className={geist.variable}>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: `(function(){if("scrollRestoration"in history)history.scrollRestoration="manual";function r(){window.scrollTo(0,0);document.documentElement.scrollTop=0;document.body.scrollTop=0;}document.addEventListener("DOMContentLoaded",r);window.addEventListener("load",function(){r();var done=false;window.addEventListener("scroll",function(){done=true;},{once:true,passive:true});[50,150,300,500].forEach(function(ms){setTimeout(function(){if(!done)r();},ms);});});window.addEventListener("beforeunload",r);window.addEventListener("pageshow",function(e){if(e.persisted)r();});})();` }} />
+        <script dangerouslySetInnerHTML={{ __html: `(function(){if("scrollRestoration"in history)history.scrollRestoration="manual";function r(){window.scrollTo(0,0);document.documentElement.scrollTop=0;document.body.scrollTop=0;}document.addEventListener("DOMContentLoaded",r);window.addEventListener("load",function(){r();var done=false;window.addEventListener("scroll",function(){done=true;},{once:true,passive:true});[50,150,300,500].forEach(function(ms){setTimeout(function(){if(!done)r();},ms);});});window.addEventListener("beforeunload",r);window.addEventListener("pageshow",function(e){r();setTimeout(r,300);});})();` }} />
       </head>
       <body>
         <CartProvider>
