@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useEffect, useLayoutEffect } from "react";
+import { useEffect } from "react";
 
 export default function ScrollToTop() {
   const pathname = usePathname();
@@ -10,7 +10,7 @@ export default function ScrollToTop() {
     if ("scrollRestoration" in history) history.scrollRestoration = "manual";
   }, []);
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     const target = sessionStorage.getItem("homeScrollTo");
 
     if (target && pathname === "/") {

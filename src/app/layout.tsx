@@ -43,9 +43,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en" className={geist.variable}>
       <head>
-        {/* iOS Safari restores scroll after the load event (after images load), not at DOMContentLoaded.
-            We fire scrollTo(0,0) at both points, plus a rAF after load to catch any post-load restoration. */}
-        <script dangerouslySetInnerHTML={{ __html: `(function(){if("scrollRestoration"in history)history.scrollRestoration="manual";function r(){if(window.pageYOffset>0)window.scrollTo(0,0);}document.addEventListener("DOMContentLoaded",r);window.addEventListener("load",function(){r();[0,50,150,300,500].forEach(function(ms){setTimeout(r,ms);});});window.addEventListener("pageshow",function(e){if(e.persisted)r();});})();` }} />
+        {/* Measure actual header height and expose as --header-height for the content padding-top.
+            Also keeps scroll-restoration prevention as a secondary defence. */}
+        <script dangerouslySetInnerHTML={{ __html: `(function(){if("scrollRestoration"in history)history.scrollRestoration="manual";document.addEventListener("DOMContentLoaded",function(){var h=document.querySelector("header");if(h){function u(){document.documentElement.style.setProperty("--header-height",h.offsetHeight+"px");}u();if(typeof ResizeObserver!=="undefined")new ResizeObserver(u).observe(h);}if(window.pageYOffset>0)window.scrollTo(0,0);});window.addEventListener("pageshow",function(e){if(e.persisted&&window.pageYOffset>0)window.scrollTo(0,0);});})();` }} />
       </head>
       <body>
         <CartProvider>
@@ -66,7 +66,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                         <div className="flex min-h-screen">
                           <Suspense fallback={null}><ScrollToTop /></Suspense>
                           <MenuSidebar sections={sections} />
-                          <div className="flex-1 min-w-0 flex flex-col">
+                          <div className="flex-1 min-w-0 flex flex-col" style={{ paddingTop: "var(--header-height, 80px)" }}>
                             <Header brands={brands} settings={settings} />
                             <main className="flex-1">{children}</main>
                             <Footer settings={settings} />

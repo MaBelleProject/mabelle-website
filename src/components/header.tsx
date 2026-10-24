@@ -23,7 +23,7 @@ export default function Header({ brands: _brands, settings }: HeaderProps) {
   const logoUrl = settings?.companyLogo ? fileUrl(settings.companyLogo) : undefined;
 
   return (
-    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-[var(--sage-light)] shadow-sm">
+    <header className="fixed top-0 left-0 right-0 w-full z-40 bg-white/95 backdrop-blur border-b border-[var(--sage-light)] shadow-sm">
       <div className="max-w-7xl mx-auto px-2 sm:px-4">
         <div className="relative flex items-center justify-between py-4">
           {/* Left: menu + search icons — hidden while sidebar is open (X inside sidebar handles close) */}
