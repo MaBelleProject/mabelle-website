@@ -43,9 +43,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en" className={geist.variable}>
       <head>
-        {/* Measure actual header height and expose as --header-height for the content padding-top.
-            Also keeps scroll-restoration prevention as a secondary defence. */}
-        <script dangerouslySetInnerHTML={{ __html: `(function(){if("scrollRestoration"in history)history.scrollRestoration="manual";document.addEventListener("DOMContentLoaded",function(){var h=document.querySelector("header");if(h){function u(){document.documentElement.style.setProperty("--header-height",h.offsetHeight+"px");}u();if(typeof ResizeObserver!=="undefined")new ResizeObserver(u).observe(h);}if(window.pageYOffset>0)window.scrollTo(0,0);});window.addEventListener("pageshow",function(e){if(e.persisted&&window.pageYOffset>0)window.scrollTo(0,0);});})();` }} />
+        <script dangerouslySetInnerHTML={{ __html: `(function(){if("scrollRestoration"in history)history.scrollRestoration="manual";function r(){window.scrollTo(0,0);document.documentElement.scrollTop=0;document.body.scrollTop=0;}document.addEventListener("DOMContentLoaded",r);window.addEventListener("load",function(){r();var done=false;window.addEventListener("scroll",function(){done=true;},{once:true,passive:true});[50,150,300,500].forEach(function(ms){setTimeout(function(){if(!done)r();},ms);});});window.addEventListener("beforeunload",r);window.addEventListener("pageshow",function(e){if(e.persisted)r();});})();` }} />
       </head>
       <body>
         <CartProvider>
@@ -66,7 +64,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                         <div className="flex min-h-screen">
                           <Suspense fallback={null}><ScrollToTop /></Suspense>
                           <MenuSidebar sections={sections} />
-                          <div className="flex-1 min-w-0 flex flex-col" style={{ paddingTop: "var(--header-height, 80px)" }}>
+                          <div className="flex-1 min-w-0 flex flex-col" style={{ paddingTop: "80px" }}>
                             <Header brands={brands} settings={settings} />
                             <main className="flex-1">{children}</main>
                             <Footer settings={settings} />
