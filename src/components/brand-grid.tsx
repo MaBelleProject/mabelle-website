@@ -35,7 +35,7 @@ export default function BrandGrid({ brands, countries = {} }: BrandGridProps) {
                 )}
                 <CountryFlag
                   country={countries[brand.id]}
-                  className="absolute bottom-1.5 right-1.5 sm:bottom-2 sm:right-2 z-10 w-5 h-[15px] sm:w-6 sm:h-[18px] shadow-sm"
+                  className="absolute bottom-1.5 right-1.5 z-10 w-4 h-3 sm:w-5 sm:h-[15px] shadow-sm"
                 />
               </Link>
             );

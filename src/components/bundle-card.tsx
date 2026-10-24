@@ -128,14 +128,13 @@ export function BundleCartControlWithSwaps({ bundle }: { bundle: Bundle }) {
             return (
               <li key={item.id} className="flex flex-col gap-2">
                 <div className="flex items-center gap-3">
-                  <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-white shrink-0">
+                  <Link href={`/product/${chosenId}`} className="relative w-10 h-10 rounded-lg overflow-hidden bg-white shrink-0 hover:opacity-80 transition">
                     {img ? <Image src={img} alt="" fill sizes="40px" className="object-cover" loading="lazy" /> : <div className="w-full h-full flex items-center justify-center">🍬</div>}
-                  </div>
+                  </Link>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <p className="min-w-0 text-sm text-stone-800 font-medium truncate">{chosen?.name ?? item.productName}</p>
-                      <CountryFlag productId={chosenId} className="w-4 h-3" />
-                    </div>
+                    <Link href={`/product/${chosenId}`} className="min-w-0 text-sm text-stone-800 font-medium truncate hover:text-[var(--brand)] hover:underline transition block">
+                      {chosen?.name ?? item.productName}
+                    </Link>
                     <p className="text-xs text-stone-400">${parseFloat(chosen?.sellingPrice ?? item.sellingPrice).toFixed(2)} · {item.quantity} included</p>
                   </div>
                   <span className="text-sm font-semibold text-stone-700 shrink-0">× {item.quantity}</span>
@@ -151,7 +150,6 @@ export function BundleCartControlWithSwaps({ bundle }: { bundle: Bundle }) {
                         className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs border transition ${opt.productId === chosenId ? "bg-[var(--brand)] text-white border-[var(--brand)]" : "bg-white text-stone-600 border-stone-200 hover:border-[var(--brand)]"}`}
                       >
                         {opt.name}
-                        <CountryFlag productId={opt.productId} interactive={false} className="w-3.5 h-2.5" />
                         {opt.productId === item.productId && <span className="ml-1 opacity-60">(default)</span>}
                       </button>
                     ))}

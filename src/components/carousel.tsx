@@ -2,8 +2,8 @@
 
 import type { CarouselSlide, SectionGroup } from "@/lib/api";
 import { fileUrl } from "@/lib/api";
-import Image from "next/image";
 import { sectionHref, sectionOfId } from "@/lib/sections";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -159,13 +159,13 @@ export default function Carousel({ slides, sections = [] }: CarouselProps) {
       onTouchEnd={onTouchEnd}
       onClick={handleContainerClick}
     >
-      {/* Track */}
+      {/* Track — absolute inset-0 so it always fills the container regardless of whether
+           the container height comes from aspect-ratio, min-height, or an explicit height. */}
       <div
         ref={trackRef}
-        className="flex h-full"
+        className="absolute inset-0 flex"
         style={{
           transform: `translateX(${translateX}%)`,
-          // Disable the CSS transition while dragging so the slide follows the finger exactly
           transition: dragging ? "none" : "transform 0.5s ease",
           willChange: "transform",
         }}
@@ -214,8 +214,9 @@ export default function Carousel({ slides, sections = [] }: CarouselProps) {
         <>
           <button
             onPointerDown={e => e.stopPropagation()}
+            onTouchStart={e => e.stopPropagation()}
             onClick={(e) => { e.stopPropagation(); prev(); }}
-            className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center rounded-full bg-white/60 backdrop-blur-sm shadow hover:bg-white/80 transition-all duration-200 text-gray-700"
+            className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center rounded-full bg-white/60 backdrop-blur-sm shadow hover:bg-white/80 transition-all duration-200 text-gray-700 touch-manipulation"
             aria-label="Previous slide"
           >
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
@@ -224,8 +225,9 @@ export default function Carousel({ slides, sections = [] }: CarouselProps) {
           </button>
           <button
             onPointerDown={e => e.stopPropagation()}
+            onTouchStart={e => e.stopPropagation()}
             onClick={(e) => { e.stopPropagation(); next(); }}
-            className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center rounded-full bg-white/60 backdrop-blur-sm shadow hover:bg-white/80 transition-all duration-200 text-gray-700"
+            className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center rounded-full bg-white/60 backdrop-blur-sm shadow hover:bg-white/80 transition-all duration-200 text-gray-700 touch-manipulation"
             aria-label="Next slide"
           >
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
@@ -237,14 +239,13 @@ export default function Carousel({ slides, sections = [] }: CarouselProps) {
 
       {/* Dots */}
       {total > 1 && (
-        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 bg-black/10 backdrop-blur-sm rounded-full px-2 py-1.5">
           {slides.map((_, i) => (
             <button
               key={i}
               onPointerDown={e => e.stopPropagation()}
               onClick={() => go(i)}
-              className={`h-2 rounded-full transition-all duration-300 ${i === current ? "bg-blue-400 w-2" : "bg-white w-2"
-                }`}
+              className={`h-2 rounded-full transition-all duration-300 ${i === current ? "bg-[var(--mint)] w-3" : "bg-white/70 w-2"}`}
               aria-label={`Slide ${i + 1}`}
             />
           ))}

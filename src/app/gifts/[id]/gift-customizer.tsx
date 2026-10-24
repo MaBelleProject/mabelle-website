@@ -238,12 +238,14 @@ export default function GiftCustomizer({
               const maxQty = Math.max(sel.quantity, stock);
               return (
                 <li key={sel.productId} className="flex items-start gap-3 bg-white rounded-xl px-3 py-2.5">
-                  <div className="relative w-9 h-9 rounded-lg overflow-hidden bg-[var(--sage-light)] shrink-0 mt-0.5">
+                  <Link href={`/product/${sel.productId}`} className="relative w-9 h-9 rounded-lg overflow-hidden bg-[var(--sage-light)] shrink-0 mt-0.5 hover:opacity-80 transition">
                     {img ? <Image src={img} alt="" fill sizes="36px" className="object-cover" loading="lazy" /> : <div className="w-full h-full flex items-center justify-center text-lg">🍬</div>}
-                  </div>
+                  </Link>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
-                      <p className="min-w-0 text-sm text-stone-800 font-medium truncate">{p.name}</p>
+                      <Link href={`/product/${sel.productId}`} className="min-w-0 text-sm text-stone-800 font-medium truncate hover:text-[var(--brand)] hover:underline transition block">
+                        {p.name}
+                      </Link>
                       <CountryFlag productId={sel.productId} className="w-4 h-3" />
                     </div>
                     <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 mt-1.5">
