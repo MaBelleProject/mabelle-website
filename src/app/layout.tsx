@@ -43,7 +43,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en" className={geist.variable}>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: `(function(){if("scrollRestoration"in history)history.scrollRestoration="manual";function r(){window.scrollTo(0,0);document.documentElement.scrollTop=0;document.body.scrollTop=0;}document.addEventListener("DOMContentLoaded",r);window.addEventListener("load",function(){r();var end=Date.now()+2000,touched=false;window.addEventListener("touchstart",function(){touched=true;},{once:true,passive:true});(function w(){if(touched||Date.now()>end)return;if(window.scrollY>0)r();requestAnimationFrame(w);})();});window.addEventListener("beforeunload",r);window.addEventListener("pageshow",function(e){r();});})();` }} />
+        <script dangerouslySetInnerHTML={{ __html: `(function(){if("scrollRestoration"in history)history.scrollRestoration="manual";function r(){window.scrollTo(0,0);document.documentElement.scrollTop=0;document.body.scrollTop=0;}document.addEventListener("DOMContentLoaded",r);window.addEventListener("load",function(){r();var stopped=false;function stop(){stopped=true;}["touchstart","wheel","mousedown","keydown"].forEach(function(e){window.addEventListener(e,stop,{once:true,passive:true});});var end=Date.now()+3000;(function w(){if(stopped||Date.now()>end)return;if(window.scrollY>0)r();requestAnimationFrame(w);})();});window.addEventListener("beforeunload",r);window.addEventListener("pageshow",function(e){r();});})();` }} />
       </head>
       <body>
         <CartProvider>
@@ -64,7 +64,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                         <div className="flex min-h-screen">
                           <Suspense fallback={null}><ScrollToTop /></Suspense>
                           <MenuSidebar sections={sections} />
-                          <div className="flex-1 min-w-0 flex flex-col" style={{ paddingTop: "80px" }}>
+                          <div className="flex-1 min-w-0 flex flex-col" style={{ paddingTop: "112px" }}>
                             <Header brands={brands} settings={settings} />
                             <main className="flex-1">{children}</main>
                             <Footer settings={settings} />
