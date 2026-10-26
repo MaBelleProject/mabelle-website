@@ -18,6 +18,7 @@ export default function MenuSidebar({ sections }: { sections: SectionGroup[] }) 
   const pathname = usePathname();
   const [confirmSignOut, setConfirmSignOut] = useState(false);
   const [sectionsOpen, setSectionsOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   const navClass = (href: string) => {
     const active = href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(href + "/") || pathname.startsWith(href + "?");
@@ -40,9 +41,13 @@ export default function MenuSidebar({ sections }: { sections: SectionGroup[] }) 
   }, [open]);
 
   const handleSignOut = () => {
-    logout();
     setConfirmSignOut(false);
     close();
+    setLoggingOut(true);
+    setTimeout(() => {
+      logout();
+      window.location.replace("/");
+    }, 700);
   };
 
   return (
@@ -160,6 +165,13 @@ export default function MenuSidebar({ sections }: { sections: SectionGroup[] }) 
         </nav>
 
       </aside>
+
+      {loggingOut && createPortal(
+        <div className="fixed inset-0 z-[300] flex items-center justify-center bg-white">
+          <div className="w-10 h-10 rounded-full border-4 border-[var(--sage-light)] border-t-[var(--brand)] animate-spin" />
+        </div>,
+        document.body
+      )}
 
       {confirmSignOut && createPortal(
         <div
