@@ -20,6 +20,7 @@ export default function MenuSidebar({ sections }: { sections: SectionGroup[] }) 
   const [sectionsOpen, setSectionsOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const scrollYRef = useRef(0);
+  const navRef = useRef<HTMLElement>(null);
 
   const navClass = (href: string) => {
     const active = href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(href + "/") || pathname.startsWith(href + "?");
@@ -40,6 +41,18 @@ export default function MenuSidebar({ sections }: { sections: SectionGroup[] }) 
   // overflow:hidden on the body, which lets the page scroll compete with the nav scroll.
   useEffect(() => {
     if (open) {
+      if (navRef.current) {
+        const nav = navRef.current;
+        const links = Array.from(nav.querySelectorAll("a"));
+        const activeLink = links.find(a => {
+          const href = a.getAttribute("href") ?? "";
+          if (href === "/") return pathname === "/";
+          return pathname === href || pathname.startsWith(href + "/") || pathname.startsWith(href + "?");
+        });
+        if (activeLink) {
+          activeLink.scrollIntoView({ block: "nearest", behavior: "instant" } as ScrollIntoViewOptions);
+        }
+      }
       scrollYRef.current = window.scrollY;
       document.body.style.position = "fixed";
       document.body.style.top = `-${scrollYRef.current}px`;
@@ -99,7 +112,7 @@ export default function MenuSidebar({ sections }: { sections: SectionGroup[] }) 
         </div>
 
         {/* Nav links */}
-        <nav className="flex-1 min-h-0 overflow-y-auto overscroll-contain scrollbar-hide px-3 pt-1 pb-4 flex flex-col gap-0.5">
+        <nav ref={navRef} className="flex-1 min-h-0 overflow-y-auto overscroll-contain scrollbar-hide px-3 pt-1 pb-4 flex flex-col gap-0.5">
           <Link href="/" onClick={close} className={navClass("/")}>
             Home
           </Link>
