@@ -78,7 +78,7 @@ export default function MenuSidebar({ sections }: { sections: SectionGroup[] }) 
       />
 
       <aside
-        className="fixed top-0 left-0 h-full w-72 bg-white shadow-xl z-50 flex flex-col will-change-transform overflow-hidden"
+        className="fixed top-0 left-0 h-full w-72 bg-white shadow-xl z-50 flex flex-col will-change-transform overflow-x-hidden"
         style={{
           transform: open ? "translateX(0)" : "translateX(-100%)",
           transition: `transform ${TRANSITION}`,
@@ -99,7 +99,7 @@ export default function MenuSidebar({ sections }: { sections: SectionGroup[] }) 
         </div>
 
         {/* Nav links */}
-        <nav className="flex-1 overflow-y-auto overscroll-contain scrollbar-hide px-3 pt-1 pb-4 flex flex-col gap-0.5">
+        <nav className="flex-1 min-h-0 overflow-y-auto overscroll-contain scrollbar-hide px-3 pt-1 pb-4 flex flex-col gap-0.5">
           <Link href="/" onClick={close} className={navClass("/")}>
             Home
           </Link>
