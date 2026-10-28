@@ -48,9 +48,13 @@ export default function MenuSidebar({ sections }: { sections: SectionGroup[] }) 
           const href = a.getAttribute("href") ?? "";
           if (href === "/") return pathname === "/";
           return pathname === href || pathname.startsWith(href + "/") || pathname.startsWith(href + "?");
-        });
+        }) as HTMLElement | undefined;
         if (activeLink) {
-          activeLink.scrollIntoView({ block: "nearest", behavior: "instant" } as ScrollIntoViewOptions);
+          const linkTop = activeLink.offsetTop - nav.offsetTop;
+          const max = nav.scrollHeight - nav.clientHeight;
+          const target = linkTop - nav.clientHeight / 2 + activeLink.offsetHeight / 2;
+          // Cap at max - 1 so iOS Safari never sits at the scroll boundary (which blocks upward gestures)
+          nav.scrollTop = Math.max(0, Math.min(target, max > 1 ? max - 1 : max));
         }
       }
       scrollYRef.current = window.scrollY;

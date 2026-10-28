@@ -1,3 +1,5 @@
+"use client";
+
 import type { Brand } from "@/lib/api";
 import { fileUrl } from "@/lib/api";
 import Image from "next/image";
@@ -20,6 +22,7 @@ export default function BrandGrid({ brands, countries = {} }: BrandGridProps) {
               <Link
                 key={brand.id}
                 href={`/brand/${brand.id}`}
+                onClick={() => sessionStorage.setItem("homeScrollTo", "brands-area")}
                 className="group relative shrink-0 w-[calc(33%-6px)] sm:w-[calc(20%-6px)] aspect-square overflow-hidden rounded-2xl bg-[var(--sage-light)] hover:shadow-md transition"
               >
                 {imgUrl ? (
