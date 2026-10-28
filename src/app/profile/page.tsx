@@ -29,7 +29,7 @@ export default function ProfilePage() {
       <div className="bg-white rounded-2xl border border-[var(--sage-light)] shadow-sm px-5 py-4 grid grid-cols-2 gap-y-2 text-sm">
         <span className="text-stone-400">Name</span><span className="text-stone-700 font-medium">{customer.name}</span>
         <span className="text-stone-400">Phone</span><span className="text-stone-700 font-medium">{customer.phone}</span>
-        {customer.email && <><span className="text-stone-400">Email</span><span className="text-stone-700 font-medium">{customer.email}</span></>}
+        {customer.email && <><span className="text-stone-400">Email</span><span className="text-stone-700 font-medium min-w-0 break-all">{customer.email}</span></>}
       </div>
 
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { setCustomerToken } from "@/lib/api";
 
 export interface CustomerInfo {
   id: number; name: string; phone: string; email?: string | null;
@@ -8,6 +9,8 @@ export interface CustomerInfo {
   isNonProfit?: boolean;
   /** Never pays delivery (always true for non-profit customers). */
   freeDelivery?: boolean;
+  /** JWT used for customer-authenticated API calls (favorites, orders, etc.). */
+  customerToken?: string;
 }
 
 /** Older saved logins have no freeDelivery; non-profit customers always had free delivery. */
@@ -39,7 +42,11 @@ export function CustomerProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) setCustomerState(JSON.parse(raw));
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed?.customerToken) setCustomerToken(parsed.customerToken);
+        setCustomerState(parsed);
+      }
     } catch { /* ignore corrupt storage */ }
     setCustomerReady(true);
   }, []);
@@ -58,6 +65,7 @@ export function CustomerProvider({ children }: { children: ReactNode }) {
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.message ?? "Login failed");
+    if (data.customerToken) setCustomerToken(data.customerToken);
     setCustomer(data);
   };
 
@@ -69,10 +77,11 @@ export function CustomerProvider({ children }: { children: ReactNode }) {
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.message ?? "Sign up failed");
+    if (data.customerToken) setCustomerToken(data.customerToken);
     setCustomer(data);
   };
 
-  const logout = () => setCustomer(null);
+  const logout = () => { setCustomerToken(null); setCustomer(null); };
 
   return (
     <CustomerContext.Provider value={{ customer, customerReady, login, signup, logout }}>

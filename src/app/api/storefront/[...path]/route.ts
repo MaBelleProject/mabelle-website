@@ -10,6 +10,10 @@ async function forward(req: NextRequest, ctx: { params: Promise<{ path: string[]
   const headers = new Headers();
   const contentType = req.headers.get("content-type");
   if (contentType) headers.set("content-type", contentType);
+  const cookie = req.headers.get("cookie");
+  if (cookie) headers.set("cookie", cookie);
+  const authorization = req.headers.get("authorization");
+  if (authorization) headers.set("authorization", authorization);
 
   let upstream: Response;
   try {
@@ -21,9 +25,18 @@ async function forward(req: NextRequest, ctx: { params: Promise<{ path: string[]
     return NextResponse.json({ message: "Cannot reach the server" }, { status: 502 });
   }
 
+  const resHeaders = new Headers();
+  resHeaders.set("content-type", upstream.headers.get("content-type") ?? "application/json");
+
+  // Forward Set-Cookie headers so the browser stores the customer session cookie
+  const setCookies = typeof upstream.headers.getSetCookie === "function"
+    ? upstream.headers.getSetCookie()
+    : upstream.headers.get("set-cookie") ? [upstream.headers.get("set-cookie")!] : [];
+  for (const c of setCookies) resHeaders.append("set-cookie", c);
+
   return new NextResponse(await upstream.arrayBuffer(), {
     status: upstream.status,
-    headers: { "content-type": upstream.headers.get("content-type") ?? "application/json" },
+    headers: resHeaders,
   });
 }
 

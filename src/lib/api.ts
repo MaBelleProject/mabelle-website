@@ -18,6 +18,20 @@ async function readError(res: Response): Promise<string> {
   } catch { return text || res.statusText; }
 }
 
+// ─── Customer auth token ──────────────────────────────────────────────────────
+// Loaded from localStorage on browser startup; updated on login/logout.
+
+let _customerToken: string | null = null;
+
+if (typeof window !== "undefined") {
+  try {
+    const raw = localStorage.getItem("mabelle_customer");
+    if (raw) { const p = JSON.parse(raw); if (p?.customerToken) _customerToken = p.customerToken; }
+  } catch {}
+}
+
+export function setCustomerToken(token: string | null) { _customerToken = token; }
+
 // ─── Client-side GET cache ─────────────────────────────────────────────────────
 // Persists across in-app navigations for the browser session; TTL prevents stale data.
 // Only caches public endpoints — anything under /customers/ is user-specific and skipped.
@@ -53,6 +67,9 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
   const headers: Record<string, string> = { ...(init?.headers as Record<string, string>) };
   if (!(init?.body instanceof FormData)) headers["Content-Type"] = "application/json";
+  if (!isServer && _customerToken && path.startsWith("/customers/")) {
+    headers["Authorization"] = `Bearer ${_customerToken}`;
+  }
 
   const base = isServer ? `${SERVER_BASE}/storefront` : CLIENT_BASE;
   const res = await fetch(`${base}${path}`, { ...init, headers, cache: "no-store" });
@@ -383,10 +400,14 @@ export const storefrontApi = {
   loyalty: (customerId: number) => request<LoyaltySummary>(`/customers/${customerId}/loyalty`),
   customerOrderAgain: (customerId: number) => request<Product[]>(`/customers/${customerId}/order-again`),
   getFavorites: (customerId: number) => request<number[]>(`/customers/${customerId}/favorites`),
-  addFavorite: (customerId: number, productId: number) =>
-    request<{ success: boolean }>(`/customers/${customerId}/favorites/${productId}`, { method: 'POST' }),
-  removeFavorite: (customerId: number, productId: number) =>
-    request<{ success: boolean }>(`/customers/${customerId}/favorites/${productId}`, { method: 'DELETE' }),
+  addFavorite: (customerId: number, productId: number) => {
+    _clientCache?.delete(`/customers/${customerId}/favorites`);
+    return request<{ success: boolean }>(`/customers/${customerId}/favorites/${productId}`, { method: 'POST' });
+  },
+  removeFavorite: (customerId: number, productId: number) => {
+    _clientCache?.delete(`/customers/${customerId}/favorites`);
+    return request<{ success: boolean }>(`/customers/${customerId}/favorites/${productId}`, { method: 'DELETE' });
+  },
   forgotPassword: (phone: string) =>
     request<{ sent: boolean }>('/forgot-password', { method: 'POST', body: JSON.stringify({ phone }) }),
   resetPassword: (token: string, newPassword: string) =>
