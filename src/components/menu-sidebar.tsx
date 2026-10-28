@@ -7,7 +7,7 @@ import { sectionHref } from "@/lib/sections";
 import { ChevronDown, LogOut, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 const TRANSITION = "300ms cubic-bezier(0.4, 0, 0.2, 1)";
@@ -19,6 +19,7 @@ export default function MenuSidebar({ sections }: { sections: SectionGroup[] }) 
   const [confirmSignOut, setConfirmSignOut] = useState(false);
   const [sectionsOpen, setSectionsOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+  const scrollYRef = useRef(0);
 
   const navClass = (href: string) => {
     const active = href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(href + "/") || pathname.startsWith(href + "?");
@@ -34,10 +35,26 @@ export default function MenuSidebar({ sections }: { sections: SectionGroup[] }) 
   // Close the confirm dialog whenever the sidebar closes
   useEffect(() => { if (!open) setConfirmSignOut(false); }, [open]);
 
-  // Lock body scroll while menu is open
+  // Lock body scroll while menu is open.
+  // position:fixed is used instead of overflow:hidden because iOS Safari ignores
+  // overflow:hidden on the body, which lets the page scroll compete with the nav scroll.
   useEffect(() => {
-    document.body.style.overflow = open ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
+    if (open) {
+      scrollYRef.current = window.scrollY;
+      document.body.style.position = "fixed";
+      document.body.style.top = `-${scrollYRef.current}px`;
+      document.body.style.width = "100%";
+    } else {
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.width = "";
+      window.scrollTo(0, scrollYRef.current);
+    }
+    return () => {
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.width = "";
+    };
   }, [open]);
 
   const handleSignOut = () => {
