@@ -7,7 +7,7 @@ import { sectionHref } from "@/lib/sections";
 import { ChevronDown, LogOut, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
 const TRANSITION = "300ms cubic-bezier(0.4, 0, 0.2, 1)";
@@ -19,7 +19,6 @@ export default function MenuSidebar({ sections }: { sections: SectionGroup[] }) 
   const [confirmSignOut, setConfirmSignOut] = useState(false);
   const [sectionsOpen, setSectionsOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
-  const navRef = useRef<HTMLElement>(null);
 
   const navClass = (href: string) => {
     const active = href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(href + "/") || pathname.startsWith(href + "?");
@@ -31,7 +30,6 @@ export default function MenuSidebar({ sections }: { sections: SectionGroup[] }) 
   };
 
   useEffect(() => { close(); }, [pathname]); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => { if (open && navRef.current) navRef.current.scrollTop = 0; }, [open]);
 
   // Close the confirm dialog whenever the sidebar closes
   useEffect(() => { if (!open) setConfirmSignOut(false); }, [open]);
@@ -84,7 +82,7 @@ export default function MenuSidebar({ sections }: { sections: SectionGroup[] }) 
         </div>
 
         {/* Nav links */}
-        <nav ref={navRef} className="flex-1 overflow-y-auto scrollbar-hide px-3 pt-1 pb-4 flex flex-col gap-0.5">
+        <nav className="flex-1 overflow-y-auto overscroll-contain scrollbar-hide px-3 pt-1 pb-4 flex flex-col gap-0.5">
           <Link href="/" onClick={close} className={navClass("/")}>
             Home
           </Link>
