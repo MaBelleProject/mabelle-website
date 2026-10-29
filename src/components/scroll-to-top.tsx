@@ -11,9 +11,6 @@ export default function ScrollToTop() {
     if ("scrollRestoration" in history) history.scrollRestoration = "manual";
   }, []);
 
-  // Handle bfcache restore — phone back button often restores the page from cache,
-  // so React's useEffect (below) never re-fires. pageshow with persisted:true is the
-
 
   // Handle client-side navigation (Next.js router.back() or popstate without bfcache)
   useEffect(() => {
