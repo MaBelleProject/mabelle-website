@@ -67,7 +67,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
   const headers: Record<string, string> = { ...(init?.headers as Record<string, string>) };
   if (!(init?.body instanceof FormData)) headers["Content-Type"] = "application/json";
-  if (!isServer && _customerToken && path.startsWith("/customers/")) {
+  if (!isServer && _customerToken) {
     headers["Authorization"] = `Bearer ${_customerToken}`;
   }
 
