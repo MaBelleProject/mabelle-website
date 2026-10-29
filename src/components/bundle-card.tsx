@@ -6,7 +6,7 @@ import Image from "next/image";
 import { Check, Minus, Plus, ShoppingCart, Layers } from "lucide-react";
 import type { Bundle, BundleReplacementProduct } from "@/lib/api";
 import { fileUrl } from "@/lib/api";
-import { useCart, bundleKey } from "@/context/cart-context";
+import { useCart, bundleKey, maxLineQty } from "@/context/cart-context";
 import CountryFlag from "./country-flag";
 
 interface BundleSwap { bundleItemId: number; productId: number }
@@ -18,22 +18,26 @@ function bundleSwapKey(bundleId: number, swaps: BundleSwap[]) {
   return `b-${bundleId}-${sorted.map((s) => `${s.bundleItemId}:${s.productId}`).join(",")}`;
 }
 
-/** Builds the cart line payload for a bundle. */
+/** Builds the cart line payload for a bundle (with the cart key for its swaps). */
 function bundleCartItem(b: Bundle, swaps: BundleSwap[] = []) {
+  const chosen = b.items.map((i) => {
+    const swap = swaps.find((s) => s.bundleItemId === i.id);
+    const r = swap ? i.replacements.find((x) => x.productId === swap.productId) : undefined;
+    return { item: i, productId: r?.productId ?? i.productId, name: r?.name ?? i.productName, stock: r ? r.stock : i.stock };
+  });
   return {
+    key: bundleSwapKey(b.id, swaps),
     itemType: "bundle" as const,
     bundleId: b.id,
     productCode: b.code,
     productName: b.name,
     unitPrice: parseFloat(b.price),
     imageUrl: b.imageUrl,
-    maxQty: b.available,
+    // Bundles of the default products the stock can make; swapped-in products are limited by `components`.
+    maxQty: swaps.length ? Number.MAX_SAFE_INTEGER : b.available,
     bundleSelections: swaps.length ? swaps : undefined,
-    contents: b.items.map((i) => {
-      const swap = swaps.find((s) => s.bundleItemId === i.id);
-      const chosenName = swap ? (i.replacements.find((r) => r.productId === swap.productId)?.name ?? i.productName) : i.productName;
-      return `${i.quantity} × ${chosenName}`;
-    }),
+    contents: chosen.map((c) => `${c.item.quantity} × ${c.name}`),
+    components: chosen.map((c) => ({ productId: c.productId, quantity: c.item.quantity, stock: c.stock })),
   };
 }
 
@@ -42,7 +46,9 @@ export function BundleCartControl({ bundle, size = "sm" }: { bundle: Bundle; siz
   const { items, add, update } = useCart();
   const key = bundleKey(bundle.id);
   const qty = items.find((i) => i.key === key)?.quantity ?? 0;
-  const soldOut = bundle.available <= 0;
+  // Products in other cart lines (products, other bundles, gifts) count against the same stock.
+  const max = maxLineQty(items, bundleCartItem(bundle));
+  const soldOut = bundle.available <= 0 || max <= 0;
   const stop = (e: React.MouseEvent) => e.preventDefault();
 
   if (qty > 0) {
@@ -55,7 +61,7 @@ export function BundleCartControl({ bundle, size = "sm" }: { bundle: Bundle; siz
           <span className="w-6 text-center text-sm font-semibold">{qty}</span>
           <button
             onClick={() => update(key, qty + 1)}
-            disabled={qty >= bundle.available}
+            disabled={qty >= max}
             className="w-7 h-7 rounded-full bg-[var(--brand)] text-white shadow flex items-center justify-center hover:bg-[var(--brand-dark)] transition disabled:opacity-40"
             aria-label="Increase"
           >
@@ -83,29 +89,31 @@ export function BundleCartControlWithSwaps({ bundle }: { bundle: Bundle }) {
   const { items, add, update } = useCart();
   const [swaps, setSwaps] = useState<BundleSwap[]>([]);
   const [added, setAdded] = useState(false);
-  const soldOut = bundle.available <= 0;
+
+  /** The swaps with one item set to `productId` (choosing the default removes its swap). */
+  const swapsWith = (bundleItemId: number, productId: number) => {
+    const without = swaps.filter((s) => s.bundleItemId !== bundleItemId);
+    const defaultId = bundle.items.find((i) => i.id === bundleItemId)?.productId;
+    return productId === defaultId ? without : [...without, { bundleItemId, productId }];
+  };
+  // How many of a selection the stock allows, once the cart's other lines (products, bundles, gifts) are counted.
+  const maxFor = (s: BundleSwap[]) => maxLineQty(items, bundleCartItem(bundle, s));
 
   const cartKey = bundleSwapKey(bundle.id, swaps);
   const qty = items.find((i) => i.key === cartKey)?.quantity ?? 0;
+  const availableStock = maxFor(swaps);
+  const noStock = availableStock <= 0 && qty === 0;
 
   const setSwap = (bundleItemId: number, productId: number) => {
     setAdded(false);
-    setSwaps((prev) => {
-      const without = prev.filter((s) => s.bundleItemId !== bundleItemId);
-      // If choosing the default product, remove the swap entry
-      const defaultId = bundle.items.find((i) => i.id === bundleItemId)?.productId;
-      if (productId === defaultId) return without;
-      return [...without, { bundleItemId, productId }];
-    });
+    setSwaps(swapsWith(bundleItemId, productId));
   };
 
   const addToCart = () => {
-    if (soldOut) return;
+    if (noStock) return;
     add(bundleCartItem(bundle, swaps));
     setAdded(true);
   };
-
-  const availableStock = bundle.available;
 
   return (
     <div className="flex flex-col gap-4">
@@ -142,17 +150,24 @@ export function BundleCartControlWithSwaps({ bundle }: { bundle: Bundle }) {
 
                 {allOptions.length > 1 && (
                   <div className="flex flex-wrap gap-1.5 sm:pl-[52px]">
-                    {allOptions.map((opt) => (
-                      <button
-                        key={opt.productId}
-                        type="button"
-                        onClick={() => setSwap(item.id, opt.productId)}
-                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs border transition ${opt.productId === chosenId ? "bg-[var(--brand)] text-white border-[var(--brand)]" : "bg-white text-stone-600 border-stone-200 hover:border-[var(--brand)]"}`}
-                      >
-                        {opt.name}
-                        {opt.productId === item.productId && <span className="ml-1 opacity-60">(default)</span>}
-                      </button>
-                    ))}
+                    {allOptions.map((opt) => {
+                      // Not enough of this product left (with the rest of the cart) to make even one bundle
+                      const short = opt.productId !== chosenId && maxFor(swapsWith(item.id, opt.productId)) <= 0;
+                      return (
+                        <button
+                          key={opt.productId}
+                          type="button"
+                          onClick={() => setSwap(item.id, opt.productId)}
+                          disabled={short}
+                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs border transition disabled:opacity-40 disabled:cursor-not-allowed ${opt.productId === chosenId ? "bg-[var(--brand)] text-white border-[var(--brand)]" : "bg-white text-stone-600 border-stone-200 hover:border-[var(--brand)]"}`}
+                        >
+                          {opt.name}
+                          <CountryFlag productId={opt.productId} interactive={false} className="w-3.5 h-2.5" />
+                          {opt.productId === item.productId && <span className="ml-1 opacity-60">(default)</span>}
+                          {short && <span className="ml-1 opacity-60">(not enough stock)</span>}
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
               </li>
@@ -167,8 +182,10 @@ export function BundleCartControlWithSwaps({ bundle }: { bundle: Bundle }) {
       </p>
 
       {/* Add to cart */}
-      {soldOut ? (
-        <p className="text-sm font-medium text-stone-500 bg-[var(--sage-light)] rounded-full px-3 py-1 w-fit">Out of stock</p>
+      {noStock ? (
+        <p className="text-sm font-medium text-stone-500 bg-[var(--sage-light)] rounded-full px-3 py-1 w-fit">
+          {bundle.available <= 0 && !swaps.length ? "Out of stock" : "Not enough stock for this selection (counting your cart)"}
+        </p>
       ) : qty > 0 ? (
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-1 bg-[var(--sage-light)] rounded-full p-0.5">

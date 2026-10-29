@@ -28,6 +28,39 @@ export interface CartItem {
   giftMessage?: string;
   /** What is inside (bundles / gifts), for display. */
   contents?: string[];
+  /** Bundles / gifts: the products one unit takes from stock, with the stock each had when it was added. */
+  components?: CartComponent[];
+}
+
+export interface CartComponent { productId: number; quantity: number; stock: number }
+
+/**
+ * What one unit of a line takes from stock, per product. Product lines take their own product (their maxQty is
+ * its stock); bundle / gift lines saved before components were kept have none (the server still checks them).
+ */
+function lineComponents(i: Pick<CartItem, "itemType" | "productId" | "maxQty" | "components">): CartComponent[] {
+  if (i.itemType === "product" || !i.itemType) return i.productId != null ? [{ productId: i.productId, quantity: 1, stock: i.maxQty }] : [];
+  const byProduct = new Map<number, CartComponent>();
+  for (const c of i.components ?? []) {
+    const seen = byProduct.get(c.productId);
+    byProduct.set(c.productId, seen ? { ...seen, quantity: seen.quantity + c.quantity, stock: Math.min(seen.stock, c.stock) } : c);
+  }
+  return [...byProduct.values()].filter(c => c.quantity > 0);
+}
+
+/** Units of a product the cart already takes — product lines, bundles and gifts — leaving out the line `exceptKey`. */
+export function unitsInCart(items: CartItem[], productId: number, exceptKey?: string) {
+  return items.reduce((s, i) => i.key === exceptKey ? s
+    : s + lineComponents(i).reduce((x, c) => x + (c.productId === productId ? c.quantity * i.quantity : 0), 0), 0);
+}
+
+/** The most of a line the cart can hold: its own limit, and what its products have left after the cart's other lines. */
+export function maxLineQty(items: CartItem[], line: Pick<CartItem, "key" | "itemType" | "productId" | "maxQty" | "components">) {
+  let max = line.maxQty;
+  for (const c of lineComponents(line)) {
+    max = Math.min(max, Math.floor(Math.max(0, c.stock - unitsInCart(items, c.productId, line.key)) / c.quantity));
+  }
+  return Math.max(0, max);
 }
 
 export const productKey = (productId: number) => `p-${productId}`;
@@ -45,7 +78,12 @@ interface CartContextValue {
   items: CartItem[];
   /** Adds `quantity` (default 1) of a line, merging with the same key. */
   add: (item: NewItem, quantity?: number) => void;
+  /** Sets a line's quantity; an increase is capped by the stock left after the cart's other lines. */
   update: (key: string, quantity: number) => void;
+  /** The most of this line the cart can hold now (see `maxLineQty`). */
+  maxQtyFor: (key: string) => number;
+  /** Units of a product still free: `stock` less what the cart's lines (but `exceptKey`) already take. */
+  stockLeft: (productId: number, stock: number, exceptKey?: string) => number;
   remove: (key: string) => void;
   clear: () => void;
   /** Offer the customer picked in the cart (null = the default, highest-priority offer). */
@@ -112,12 +150,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     const key = item.key ?? (itemType === "bundle" ? bundleKey(item.bundleId!) : productKey(item.productId!));
     setItems(prev => {
       const existing = prev.find(i => i.key === key);
+      // Never more than the stock left once the cart's other lines (products, bundles, gifts) are counted.
+      const max = maxLineQty(prev, { ...item, key, itemType });
       if (existing) {
         return prev.map(i =>
-          i.key === key ? { ...i, ...item, key, itemType, quantity: Math.min(i.quantity + quantity, item.maxQty) } : i,
+          i.key === key ? { ...i, ...item, key, itemType, quantity: Math.max(i.quantity, Math.min(i.quantity + quantity, max)) } : i,
         );
       }
-      return [...prev, { ...item, key, itemType, quantity: Math.min(quantity, item.maxQty) }];
+      const qty = Math.min(quantity, max);
+      return qty > 0 ? [...prev, { ...item, key, itemType, quantity: qty }] : prev;
     });
   };
 
@@ -126,10 +167,18 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       setItems(prev => prev.filter(i => i.key !== key));
     } else {
       setItems(prev =>
-        prev.map(i => i.key === key ? { ...i, quantity } : i),
+        prev.map(i => i.key !== key ? i
+          : { ...i, quantity: quantity > i.quantity ? Math.max(i.quantity, Math.min(quantity, maxLineQty(prev, i))) : quantity }),
       );
     }
   };
+
+  const maxQtyFor = (key: string) => {
+    const line = items.find(i => i.key === key);
+    return line ? maxLineQty(items, line) : 0;
+  };
+  const stockLeft = (productId: number, stock: number, exceptKey?: string) =>
+    Math.max(0, stock - unitsInCart(items, productId, exceptKey));
 
   const remove = (key: string) => {
     setItems(prev => prev.filter(i => i.key !== key));
@@ -141,7 +190,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const subtotal = items.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
 
   return (
-    <CartContext.Provider value={{ items, add, update, remove, clear, selectedOfferId, selectOffer: setSelectedOfferId, count, subtotal }}>
+    <CartContext.Provider value={{ items, add, update, maxQtyFor, stockLeft, remove, clear, selectedOfferId, selectOffer: setSelectedOfferId, count, subtotal }}>
       {children}
     </CartContext.Provider>
   );

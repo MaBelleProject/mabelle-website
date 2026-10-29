@@ -344,9 +344,13 @@ export interface OrderQuote {
   totalCharges: number; netTotal: number;
   /** Delivery is outside netTotal; totalDue = netTotal + deliveryDue is what the customer pays. */
   deliveryCharge: number; deliveryDue: number; totalDue: number;
+  /** Applied offers: the main one first, then offers on other products that stack with it. */
   offers: { offerId: number; offerName: string; offerType: Offer['offerType']; discountAmount: number }[];
-  /** Every offer the cart qualifies for, default (highest priority) first; only one is applied, and the customer may pick it. */
-  availableOffers: { offerId: number; offerName: string; offerType: Offer['offerType']; priority: number; discountAmount: number }[];
+  /**
+   * Every offer the cart qualifies for, default main offer (highest priority) first; the customer may pick the main
+   * one. `recommended` marks the biggest actual saving.
+   */
+  availableOffers: { offerId: number; offerName: string; offerType: Offer['offerType']; priority: number; discountAmount: number; recommended: boolean }[];
 }
 
 export interface LoyaltySummary {

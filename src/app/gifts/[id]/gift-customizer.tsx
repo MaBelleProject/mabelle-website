@@ -49,9 +49,11 @@ function Stepper({ value, min, max, onChange }: { value: number; min: number; ma
   );
 }
 
-function ProductPicker({ allProducts, selected, onAdd }: {
+function ProductPicker({ allProducts, selected, stockLeft, onAdd }: {
   allProducts: Product[];
   selected: Set<number>;
+  /** Units still free once the cart is counted. */
+  stockLeft: (p: Product) => number;
   onAdd: (productId: number) => void;
 }) {
   const [q, setQ] = useState("");
@@ -76,13 +78,14 @@ function ProductPicker({ allProducts, selected, onAdd }: {
         {visible.length === 0 && <p className="px-3 py-3 text-xs text-stone-400 text-center">No products found</p>}
         {visible.map((p) => {
           const alreadyIn = selected.has(p.id);
+          const noStock = !alreadyIn && stockLeft(p) <= 0;
           const img = fileUrl(p.imageUrl);
           return (
             <button
               key={p.id}
               type="button"
-              onClick={() => { if (!alreadyIn) onAdd(p.id); }}
-              disabled={alreadyIn}
+              onClick={() => { if (!alreadyIn && !noStock) onAdd(p.id); }}
+              disabled={alreadyIn || noStock}
               className="w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-[var(--sage-light)] transition disabled:opacity-50 text-left"
             >
               <div className="relative w-7 h-7 rounded-md overflow-hidden bg-[var(--sage-light)] shrink-0 flex items-center justify-center">
@@ -95,7 +98,9 @@ function ProductPicker({ allProducts, selected, onAdd }: {
               <span className="text-stone-400 shrink-0">${parseFloat(p.sellingPrice).toFixed(2)}</span>
               {alreadyIn
                 ? <span className="text-[10px] text-[var(--brand)] font-semibold shrink-0">Added</span>
-                : <Plus className="w-3.5 h-3.5 text-[var(--brand)] shrink-0" />
+                : noStock
+                  ? <span className="text-[10px] text-stone-400 font-semibold shrink-0">Out of stock</span>
+                  : <Plus className="w-3.5 h-3.5 text-[var(--brand)] shrink-0" />
               }
             </button>
           );
@@ -116,7 +121,7 @@ export default function GiftCustomizer({
   allProducts: Product[];
   giftCardImage?: string | null;
 }) {
-  const { add } = useCart();
+  const { add, stockLeft } = useCart();
   const { customer } = useCustomer();
   // Non-profit customers pay the gift box's cost price (same as price when no cost is set).
   const boxPrice = (p: GiftPackaging) => parseFloat(customer?.isNonProfit ? p.cost ?? p.price : p.price);
@@ -168,14 +173,16 @@ export default function GiftCustomizer({
   }, 0);
   const unitPrice = contentsPrice + (packaging ? boxPrice(packaging) : 0);
 
+  const stockOf = (pid: number) => {
+    const p = productMap.get(pid);
+    return (p as Product)?.quantity ?? (p as GiftProduct)?.stock ?? 0;
+  };
+  // What is still free of a product: its stock less what the cart already takes (products, bundles, gifts).
+  const freeOf = (pid: number) => stockLeft(pid, stockOf(pid));
+
   const perGift = new Map<number, number>();
   for (const c of selections) if (c.quantity > 0) perGift.set(c.productId, (perGift.get(c.productId) ?? 0) + c.quantity);
-  const maxGifts = perGift.size
-    ? Math.min(...[...perGift].map(([pid, q]) => {
-      const p = productMap.get(pid);
-      return Math.floor(((p as Product)?.quantity ?? (p as GiftProduct)?.stock ?? 0) / q);
-    }))
-    : 0;
+  const maxGifts = perGift.size ? Math.min(...[...perGift].map(([pid, q]) => Math.floor(freeOf(pid) / q))) : 0;
 
   const empty = selections.length === 0;
 
@@ -195,7 +202,9 @@ export default function GiftCustomizer({
       productName: gift?.name ?? "Custom Gift",
       unitPrice,
       imageUrl: gift?.imageUrl ?? null,
-      maxQty: maxGifts,
+      // The cart caps it by `components` (stock less its other lines)
+      maxQty: Number.MAX_SAFE_INTEGER,
+      components: [...perGift].map(([productId, q]) => ({ productId, quantity: q, stock: stockOf(productId) })),
       giftSelections,
       packagingId,
       packagingName: packaging?.name ?? null,
@@ -222,7 +231,7 @@ export default function GiftCustomizer({
 
         {showPicker && (
           <div className="mb-3">
-            <ProductPicker allProducts={allProducts} selected={selectedIds} onAdd={(id) => { addProduct(id); setShowPicker(false); }} />
+            <ProductPicker allProducts={allProducts} selected={selectedIds} stockLeft={(p) => stockLeft(p.id, p.quantity)} onAdd={(id) => { addProduct(id); setShowPicker(false); }} />
           </div>
         )}
 
@@ -234,8 +243,8 @@ export default function GiftCustomizer({
               const p = productMap.get(sel.productId);
               if (!p) return null;
               const img = fileUrl((p as Product).imageUrl ?? (p as GiftProduct).imageUrl);
-              const stock = (p as Product).quantity ?? (p as GiftProduct).stock ?? 0;
-              const maxQty = Math.max(sel.quantity, stock);
+              // Per gift: what is left of the product after the cart, shared by the number of gifts being added
+              const maxQty = Math.max(sel.quantity, Math.floor(freeOf(sel.productId) / Math.max(1, quantity)));
               return (
                 <li key={sel.productId} className="flex items-start gap-3 bg-white rounded-xl px-3 py-2.5">
                   <Link href={`/product/${sel.productId}`} className="relative w-9 h-9 rounded-lg overflow-hidden bg-[var(--sage-light)] shrink-0 mt-0.5 hover:opacity-80 transition">
@@ -251,7 +260,7 @@ export default function GiftCustomizer({
                     <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 mt-1.5">
                       <p className="text-xs text-stone-400 shrink-0">${parseFloat((p as Product).sellingPrice).toFixed(2)} each</p>
                       <div className="flex items-center gap-1.5 ml-auto shrink-0">
-                        <Stepper value={sel.quantity} min={1} max={maxQty || 99} onChange={(v) => setQty(sel.productId, v)} />
+                        <Stepper value={sel.quantity} min={1} max={maxQty} onChange={(v) => setQty(sel.productId, v)} />
                         <button type="button" onClick={() => removeProduct(sel.productId)} className="p-1 text-stone-300 hover:text-red-400 transition" aria-label="Remove">
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -272,7 +281,6 @@ export default function GiftCustomizer({
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {packagings.map((p) => {
               const selected = p.id === packagingId;
-              const outOfStock = p.stock <= 0;
               const img = fileUrl(p.imageUrl);
               return (
                 <button
@@ -287,7 +295,6 @@ export default function GiftCustomizer({
                   </div>
                   <span className="text-xs font-medium text-stone-700 line-clamp-1">{p.name}</span>
                   <span className="text-[11px] font-semibold text-[var(--brand)]">+${boxPrice(p).toFixed(2)}</span>
-                  {outOfStock && <span className="text-[10px] text-amber-600 font-medium">Low stock</span>}
                 </button>
               );
             })}

@@ -12,7 +12,7 @@ import BackButton from "@/components/back-button";
 import CountryFlag from "@/components/country-flag";
 
 export default function CartPage() {
-  const { items, update, remove, subtotal, selectedOfferId, selectOffer } = useCart();
+  const { items, update, maxQtyFor, remove, subtotal, selectedOfferId, selectOffer } = useCart();
   const { customer, customerReady } = useCustomer();
   const { quote } = useCartQuote(items, { customerId: customer?.id, selectedOfferId, skip: !customerReady });
   const [deliveryCharge, setDeliveryCharge] = useState(0);
@@ -70,6 +70,8 @@ export default function CartPage() {
           {items.map((item, idx) => {
             const imgUrl = fileUrl(item.imageUrl);
             const unitPrice = quote?.items[idx]?.unitPrice ?? item.unitPrice;
+            // Stock is shared by every line that uses a product (products, bundles, gifts)
+            const maxQty = maxQtyFor(item.key);
             return (
               <div key={item.key} className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 bg-white rounded-2xl p-4 border border-[var(--sage-light)] shadow-sm">
                 {/* Image + Info row */}
@@ -97,6 +99,11 @@ export default function CartPage() {
                     {item.packagingName && <p className="text-xs text-stone-500">Packaging: {item.packagingName}</p>}
                     {item.giftMessage && <p className="text-xs text-stone-400 italic line-clamp-1">"{item.giftMessage}"</p>}
                     <p className="text-xs text-stone-400 mt-0.5">${unitPrice.toFixed(2)} each</p>
+                    {item.quantity > maxQty && (
+                      <p className="text-xs text-red-500 mt-0.5">
+                        {maxQty > 0 ? `Only ${maxQty} available with the rest of your cart` : "Not enough stock left with the rest of your cart"}
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -110,7 +117,7 @@ export default function CartPage() {
                     <span className="w-6 text-center text-sm font-semibold">{item.quantity}</span>
                     <button
                       onClick={() => update(item.key, item.quantity + 1)}
-                      disabled={item.quantity >= item.maxQty}
+                      disabled={item.quantity >= maxQty}
                       className="w-7 h-7 rounded-full bg-[var(--brand)] text-white flex items-center justify-center shadow hover:bg-[var(--brand-dark)] transition disabled:opacity-40"
                       aria-label="Increase"
                     >
@@ -150,13 +157,13 @@ export default function CartPage() {
               <p className="text-xs text-stone-400 mt-0.5">Promo code is not applicable to bundles.</p>
             </div>
           )}
-          {itemOffers.map(o => (
+          {itemOffers.map((o, n) => (
             <div key={o.offerId} className="mb-3">
               <div className="flex justify-between text-sm text-green-600">
                 <span className="flex items-center gap-1"><Tag className="w-3.5 h-3.5" /> {o.offerName}</span>
                 <span>-${o.discountAmount.toFixed(2)}</span>
               </div>
-              {quote?.promoCode && (
+              {quote?.promoCode && n === itemOffers.length - 1 && (
                 <p className="text-xs text-stone-400 mt-0.5">
                   {quote.promoApplied && quote.promoCodeAmount > 0
                     ? `Promo code applied: ${quote.promoCode}`

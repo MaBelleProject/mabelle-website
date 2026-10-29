@@ -335,15 +335,15 @@ export default function ReviewPage() {
                   <p className="text-xs text-stone-400 mt-0.5">Promo code is not applicable to bundles.</p>
                 </div>
               )}
-              {itemOffers.map(o => (
+              {itemOffers.map((o, n) => (
                 <div key={o.offerId}>
                   <div className="flex justify-between text-green-600">
                     <span className="flex items-center gap-1"><Tag className="w-3.5 h-3.5" /> {o.offerName}</span>
                     <span>-${o.discountAmount.toFixed(2)}</span>
                   </div>
-                  {promoCodeInUse && (
+                  {promoCodeInUse && n === itemOffers.length - 1 && (
                     <p className="text-xs text-stone-400 mt-0.5">
-                      {promoDiscount > 0 ? `Promo code applied: ${promoCodeInUse}` : `Promo code ${promoCodeInUse} can't be combined with this offer`}
+                      {promoDiscount > 0 ? `Promo code applied: ${promoCodeInUse}` : `Promo code ${promoCodeInUse} can't be combined with ${itemOffers.length > 1 ? "these offers" : "this offer"}`}
                     </p>
                   )}
                 </div>

@@ -27,7 +27,7 @@ function computeDisplay(product: Product): { price: number; originalPrice: numbe
 }
 
 export default function ProductCard({ product, compact = false }: ProductCardProps) {
-  const { items, add, update } = useCart();
+  const { items, add, update, maxQtyFor, stockLeft } = useCart();
   const { customer } = useCustomer();
   const { isFavorite, toggle } = useFavorites();
   // Highest-priority offer aimed at this product (store-wide offers are shown in the offers panel instead).
@@ -42,10 +42,12 @@ export default function ProductCard({ product, compact = false }: ProductCardPro
 
   const cartItem = items.find(i => i.key === productKey(product.id));
   const qty = cartItem?.quantity ?? 0;
+  // Bundles / gifts in the cart may already take some of this product's stock.
+  const noneLeft = stockLeft(product.id, product.quantity) <= 0;
 
   const handleAdd = (e: React.MouseEvent) => {
     e.preventDefault();
-    if (outOfStock) return;
+    if (outOfStock || noneLeft) return;
     add({ productId: product.id, productCode: product.code, productName: product.name, unitPrice: price, imageUrl: product.imageUrl, maxQty: product.quantity });
   };
 
@@ -159,7 +161,7 @@ export default function ProductCard({ product, compact = false }: ProductCardPro
               <span className="w-6 text-center text-sm font-semibold">{qty}</span>
               <button
                 onClick={handleIncrease}
-                disabled={qty >= product.quantity}
+                disabled={qty >= maxQtyFor(productKey(product.id))}
                 className="w-7 h-7 rounded-full bg-[var(--brand)] text-white shadow flex items-center justify-center hover:bg-[var(--brand-dark)] transition disabled:opacity-40"
                 aria-label="Increase"
               >
@@ -171,7 +173,7 @@ export default function ProductCard({ product, compact = false }: ProductCardPro
         ) : (
           <button
             onClick={handleAdd}
-            disabled={outOfStock}
+            disabled={outOfStock || noneLeft}
             className="flex items-center justify-center gap-2 w-full py-1.5 rounded-xl bg-[var(--brand)] hover:bg-[var(--brand-dark)] text-white text-sm font-semibold transition disabled:opacity-40 disabled:cursor-not-allowed mt-1"
           >
             <ShoppingCart className="w-4 h-4" />
