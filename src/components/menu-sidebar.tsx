@@ -33,6 +33,18 @@ export default function MenuSidebar({ sections }: { sections: SectionGroup[] }) 
 
   useEffect(() => { close(); }, [pathname]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // The document-level touchmove handler in layout.tsx calls e.preventDefault() whenever
+  // window.scrollY === 0 and the finger moves down (scroll-up gesture). While the menu is
+  // open, body is position:fixed so window.scrollY is always 0 — that handler would block
+  // every upward scroll in the nav. Stopping propagation here keeps nav touches local.
+  useEffect(() => {
+    const nav = navRef.current;
+    if (!nav) return;
+    const stop = (e: TouchEvent) => e.stopPropagation();
+    nav.addEventListener("touchmove", stop, { passive: true });
+    return () => nav.removeEventListener("touchmove", stop);
+  }, []);
+
   // Close the confirm dialog whenever the sidebar closes
   useEffect(() => { if (!open) setConfirmSignOut(false); }, [open]);
 

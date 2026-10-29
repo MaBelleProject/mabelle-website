@@ -49,6 +49,10 @@ export function CustomerProvider({ children }: { children: ReactNode }) {
       }
     } catch { /* ignore corrupt storage */ }
     setCustomerReady(true);
+
+    const onExpired = () => setCustomerState(null);
+    window.addEventListener("customer-session-expired", onExpired);
+    return () => window.removeEventListener("customer-session-expired", onExpired);
   }, []);
 
   const setCustomer = (c: CustomerInfo | null) => {

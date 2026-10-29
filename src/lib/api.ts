@@ -73,7 +73,15 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
   const base = isServer ? `${SERVER_BASE}/storefront` : CLIENT_BASE;
   const res = await fetch(`${base}${path}`, { ...init, headers, cache: "no-store" });
-  if (!res.ok) throw new ApiError(res.status, await readError(res));
+  if (!res.ok) {
+    // Token expired or invalid — clear the session so the user is sent back to login.
+    if (!isServer && res.status === 401 && _customerToken && path.startsWith("/customers/")) {
+      _customerToken = null;
+      try { localStorage.removeItem("mabelle_customer"); } catch {}
+      window.dispatchEvent(new Event("customer-session-expired"));
+    }
+    throw new ApiError(res.status, await readError(res));
+  }
   const data = await (res.json() as Promise<T>);
 
   // Store in client cache after a successful GET
