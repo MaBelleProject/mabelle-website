@@ -1,22 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { Heart } from "lucide-react";
-import { useCustomer } from "@/context/customer-context";
+import { useRequireCustomer } from "@/context/customer-context";
 import { useFavorites } from "@/context/favorites-context";
 import { storefrontApi, type Product } from "@/lib/api";
 import ProductCard from "@/components/product-card";
 
 export default function FavoritesPage() {
-  const { customer } = useCustomer();
-  const router = useRouter();
+  // Waits for the saved session to be restored; only a signed-out visitor is sent to the login page
+  const { customer } = useRequireCustomer();
   const { favorites, loading: favLoading } = useFavorites();
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!customer) { router.replace("/login"); return; }
+    if (!customer) return;
     storefrontApi.products()
       .then(setAllProducts)
       .catch(() => setAllProducts([]))

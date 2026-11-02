@@ -6,6 +6,7 @@ import { useCart } from "@/context/cart-context";
 import { hasFreeDelivery, useCustomer } from "@/context/customer-context";
 import Link from "next/link";
 import { ArrowLeft, LogIn, LogOut, Eye, EyeOff } from "lucide-react";
+import { optionalEmailError } from "@/lib/email";
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -92,8 +93,9 @@ export default function CheckoutPage() {
     if (!customer) {
       if (!form.name.trim()) e.name = "Name is required";
       if (!form.phone.trim()) e.phone = "Phone number is required";
-      if (!form.email.trim()) e.email = "Email address is required";
-      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = "Enter a valid email address";
+      // Email is optional; when given it must be a valid address
+      const emailError = optionalEmailError(form.email);
+      if (emailError) e.email = emailError;
       if (!form.password) e.password = "Password is required";
       else if (form.password.length < 6) e.password = "Password must be at least 6 characters";
       if (form.password !== form.confirmPassword) e.confirmPassword = "Passwords do not match";
@@ -128,7 +130,7 @@ export default function CheckoutPage() {
     sessionStorage.setItem("checkout_info", JSON.stringify({
       name: customer?.name ?? form.name,
       phone: customer?.phone ?? form.phone,
-      email: customer?.email ?? form.email,
+      email: customer ? customer.email ?? "" : form.email.trim(),
       address: form.address,
       city: form.city,
       floor: form.floor,
@@ -228,8 +230,8 @@ export default function CheckoutPage() {
             <Field label="Phone Number *" error={errors.phone}>
               <input type="tel" value={form.phone} onChange={e => set("phone", e.target.value)} placeholder="+961 xx xxx xxx" className={inputCls(!!errors.phone)} />
             </Field>
-            <Field label="Email Address *" error={errors.email}>
-              <input type="email" value={form.email} onChange={e => set("email", e.target.value)} placeholder="your@email.com" className={inputCls(!!errors.email)} />
+            <Field label="Email Address" error={errors.email}>
+              <input type="email" value={form.email} onChange={e => set("email", e.target.value)} placeholder="your@email.com (optional)" className={inputCls(!!errors.email)} />
             </Field>
           </>
         )}

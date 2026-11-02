@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ShoppingBag, Eye, EyeOff } from "lucide-react";
 import { useCustomer } from "@/context/customer-context";
+import { emailOrUndefined, optionalEmailError } from "@/lib/email";
 import Link from "next/link";
 
 export default function SignupPage() {
@@ -24,7 +25,8 @@ export default function SignupPage() {
     const e: Record<string, string> = {};
     if (!form.name.trim()) e.name = "Name is required";
     if (!form.phone.trim()) e.phone = "Phone number is required";
-    if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = "Enter a valid email";
+    const emailError = optionalEmailError(form.email);
+    if (emailError) e.email = emailError;
     if (!form.password) e.password = "Password is required";
     else if (form.password.length < 6) e.password = "Password must be at least 6 characters";
     if (form.password !== form.confirmPassword) e.confirmPassword = "Passwords do not match";
@@ -38,7 +40,7 @@ export default function SignupPage() {
     setBusy(true);
     setApiError("");
     try {
-      await signup(form.name.trim(), form.phone.trim(), form.email || undefined, form.password, form.address || undefined, form.city || undefined, form.floor || undefined);
+      await signup(form.name.trim(), form.phone.trim(), emailOrUndefined(form.email), form.password, form.address || undefined, form.city || undefined, form.floor || undefined);
       router.replace("/");
       router.refresh();
     } catch (err) {

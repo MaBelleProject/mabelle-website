@@ -1,6 +1,6 @@
 "use client";
 
-import OfferPicker from "@/components/offer-picker";
+import OfferPicker, { RecommendedBadge } from "@/components/offer-picker";
 import { cartItemHref, useCart } from "@/context/cart-context";
 import { hasFreeDelivery, useCustomer } from "@/context/customer-context";
 import { fileUrl, storefrontApi } from "@/lib/api";
@@ -53,6 +53,7 @@ export default function CartPage() {
     : subtotal + (freeDelivery ? 0 : deliveryCharge);
   const itemOffers = quote?.offers.filter(o => o.offerType !== "free_delivery") ?? [];
   const deliveryOffer = quote?.offers.find(o => o.offerType === "free_delivery");
+  const recommendedId = quote?.availableOffers.find(o => o.recommended)?.offerId;
   const availablePoints = quote?.availablePoints ?? 0;
   const pointsValue = Math.floor(availablePoints / (quote?.pointsPerDollar ?? 20) * 100) / 100;
   const showPoints = !!customer && !isNonProfit && availablePoints > 0;
@@ -90,14 +91,15 @@ export default function CartPage() {
                       <span className="text-[10px] font-semibold uppercase tracking-wide text-[var(--brand)]">{item.itemType}</span>
                     )}
                     <div className="flex items-start gap-1.5">
-                      <Link href={cartItemHref(item)} className="min-w-0 text-sm font-semibold text-stone-800 hover:text-[var(--brand)] transition line-clamp-2">
+                      <Link href={cartItemHref(item)} className="min-w-0 text-sm font-semibold text-stone-800 hover:text-[var(--brand)] transition break-words">
                         {item.productName}
                       </Link>
                       {item.itemType === "product" && <CountryFlag productId={item.productId} className="mt-[3px] w-4 h-3" />}
                     </div>
-                    {item.contents?.length ? <p className="text-xs text-stone-500 mt-0.5 line-clamp-2">{item.contents.join(" · ")}</p> : null}
-                    {item.packagingName && <p className="text-xs text-stone-500">Packaging: {item.packagingName}</p>}
-                    {item.giftMessage && <p className="text-xs text-stone-400 italic line-clamp-1">"{item.giftMessage}"</p>}
+                    {/* Bundle / gift contents, box and message are shown in full, however long */}
+                    {item.contents?.length ? <p className="text-xs text-stone-500 mt-0.5 whitespace-normal break-words">{item.contents.join(" · ")}</p> : null}
+                    {item.packagingName && <p className="text-xs text-stone-500 break-words">Packaging: {item.packagingName}</p>}
+                    {item.giftMessage && <p className="text-xs text-stone-400 italic whitespace-pre-line break-words">"{item.giftMessage}"</p>}
                     <p className="text-xs text-stone-400 mt-0.5">${unitPrice.toFixed(2)} each</p>
                     {item.quantity > maxQty && (
                       <p className="text-xs text-red-500 mt-0.5">
@@ -160,7 +162,7 @@ export default function CartPage() {
           {itemOffers.map((o, n) => (
             <div key={o.offerId} className="mb-3">
               <div className="flex justify-between text-sm text-green-600">
-                <span className="flex items-center gap-1"><Tag className="w-3.5 h-3.5" /> {o.offerName}</span>
+                <span className="flex items-center gap-1 min-w-0"><Tag className="w-3.5 h-3.5 shrink-0" /> {o.offerName}{recommendedId === o.offerId && <RecommendedBadge />}</span>
                 <span>-${o.discountAmount.toFixed(2)}</span>
               </div>
               {quote?.promoCode && n === itemOffers.length - 1 && (
@@ -176,7 +178,7 @@ export default function CartPage() {
             <span>
               Delivery
               {freeDelivery && <span className="text-green-600"> · {isNonProfit ? "Non-profit" : "Free delivery"}</span>}
-              {!freeDelivery && deliveryOffer && <span className="text-green-600"> · {deliveryOffer.offerName}</span>}
+              {!freeDelivery && deliveryOffer && <span className="text-green-600"> · {deliveryOffer.offerName}{recommendedId === deliveryOffer.offerId && <RecommendedBadge />}</span>}
             </span>
             <span>
               {freeDelivery

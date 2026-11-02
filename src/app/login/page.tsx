@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ShoppingBag } from "lucide-react";
 import { useCustomer } from "@/context/customer-context";
@@ -9,7 +9,15 @@ import Link from "next/link";
 function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
-  const { login } = useCustomer();
+  const { login, customer, customerReady } = useCustomer();
+  const next = params.get("next");
+  const target = next && next.startsWith("/") && !next.startsWith("//") ? next : "/";
+
+  // Already signed in (e.g. the page was refreshed or reopened): go Home — or back where they came from —
+  // but only once the saved session has been checked.
+  useEffect(() => {
+    if (customerReady && customer) router.replace(target);
+  }, [customerReady, customer, router, target]);
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(
@@ -23,14 +31,18 @@ function LoginForm() {
     setError(null);
     try {
       await login(phone, password);
-      const next = params.get("next");
-      router.replace(next && next.startsWith("/") && !next.startsWith("//") ? next : "/");
+      router.replace(target);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
       setBusy(false);
     }
   };
+
+  // Restoring the session, or about to leave for Home: no login form flash
+  if (!customerReady || customer) {
+    return <div className="w-8 h-8 border-4 border-[var(--brand)] border-t-transparent rounded-full animate-spin" aria-label="Loading" />;
+  }
 
   return (
     <form onSubmit={submit} className="w-full max-w-sm bg-white rounded-2xl shadow-sm border border-[var(--sage-light)] p-8 space-y-5">

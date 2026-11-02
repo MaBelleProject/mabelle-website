@@ -259,6 +259,19 @@ export interface CustomerOrder {
   createdAt: string;
 }
 
+/** A customer's order with the details the printable voucher needs. */
+export interface CustomerOrderDetail extends Omit<CustomerOrder, "items" | "offers" | "feedbackSubmitted"> {
+  customerName: string | null; customerCode: string | null; customerEmail: string | null; promoCode: string | null;
+  deliveryCompany: string | null; remark: string | null;
+  deductionAmount: string; additionalCharge: string;
+  items: (CustomerOrderItem & {
+    productDiscountper: string; productDiscountamount: string; remark: string | null;
+    packagingName: string | null; packagingPrice: string; giftMessage: string | null;
+    components: { productName: string; quantity: number; unitPrice: string }[];
+  })[];
+  offers: { offerName: string; offerType: Offer['offerType']; discountAmount: string }[];
+}
+
 export interface FeedbackProduct {
   productId: number;
   productName: string;
@@ -409,6 +422,8 @@ export const storefrontApi = {
     body: JSON.stringify(data),
   }),
   customerOrders: (customerId: number) => request<CustomerOrder[]>(`/customers/${customerId}/orders`),
+  /** One of the signed-in customer's own orders, with everything its voucher shows (the server checks ownership). */
+  customerOrder: (customerId: number, orderId: number) => request<CustomerOrderDetail>(`/customers/${customerId}/orders/${orderId}`),
   loyalty: (customerId: number) => request<LoyaltySummary>(`/customers/${customerId}/loyalty`),
   customerOrderAgain: (customerId: number) => request<Product[]>(`/customers/${customerId}/order-again`),
   getFavorites: (customerId: number) => request<number[]>(`/customers/${customerId}/favorites`),

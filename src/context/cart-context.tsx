@@ -86,7 +86,7 @@ interface CartContextValue {
   stockLeft: (productId: number, stock: number, exceptKey?: string) => number;
   remove: (key: string) => void;
   clear: () => void;
-  /** Offer the customer picked in the cart (null = the default, highest-priority offer). */
+  /** Offer the customer picked in the cart (null = the default: the recommended offer, the biggest saving). */
   selectedOfferId: number | null;
   selectOffer: (offerId: number | null) => void;
   count: number;
@@ -145,7 +145,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, [items, selectedOfferId, hydrated]);
 
+  // Any change to the cart drops a hand-picked offer, so the recommended one is worked out (and applied) again.
   const add = (item: NewItem, quantity = 1) => {
+    setSelectedOfferId(null);
     const itemType = item.itemType ?? "product";
     const key = item.key ?? (itemType === "bundle" ? bundleKey(item.bundleId!) : productKey(item.productId!));
     setItems(prev => {
@@ -163,6 +165,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   };
 
   const update = (key: string, quantity: number) => {
+    setSelectedOfferId(null);
     if (quantity <= 0) {
       setItems(prev => prev.filter(i => i.key !== key));
     } else {
@@ -181,6 +184,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     Math.max(0, stock - unitsInCart(items, productId, exceptKey));
 
   const remove = (key: string) => {
+    setSelectedOfferId(null);
     setItems(prev => prev.filter(i => i.key !== key));
   };
 

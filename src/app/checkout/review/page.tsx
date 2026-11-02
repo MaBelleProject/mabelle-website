@@ -1,7 +1,7 @@
 "use client";
 
 import CountryFlag from "@/components/country-flag";
-import OfferPicker from "@/components/offer-picker";
+import OfferPicker, { RecommendedBadge } from "@/components/offer-picker";
 import { toOrderLine, useCart, type CartItem } from "@/context/cart-context";
 import { useCustomer } from "@/context/customer-context";
 import { storefrontApi, type PromoCode } from "@/lib/api";
@@ -91,6 +91,7 @@ export default function ReviewPage() {
   const promoCodeInUse = promo?.code ?? quote?.promoCode ?? null;
   const itemOffers = quote?.offers.filter(o => o.offerType !== "free_delivery") ?? [];
   const deliveryOffer = quote?.offers.find(o => o.offerType === "free_delivery");
+  const recommendedId = quote?.availableOffers.find(o => o.recommended)?.offerId;
 
   const applyPromo = async () => {
     if (!promoInput.trim()) return;
@@ -201,9 +202,9 @@ export default function ReviewPage() {
                   <span className="font-medium text-stone-800">{item.productName}</span>
                   {item.itemType === "product" && <CountryFlag productId={item.productId} className="ml-1.5 align-[-1px] w-4 h-3" />}
                   <span className="text-stone-400"> × {item.quantity}</span>
-                  {item.contents?.length ? <span className="block text-xs text-stone-400">{item.contents.join(" · ")}</span> : null}
-                  {item.packagingName && <span className="block text-xs text-stone-400">Packaging: {item.packagingName}</span>}
-                  {item.giftMessage && <span className="block text-xs text-stone-400 italic">Card: "{item.giftMessage}"</span>}
+                  {item.contents?.length ? <span className="block text-xs text-stone-400 whitespace-normal break-words">{item.contents.join(" · ")}</span> : null}
+                  {item.packagingName && <span className="block text-xs text-stone-400 break-words">Packaging: {item.packagingName}</span>}
+                  {item.giftMessage && <span className="block text-xs text-stone-400 italic whitespace-pre-line break-words">Card: "{item.giftMessage}"</span>}
                 </span>
                 <span className="text-sm font-semibold text-stone-800 shrink-0">
                   ${(quote?.items[idx]?.totalPrice ?? item.unitPrice * item.quantity).toFixed(2)}
@@ -338,7 +339,7 @@ export default function ReviewPage() {
               {itemOffers.map((o, n) => (
                 <div key={o.offerId}>
                   <div className="flex justify-between text-green-600">
-                    <span className="flex items-center gap-1"><Tag className="w-3.5 h-3.5" /> {o.offerName}</span>
+                    <span className="flex items-center gap-1 min-w-0"><Tag className="w-3.5 h-3.5 shrink-0" /> {o.offerName}{recommendedId === o.offerId && <RecommendedBadge />}</span>
                     <span>-${o.discountAmount.toFixed(2)}</span>
                   </div>
                   {promoCodeInUse && n === itemOffers.length - 1 && (
@@ -358,7 +359,7 @@ export default function ReviewPage() {
                 <span>
                   Delivery
                   {freeDelivery && <span className="text-green-600"> · {isNonProfit ? "Non-profit" : "Free delivery"}</span>}
-                  {!freeDelivery && deliveryOffer && <span className="text-green-600"> · {deliveryOffer.offerName}</span>}
+                  {!freeDelivery && deliveryOffer && <span className="text-green-600"> · {deliveryOffer.offerName}{recommendedId === deliveryOffer.offerId && <RecommendedBadge />}</span>}
                 </span>
                 <span>
                   {deliveryDue < delivery

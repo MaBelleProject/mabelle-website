@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { ChevronDown, ChevronUp, Loader2, MessageCircleHeart, Package, RotateCcw } from "lucide-react";
-import { useCustomer } from "@/context/customer-context";
+import Link from "next/link";
+import { ChevronDown, ChevronUp, Loader2, MessageCircleHeart, Package, Printer, RotateCcw } from "lucide-react";
+import { useRequireCustomer } from "@/context/customer-context";
 import { useCart } from "@/context/cart-context";
 import { storefrontApi, type CustomerOrder, type OrderFeedback, fileUrl } from "@/lib/api";
 import { trimZeros } from "@/lib/format";
@@ -23,8 +23,8 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function OrderHistoryPage() {
-  const { customer } = useCustomer();
-  const router = useRouter();
+  // Waits for the saved session to be restored; only a signed-out visitor is sent to the login page
+  const { customer } = useRequireCustomer();
   const { add } = useCart();
   const [orders, setOrders] = useState<CustomerOrder[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,7 +46,7 @@ export default function OrderHistoryPage() {
   };
 
   useEffect(() => {
-    if (!customer) { router.replace("/login"); return; }
+    if (!customer) return;
     load();
   }, [customer?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -123,9 +123,10 @@ export default function OrderHistoryPage() {
         <div className="flex flex-col gap-4">
           {orders.map(order => (
             <div key={order.id} className="bg-white rounded-2xl border border-[var(--sage-light)] shadow-sm overflow-hidden">
-              {/* Order summary row */}
+              {/* Order summary row + its voucher */}
+              <div className="flex items-stretch">
               <button
-                className="w-full px-5 py-4 flex items-center gap-3 text-left hover:bg-[var(--cream)] transition"
+                className="flex-1 min-w-0 pl-5 pr-2 py-4 flex items-center gap-3 text-left hover:bg-[var(--cream)] transition"
                 onClick={() => setExpandedId(expandedId === order.id ? null : order.id)}
               >
                 <div className="flex-1 min-w-0">
@@ -147,6 +148,15 @@ export default function OrderHistoryPage() {
                   ? <ChevronUp className="w-4 h-4 text-stone-400 shrink-0" />
                   : <ChevronDown className="w-4 h-4 text-stone-400 shrink-0" />}
               </button>
+              <Link
+                href={`/order-history/${order.id}/voucher`}
+                className="shrink-0 flex flex-col sm:flex-row items-center justify-center gap-1 px-3 sm:px-4 text-[11px] sm:text-xs font-semibold text-[var(--brand)] border-l border-[var(--sage-light)] hover:bg-[var(--cream)] transition"
+                aria-label={`Print voucher for order ${order.orderNumber}`}
+              >
+                <Printer className="w-4 h-4" />
+                <span className="whitespace-nowrap">Print Voucher</span>
+              </Link>
+              </div>
 
               {/* Expanded details */}
               {expandedId === order.id && (
@@ -164,7 +174,7 @@ export default function OrderHistoryPage() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5">
-                            <p className="min-w-0 text-sm font-medium text-stone-800 line-clamp-1">{item.productName}</p>
+                            <p className="min-w-0 text-sm font-medium text-stone-800 break-words">{item.productName}</p>
                             {item.itemType === "product" && <CountryFlag productId={item.productId} className="w-4 h-3" />}
                           </div>
                           <p className="text-xs text-stone-500">

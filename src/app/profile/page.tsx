@@ -1,19 +1,18 @@
 "use client";
 
-import { useCustomer } from "@/context/customer-context";
+import { useRequireCustomer } from "@/context/customer-context";
 import { storefrontApi, type LoyaltySummary } from "@/lib/api";
 import { Star } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export default function ProfilePage() {
-  const { customer } = useCustomer();
-  const router = useRouter();
+  // Waits for the saved session to be restored; only a signed-out visitor is sent to the login page
+  const { customer } = useRequireCustomer();
   const [loyalty, setLoyalty] = useState<LoyaltySummary | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!customer) { router.replace("/login"); return; }
+    if (!customer) return;
     storefrontApi.loyalty(customer.id)
       .then(setLoyalty)
       .catch(() => setLoyalty(null))
