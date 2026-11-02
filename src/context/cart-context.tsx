@@ -91,6 +91,8 @@ interface CartContextValue {
   selectOffer: (offerId: number | null) => void;
   count: number;
   subtotal: number;
+  /** True once the cart has been loaded from localStorage. */
+  cartReady: boolean;
 }
 
 const CartContext = createContext<CartContextValue | null>(null);
@@ -190,7 +192,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const subtotal = items.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
 
   return (
-    <CartContext.Provider value={{ items, add, update, maxQtyFor, stockLeft, remove, clear, selectedOfferId, selectOffer: setSelectedOfferId, count, subtotal }}>
+    <CartContext.Provider value={{ items, add, update, maxQtyFor, stockLeft, remove, clear, selectedOfferId, selectOffer: setSelectedOfferId, count, subtotal, cartReady: hydrated }}>
       {children}
     </CartContext.Provider>
   );

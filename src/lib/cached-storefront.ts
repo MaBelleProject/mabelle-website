@@ -86,41 +86,47 @@ async function fetchAllProductRatings() {
   return storefrontApi.allProductRatings();
 }
 
-// minutes profile: stale=5 min, revalidate=1 min, expire=1 hr
-// Use for price/stock-sensitive data (products, offers, bundles, best-sellers).
+// 5-minute profile for price/stock-sensitive data: reduces backend calls by 5× vs the old 1-minute
+// profile while keeping stock and pricing acceptably fresh. The cart quote (POST /orders/quote) is
+// always live, so customers never check out with stale prices.
+// stale=5 min → browser serves navigations from its own cache for 5 min
+// revalidate=5 min → Next.js re-fetches from the backend every 5 min
+// expire=1 hr → entries are evicted after 1 hr of no traffic
+const FIVE_MIN = { stale: 300, revalidate: 300, expire: 3600 } as const;
+
 async function fetchOffers() {
   'use cache';
-  cacheLife('minutes');
+  cacheLife(FIVE_MIN);
   return storefrontApi.offers();
 }
 
 async function fetchBestSellers() {
   'use cache';
-  cacheLife('minutes');
+  cacheLife(FIVE_MIN);
   return storefrontApi.bestSellers();
 }
 
 async function fetchBundles() {
   'use cache';
-  cacheLife('minutes');
+  cacheLife(FIVE_MIN);
   return storefrontApi.bundles();
 }
 
 async function fetchBundle(id: number) {
   'use cache';
-  cacheLife('minutes');
+  cacheLife(FIVE_MIN);
   return storefrontApi.bundle(id);
 }
 
 async function fetchProducts(params?: Parameters<typeof storefrontApi.products>[0]) {
   'use cache';
-  cacheLife('minutes');
+  cacheLife(FIVE_MIN);
   return storefrontApi.products(params);
 }
 
 async function fetchProduct(id: number) {
   'use cache';
-  cacheLife('minutes');
+  cacheLife(FIVE_MIN);
   return storefrontApi.product(id);
 }
 
