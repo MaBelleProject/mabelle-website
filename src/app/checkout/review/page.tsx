@@ -28,7 +28,7 @@ function computePromoDiscount(promo: PromoCode | null, items: CartItem[]): numbe
 
 export default function ReviewPage() {
   const router = useRouter();
-  const { items, subtotal, clear, selectedOfferId, selectOffer } = useCart();
+  const { items, subtotal, clear, selectedOfferId, selectOffer, cartReady } = useCart();
   const { login } = useCustomer();
   const [info, setInfo] = useState<CheckoutInfo | null>(null);
   const [deliveryCharge, setDeliveryCharge] = useState(0);
@@ -51,6 +51,7 @@ export default function ReviewPage() {
   useEffect(() => { if (quotedMax !== undefined) setMaxPoints(quotedMax); }, [quotedMax]);
 
   useEffect(() => {
+    if (!cartReady) return;
     if (items.length === 0) {
       router.replace("/cart");
       setRedirecting(true);
@@ -63,7 +64,7 @@ export default function ReviewPage() {
       setInfo(saved);
       if (saved.remark) setOrderNote(String(saved.remark).slice(0, 200));
     } catch { router.replace("/checkout"); setRedirecting(true); }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [cartReady]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     storefrontApi.settings().then(s => {
