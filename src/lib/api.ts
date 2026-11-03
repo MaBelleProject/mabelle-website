@@ -32,38 +32,8 @@ if (typeof window !== "undefined") {
 
 export function setCustomerToken(token: string | null) { _customerToken = token; }
 
-// ─── Client-side GET cache ─────────────────────────────────────────────────────
-// Persists across in-app navigations for the browser session; TTL prevents stale data.
-// Only caches public endpoints — anything under /customers/ is user-specific and skipped.
-
-const _clientCache =
-  typeof window !== "undefined"
-    ? new Map<string, { data: unknown; expires: number }>()
-    : null;
-
-const CLIENT_CACHE_TTL_MS = 2 * 60 * 1000; // 2 minutes
-
-function isCacheableClientPath(path: string): boolean {
-  if (path.startsWith("/promo-codes/")) return false;
-  if (path.startsWith("/customers/")) {
-    // Safe to cache briefly: read-only, keyed by customer ID so no cross-user leakage
-    if (path.endsWith("/order-again")) return true;
-    if (path.endsWith("/favorites")) return true;
-    return false;
-  }
-  return true;
-}
-
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const isServer = typeof window === "undefined";
-  const method = (init?.method ?? "GET").toUpperCase();
-  const isGET = method === "GET";
-
-  // Return cached result for eligible client-side GET requests
-  if (!isServer && isGET && isCacheableClientPath(path)) {
-    const entry = _clientCache!.get(path);
-    if (entry && Date.now() < entry.expires) return entry.data as T;
-  }
 
   const headers: Record<string, string> = { ...(init?.headers as Record<string, string>) };
   if (!(init?.body instanceof FormData)) headers["Content-Type"] = "application/json";
@@ -82,14 +52,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     }
     throw new ApiError(res.status, await readError(res));
   }
-  const data = await (res.json() as Promise<T>);
-
-  // Store in client cache after a successful GET
-  if (!isServer && isGET && isCacheableClientPath(path)) {
-    _clientCache!.set(path, { data, expires: Date.now() + CLIENT_CACHE_TTL_MS });
-  }
-
-  return data;
+  return res.json() as Promise<T>;
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -427,14 +390,10 @@ export const storefrontApi = {
   loyalty: (customerId: number) => request<LoyaltySummary>(`/customers/${customerId}/loyalty`),
   customerOrderAgain: (customerId: number) => request<Product[]>(`/customers/${customerId}/order-again`),
   getFavorites: (customerId: number) => request<number[]>(`/customers/${customerId}/favorites`),
-  addFavorite: (customerId: number, productId: number) => {
-    _clientCache?.delete(`/customers/${customerId}/favorites`);
-    return request<{ success: boolean }>(`/customers/${customerId}/favorites/${productId}`, { method: 'POST' });
-  },
-  removeFavorite: (customerId: number, productId: number) => {
-    _clientCache?.delete(`/customers/${customerId}/favorites`);
-    return request<{ success: boolean }>(`/customers/${customerId}/favorites/${productId}`, { method: 'DELETE' });
-  },
+  addFavorite: (customerId: number, productId: number) =>
+    request<{ success: boolean }>(`/customers/${customerId}/favorites/${productId}`, { method: 'POST' }),
+  removeFavorite: (customerId: number, productId: number) =>
+    request<{ success: boolean }>(`/customers/${customerId}/favorites/${productId}`, { method: 'DELETE' }),
   forgotPassword: (phone: string) =>
     request<{ sent: boolean }>('/forgot-password', { method: 'POST', body: JSON.stringify({ phone }) }),
   resetPassword: (token: string, newPassword: string) =>

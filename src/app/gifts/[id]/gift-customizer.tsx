@@ -1,6 +1,5 @@
 "use client";
 
-import CountryFlag from "@/components/country-flag";
 import { useCart } from "@/context/cart-context";
 import { useCustomer } from "@/context/customer-context";
 import { fileUrl, type GiftPackage, type GiftPackaging, type GiftProduct, type Product } from "@/lib/api";
@@ -93,7 +92,6 @@ function ProductPicker({ allProducts, selected, stockLeft, onAdd }: {
               </div>
               <span className="flex-1 min-w-0 flex items-center gap-1.5">
                 <span className="truncate text-stone-700">{p.name}</span>
-                <CountryFlag country={p.madeIn} interactive={false} className="w-3.5 h-2.5" />
               </span>
               <span className="text-stone-400 shrink-0">${parseFloat(p.sellingPrice).toFixed(2)}</span>
               {alreadyIn
@@ -255,7 +253,6 @@ export default function GiftCustomizer({
                       <Link href={`/product/${sel.productId}`} className="min-w-0 text-sm text-stone-800 font-medium truncate hover:text-[var(--brand)] hover:underline transition block">
                         {p.name}
                       </Link>
-                      <CountryFlag productId={sel.productId} className="w-4 h-3" />
                     </div>
                     <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 mt-1.5">
                       <p className="text-xs text-stone-400 shrink-0">${parseFloat((p as Product).sellingPrice).toFixed(2)} each</p>

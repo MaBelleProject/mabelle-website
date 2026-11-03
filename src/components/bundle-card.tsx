@@ -7,7 +7,6 @@ import { Check, Minus, Plus, ShoppingCart, Layers } from "lucide-react";
 import type { Bundle, BundleReplacementProduct } from "@/lib/api";
 import { fileUrl } from "@/lib/api";
 import { useCart, bundleKey, maxLineQty } from "@/context/cart-context";
-import CountryFlag from "./country-flag";
 
 interface BundleSwap { bundleItemId: number; productId: number }
 
@@ -162,7 +161,6 @@ export function BundleCartControlWithSwaps({ bundle }: { bundle: Bundle }) {
                           className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs border transition disabled:opacity-40 disabled:cursor-not-allowed ${opt.productId === chosenId ? "bg-[var(--brand)] text-white border-[var(--brand)]" : "bg-white text-stone-600 border-stone-200 hover:border-[var(--brand)]"}`}
                         >
                           {opt.name}
-                          <CountryFlag productId={opt.productId} interactive={false} className="w-3.5 h-2.5" />
                           {opt.productId === item.productId && <span className="ml-1 opacity-60">(default)</span>}
                           {short && <span className="ml-1 opacity-60">(not enough stock)</span>}
                         </button>
@@ -247,7 +245,6 @@ export default function BundleCard({ bundle }: { bundle: Bundle }) {
           {bundle.items.map((i, n) => (
             <span key={i.id}>
               {n > 0 && " · "}{i.quantity} × {i.productName}
-              <CountryFlag productId={i.productId} className="ml-1 align-[-1px] w-3.5 h-2.5" />
             </span>
           ))}
         </p>

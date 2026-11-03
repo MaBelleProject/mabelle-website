@@ -1,7 +1,6 @@
 import { BadgePercent } from "lucide-react";
 import type { Offer } from "@/lib/api";
 import { describeOffer, offerBadge, offerEnds, offerScope } from "@/lib/offers";
-import CountryFlag from "./country-flag";
 
 /** One active offer with its details. `compact` is the dense version used in the header panel. */
 export default function OfferCard({ offer, compact = false }: { offer: Offer; compact?: boolean }) {
@@ -22,7 +21,6 @@ export default function OfferCard({ offer, compact = false }: { offer: Offer; co
           {offer.appliesToAll ? offerScope(offer) : offer.products.map((p, n) => (
             <span key={p.id}>
               {n > 0 && ", "}{p.name}
-              <CountryFlag productId={p.id} interactive={false} className="ml-1 align-[-1px] w-3.5 h-2.5" />
             </span>
           ))}
           {ends ? ` · ${ends}` : ""}

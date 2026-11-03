@@ -4,7 +4,6 @@ import { fileUrl } from "@/lib/api";
 import { cachedStorefrontApi } from "@/lib/cached-storefront";
 import { Gift, Plus } from "lucide-react";
 import BackButton from "@/components/back-button";
-import CountryFlag from "@/components/country-flag";
 import { cacheLife } from "next/cache";
 
 export default async function GiftsPage() {
@@ -59,7 +58,6 @@ export default async function GiftsPage() {
                   {g.items.map((s, n) => (
                     <span key={s.id}>
                       {n > 0 && " · "}{s.quantity} × {s.product.name}
-                      <CountryFlag productId={s.productId} className="ml-1 align-[-1px] w-3.5 h-2.5" />
                     </span>
                   ))}
                 </p>

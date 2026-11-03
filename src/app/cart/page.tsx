@@ -9,7 +9,6 @@ import { Minus, Plus, ShoppingBag, Star, Tag, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import BackButton from "@/components/back-button";
-import CountryFlag from "@/components/country-flag";
 
 export default function CartPage() {
   const { items, update, maxQtyFor, remove, subtotal, selectedOfferId, selectOffer } = useCart();
@@ -94,7 +93,6 @@ export default function CartPage() {
                       <Link href={cartItemHref(item)} className="min-w-0 text-sm font-semibold text-stone-800 hover:text-[var(--brand)] transition break-words">
                         {item.productName}
                       </Link>
-                      {item.itemType === "product" && <CountryFlag productId={item.productId} className="mt-[3px] w-4 h-3" />}
                     </div>
                     {/* Bundle / gift contents, box and message are shown in full, however long */}
                     {item.contents?.length ? <p className="text-xs text-stone-500 mt-0.5 whitespace-normal break-words">{item.contents.join(" · ")}</p> : null}

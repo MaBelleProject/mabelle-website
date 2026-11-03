@@ -86,6 +86,12 @@ async function fetchAllProductRatings() {
   return storefrontApi.allProductRatings();
 }
 
+async function fetchCountry(id: number) {
+  'use cache';
+  cacheLife('hours');
+  return storefrontApi.country(id);
+}
+
 // 5-minute profile for price/stock-sensitive data: reduces backend calls by 5× vs the old 1-minute
 // profile while keeping stock and pricing acceptably fresh. The cart quote (POST /orders/quote) is
 // always live, so customers never check out with stale prices.
@@ -145,6 +151,7 @@ export const cachedStorefrontApi = {
   giftCards: fetchGiftCards,
   products: fetchProducts,
   product: fetchProduct,
+  country: fetchCountry,
   publicReviews: fetchPublicReviews,
   productReviews: fetchProductReviews,
   generalReviews: fetchGeneralReviews,
