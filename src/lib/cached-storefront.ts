@@ -92,7 +92,6 @@ async function fetchCountry(id: number) {
   return storefrontApi.country(id);
 }
 
-// 5-minute profile for price/stock-sensitive data: reduces backend calls by 5× vs the old 1-minute
 // profile while keeping stock and pricing acceptably fresh. The cart quote (POST /orders/quote) is
 // always live, so customers never check out with stale prices.
 // stale=5 min → browser serves navigations from its own cache for 5 min
