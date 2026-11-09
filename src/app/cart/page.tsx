@@ -11,9 +11,9 @@ import { useEffect, useState } from "react";
 import BackButton from "@/components/back-button";
 
 export default function CartPage() {
-  const { items, update, maxQtyFor, remove, subtotal, selectedOfferId, selectOffer } = useCart();
+  const { items, update, maxQtyFor, remove, subtotal, selectedOfferId, selectOffer, promoPicked, selectPromo } = useCart();
   const { customer, customerReady } = useCustomer();
-  const { quote } = useCartQuote(items, { customerId: customer?.id, selectedOfferId, skip: !customerReady });
+  const { quote } = useCartQuote(items, { customerId: customer?.id, selectedOfferId, promoPicked, skip: !customerReady });
   const [deliveryCharge, setDeliveryCharge] = useState(0);
 
   useEffect(() => {
@@ -147,7 +147,7 @@ export default function CartPage() {
             <span>Subtotal</span>
             <span>${shownSubtotal.toFixed(2)}</span>
           </div>
-          <OfferPicker quote={quote} onSelect={selectOffer} />
+          <OfferPicker quote={quote} onSelectOffer={selectOffer} onSelectPromo={selectPromo} />
           {quote && quote.promoCode && quote.promoApplied && quote.promoCodeAmount > 0 && (
             <div className="mb-3">
               <div className="flex justify-between text-sm text-green-600">
@@ -157,18 +157,14 @@ export default function CartPage() {
               <p className="text-xs text-stone-400 mt-0.5">Promo code is not applicable to bundles.</p>
             </div>
           )}
-          {itemOffers.map((o, n) => (
+          {itemOffers.map(o => (
             <div key={o.offerId} className="mb-3">
               <div className="flex justify-between text-sm text-green-600">
                 <span className="flex items-center gap-1 min-w-0"><Tag className="w-3.5 h-3.5 shrink-0" /> {o.offerName}{recommendedId === o.offerId && <RecommendedBadge />}</span>
                 <span>-${o.discountAmount.toFixed(2)}</span>
               </div>
-              {quote?.promoCode && n === itemOffers.length - 1 && (
-                <p className="text-xs text-stone-400 mt-0.5">
-                  {quote.promoApplied && quote.promoCodeAmount > 0
-                    ? `Promo code applied: ${quote.promoCode}`
-                    : `Promo code ${quote.promoCode} can't be combined with this offer`}
-                </p>
+              {quote?.promoCode && !quote.promoApplied && (
+                <p className="text-xs text-stone-400 mt-0.5">Promo code {quote.promoCode} isn&apos;t applied — only one discount per order.</p>
               )}
             </div>
           ))}

@@ -88,7 +88,11 @@ interface CartContextValue {
   clear: () => void;
   /** Offer the customer picked in the cart (null = the default: the recommended offer, the biggest saving). */
   selectedOfferId: number | null;
+  /** Only ONE discount applies: an offer or the promo code. Picking one clears the other. */
   selectOffer: (offerId: number | null) => void;
+  /** true = the customer chose the promo code instead of an offer (false = the default / an offer). */
+  promoPicked: boolean;
+  selectPromo: (picked: boolean) => void;
   count: number;
   subtotal: number;
   /** True once the cart has been loaded from localStorage. */
@@ -127,6 +131,7 @@ export function toOrderLine(i: CartItem): OrderLine {
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [selectedOfferId, setSelectedOfferId] = useState<number | null>(null);
+  const [promoPicked, setPromoPicked] = useState(false);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
@@ -147,9 +152,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, [items, selectedOfferId, hydrated]);
 
-  // Any change to the cart drops a hand-picked offer, so the recommended one is worked out (and applied) again.
+  // Picking an offer drops a picked promo code and vice versa: never both.
+  const selectOffer = (offerId: number | null) => { setSelectedOfferId(offerId); setPromoPicked(false); };
+  const selectPromo = (picked: boolean) => { setPromoPicked(picked); if (picked) setSelectedOfferId(null); };
+  // Any change to the cart drops a hand-picked discount, so the recommended one is worked out (and applied) again.
   const add = (item: NewItem, quantity = 1) => {
-    setSelectedOfferId(null);
+    selectOffer(null);
     const itemType = item.itemType ?? "product";
     const key = item.key ?? (itemType === "bundle" ? bundleKey(item.bundleId!) : productKey(item.productId!));
     setItems(prev => {
@@ -167,7 +175,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   };
 
   const update = (key: string, quantity: number) => {
-    setSelectedOfferId(null);
+    selectOffer(null);
     if (quantity <= 0) {
       setItems(prev => prev.filter(i => i.key !== key));
     } else {
@@ -186,17 +194,17 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     Math.max(0, stock - unitsInCart(items, productId, exceptKey));
 
   const remove = (key: string) => {
-    setSelectedOfferId(null);
+    selectOffer(null);
     setItems(prev => prev.filter(i => i.key !== key));
   };
 
-  const clear = () => { setItems([]); setSelectedOfferId(null); };
+  const clear = () => { setItems([]); selectOffer(null); };
 
   const count = items.reduce((s, i) => s + i.quantity, 0);
   const subtotal = items.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
 
   return (
-    <CartContext.Provider value={{ items, add, update, maxQtyFor, stockLeft, remove, clear, selectedOfferId, selectOffer: setSelectedOfferId, count, subtotal, cartReady: hydrated }}>
+    <CartContext.Provider value={{ items, add, update, maxQtyFor, stockLeft, remove, clear, selectedOfferId, selectOffer, promoPicked, selectPromo, count, subtotal, cartReady: hydrated }}>
       {children}
     </CartContext.Provider>
   );

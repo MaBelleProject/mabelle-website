@@ -5,6 +5,10 @@ const nextConfig: NextConfig = {
   partialPrefetching: true,
   devIndicators: false,
   images: {
+    // Local dev only: the optimizer downloads each image server-side with a hard 7s timeout, which
+    // large PNGs from R2 exceed on a slow connection (500 error). Let the browser load them directly.
+    // Production builds are unaffected.
+    unoptimized: process.env.NODE_ENV === "development",
     formats: ["image/avif", "image/webp"],
     remotePatterns: [
       {

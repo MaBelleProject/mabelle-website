@@ -320,13 +320,17 @@ export interface OrderQuote {
   totalCharges: number; netTotal: number;
   /** Delivery is outside netTotal; totalDue = netTotal + deliveryDue is what the customer pays. */
   deliveryCharge: number; deliveryDue: number; totalDue: number;
-  /** Applied offers: the main one first, then offers on other products that stack with it. */
+  /** The offer applied (at most one: offers never stack, nor combine with a promo code). */
   offers: { offerId: number; offerName: string; offerType: Offer['offerType']; discountAmount: number }[];
   /**
    * Every offer the cart qualifies for, default main offer (highest priority) first; the customer may pick the main
    * one. `recommended` marks the biggest actual saving.
    */
   availableOffers: { offerId: number; offerName: string; offerType: Offer['offerType']; priority: number; discountAmount: number; recommended: boolean }[];
+  /** Which single discount is applied: one offer, the promo code, or none. */
+  selectedDiscount: 'offer' | 'promo' | 'none';
+  /** The promo code as a discount option next to the offers (null when no code is in use). */
+  promoOption: { code: string; isFamily: boolean; discountAmount: number; recommended: boolean; selected: boolean } | null;
 }
 
 export interface LoyaltySummary {
@@ -367,7 +371,7 @@ export const storefrontApi = {
   giftPackaging: () => request<GiftPackaging[]>('/gifts/packaging'),
   giftCards: () => request<GiftCard[]>('/gifts/cards'),
   offers: () => request<Offer[]>('/offers'),
-  quote: (data: { customerId?: number; procodeId?: number; selectedOfferId?: number; loyaltyPointsUsed?: number; items: OrderLine[] }) =>
+  quote: (data: { customerId?: number; procodeId?: number; selectedOfferId?: number; selectedDiscount?: 'offer' | 'promo'; loyaltyPointsUsed?: number; items: OrderLine[] }) =>
     request<OrderQuote>('/orders/quote', { method: 'POST', body: JSON.stringify(data) }),
   settings: () => request<Settings | null>('/settings'),
   validatePromo: (code: string, phone?: string) =>
@@ -378,7 +382,7 @@ export const storefrontApi = {
     customerId?: number;
     newCustomer?: { name: string; phone: string; email?: string; address?: string; password?: string };
     phoneNumber?: string; address?: string; paymentMethod: string; remark?: string;
-    procodeId?: number; selectedOfferId?: number; loyaltyPointsUsed?: number; items: OrderLine[];
+    procodeId?: number; selectedOfferId?: number; selectedDiscount?: 'offer' | 'promo'; loyaltyPointsUsed?: number; items: OrderLine[];
     orderType?: string;
   }) => request<{ id: number; orderNumber: string; netTotal: string; totalDue: string }>('/orders', {
     method: 'POST',

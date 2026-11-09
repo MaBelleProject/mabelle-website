@@ -1,5 +1,6 @@
 import { cachedStorefrontApi } from "@/lib/cached-storefront";
 import BackButton from "@/components/back-button";
+import OffersNote from "@/components/offers-note";
 import { cacheLife } from "next/cache";
 import OffersPageClient from "./offers-client";
 
@@ -15,6 +16,7 @@ export default async function OffersPage() {
         <h1 className="text-3xl font-bold text-stone-800">Offers</h1>
       </div>
       <p className="text-stone-500 mt-1 mb-8">Applied automatically to your cart — no code needed.</p>
+      <div className="-mt-6 mb-8"><OffersNote /></div>
       {offers.length === 0 ? (
         <div className="text-center py-20 text-stone-400">
           <p className="text-4xl mb-3">🎁</p>

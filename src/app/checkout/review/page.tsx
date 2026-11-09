@@ -27,7 +27,7 @@ function computePromoDiscount(promo: PromoCode | null, items: CartItem[]): numbe
 
 export default function ReviewPage() {
   const router = useRouter();
-  const { items, subtotal, clear, selectedOfferId, selectOffer, cartReady } = useCart();
+  const { items, subtotal, clear, selectedOfferId, selectOffer, promoPicked, selectPromo, cartReady } = useCart();
   const { login } = useCustomer();
   const [info, setInfo] = useState<CheckoutInfo | null>(null);
   const [deliveryCharge, setDeliveryCharge] = useState(0);
@@ -45,7 +45,7 @@ export default function ReviewPage() {
   const [maxPoints, setMaxPoints] = useState(0);
   const requestedPoints = usePoints ? (pointsInput === null ? maxPoints : Math.max(0, Math.floor(Number(pointsInput)) || 0)) : 0;
   // Exact totals from the server: offers applied automatically, bundle / gift prices
-  const { quote, error: quoteError } = useCartQuote(items, { customerId: info?.customerId, procodeId: promo?.id, selectedOfferId, loyaltyPointsUsed: requestedPoints });
+  const { quote, error: quoteError } = useCartQuote(items, { customerId: info?.customerId, procodeId: promo?.id, selectedOfferId, promoPicked, loyaltyPointsUsed: requestedPoints });
   const quotedMax = quote?.maxRedeemablePoints;
   useEffect(() => { if (quotedMax !== undefined) setMaxPoints(quotedMax); }, [quotedMax]);
 
@@ -126,7 +126,9 @@ export default function ReviewPage() {
         paymentMethod: info.paymentMethod,
         remark: orderNote.trim() || undefined,
         procodeId: promo?.id,
-        selectedOfferId: selectedOfferId ?? undefined,
+        // Only one discount: the picked offer or the promo code (default: the server's best-saving choice)
+        selectedOfferId: promoPicked ? undefined : selectedOfferId ?? undefined,
+        selectedDiscount: promoPicked ? "promo" : selectedOfferId ? "offer" : undefined,
         loyaltyPointsUsed: quote?.loyaltyPointsUsed || undefined,
         items: orderItems,
         orderType: "order",
@@ -247,6 +249,7 @@ export default function ReviewPage() {
           {/* Promo Code */}
           {!isNonProfit && <div className="bg-white rounded-2xl border border-[var(--sage-light)] shadow-sm px-5 py-4">
             <h2 className="font-semibold text-stone-800 mb-3">Promo Code <span className="ml-1 text-xs font-normal text-stone-400">(not applicable to bundles)</span></h2>
+            <p className="text-xs text-stone-400 -mt-2 mb-3">You can use a promo code or an offer, not both — you&apos;ll choose below.</p>
             {promo ? (
               <div className="flex items-center gap-2">
                 <CheckCircle className="w-5 h-5 text-green-500 shrink-0" />
@@ -258,11 +261,11 @@ export default function ReviewPage() {
                       : `$${promo.promoDiscountAmount} off`}
                   </p>
                 </div>
-                <button onClick={() => { setPromo(null); setPromoInput(""); }} className="text-stone-300 hover:text-red-400 transition">
+                <button onClick={() => { setPromo(null); setPromoInput(""); selectPromo(false); }} className="text-stone-300 hover:text-red-400 transition">
                   <XCircle className="w-4 h-4" />
                 </button>
               </div>
-            ) : quote?.promoCode && quote.promoApplied && quote.promoIsFamily ? (
+            ) : quote?.promoCode && quote.promoIsFamily ? (
               <div className="flex items-center gap-2">
                 <CheckCircle className="w-5 h-5 text-green-500 shrink-0" />
                 <div className="flex-1">
@@ -291,8 +294,8 @@ export default function ReviewPage() {
               </div>
             )}
             {promoError && <p className="text-xs text-red-500 mt-1.5">{promoError}</p>}
-            {promo && quote?.promoNote && (
-              <p className={`text-xs mt-1.5 ${quote.promoApplied ? "text-amber-600" : "text-red-500"}`}>{quote.promoNote}</p>
+            {(promo || quote?.promoIsFamily) && quote?.promoNote && (
+              <p className="text-xs mt-1.5 text-amber-600">{quote.promoNote}</p>
             )}
           </div>}
 
@@ -326,7 +329,7 @@ export default function ReviewPage() {
           {/* Totals */}
           <div className="bg-white rounded-2xl border border-[var(--sage-light)] shadow-sm px-5 py-4">
             <h2 className="font-semibold text-stone-800 mb-4">Order Total</h2>
-            <OfferPicker quote={quote} onSelect={selectOffer} />
+            <OfferPicker quote={quote} onSelectOffer={selectOffer} onSelectPromo={selectPromo} />
             <div className="flex flex-col gap-2 text-sm text-stone-600">
               <div className="flex justify-between"><span>Subtotal</span><span>${shownSubtotal.toFixed(2)}</span></div>
               {promoDiscount > 0 && (
@@ -335,16 +338,14 @@ export default function ReviewPage() {
                   <p className="text-xs text-stone-400 mt-0.5">Promo code is not applicable to bundles.</p>
                 </div>
               )}
-              {itemOffers.map((o, n) => (
+              {itemOffers.map(o => (
                 <div key={o.offerId}>
                   <div className="flex justify-between text-green-600">
                     <span className="flex items-center gap-1 min-w-0"><Tag className="w-3.5 h-3.5 shrink-0" /> {o.offerName}{recommendedId === o.offerId && <RecommendedBadge />}</span>
                     <span>-${o.discountAmount.toFixed(2)}</span>
                   </div>
-                  {promoCodeInUse && n === itemOffers.length - 1 && (
-                    <p className="text-xs text-stone-400 mt-0.5">
-                      {promoDiscount > 0 ? `Promo code applied: ${promoCodeInUse}` : `Promo code ${promoCodeInUse} can't be combined with ${itemOffers.length > 1 ? "these offers" : "this offer"}`}
-                    </p>
+                  {promoCodeInUse && (
+                    <p className="text-xs text-stone-400 mt-0.5">Promo code {promoCodeInUse} isn&apos;t applied — only one discount per order.</p>
                   )}
                 </div>
               ))}

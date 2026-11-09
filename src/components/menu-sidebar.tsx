@@ -121,6 +121,10 @@ export default function MenuSidebar({ sections }: { sections: SectionGroup[] }) 
             Home
           </Link>
 
+          <Link href="/bundles" onClick={close} className={navClass("/bundles")}>
+            Bundles
+          </Link>
+
           {sections.length > 0 && (
             <div>
               <button
@@ -153,9 +157,6 @@ export default function MenuSidebar({ sections }: { sections: SectionGroup[] }) 
             </div>
           )}
 
-          <Link href="/bundles" onClick={close} className={navClass("/bundles")}>
-            Bundles
-          </Link>
           <Link href="/gifts" onClick={close} className={navClass("/gifts")}>
             Gifts
           </Link>

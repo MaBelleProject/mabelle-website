@@ -9,6 +9,8 @@ interface SearchParams {
   subsectionId?: string;
   sectionCode?: string;
   countryId?: string;
+  age?: string;
+  collection?: string;
 }
 
 export default async function ProductsPage({
@@ -17,18 +19,21 @@ export default async function ProductsPage({
   searchParams: Promise<SearchParams>;
 }) {
   const sp = await searchParams;
+  const bestSellersOnly = sp.collection === "best-sellers";
 
-  const [initialProducts, initialBrands, initialCountry] = await Promise.all([
-    cachedStorefrontApi
-      .products({
-        categoryId: sp.categoryId ? +sp.categoryId : undefined,
-        sectionId: sp.sectionId ? +sp.sectionId : undefined,
-        subsectionId: sp.subsectionId ? +sp.subsectionId : undefined,
-        sectionCode: sp.sectionCode,
-        countryId: sp.countryId ? +sp.countryId : undefined,
-      })
-      .catch(() => []),
+  // Brand (categoryId), section (sectionCode) and age are filtered in the browser from the URL, so changing
+  // them is instant. Only the structural filters below still narrow the server query.
+  const [initialProducts, initialBrands, sections, initialCountry] = await Promise.all([
+    (bestSellersOnly
+      ? cachedStorefrontApi.bestSellers()
+      : cachedStorefrontApi.products({
+          sectionId: sp.sectionId ? +sp.sectionId : undefined,
+          subsectionId: sp.subsectionId ? +sp.subsectionId : undefined,
+          countryId: sp.countryId ? +sp.countryId : undefined,
+        })
+    ).catch(() => []),
     cachedStorefrontApi.brands().catch(() => []),
+    cachedStorefrontApi.sections().catch(() => []),
     sp.countryId
       ? cachedStorefrontApi.country(+sp.countryId).catch(() => null)
       : Promise.resolve(null),
@@ -36,7 +41,7 @@ export default async function ProductsPage({
 
   // Key forces remount (and state reset) when structural filters change,
   // preventing stale search text from filtering a different category's products.
-  const filterKey = `${sp.categoryId ?? ""},${sp.sectionId ?? ""},${sp.subsectionId ?? ""},${sp.sectionCode ?? ""},${sp.countryId ?? ""}`;
+  const filterKey = `${sp.sectionId ?? ""},${sp.subsectionId ?? ""},${sp.countryId ?? ""},${sp.collection ?? ""}`;
 
   return (
     <Suspense>
@@ -44,8 +49,10 @@ export default async function ProductsPage({
         key={filterKey}
         initialProducts={initialProducts}
         initialBrands={initialBrands}
+        sections={sections}
         initialCountry={initialCountry}
         initialSearch={sp.search ?? ""}
+        collection={bestSellersOnly ? "best-sellers" : null}
       />
     </Suspense>
   );

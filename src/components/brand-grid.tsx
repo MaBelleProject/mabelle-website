@@ -5,6 +5,7 @@ import { fileUrl } from "@/lib/api";
 import Image from "next/image";
 import Link from "next/link";
 import CountryFlag from "./country-flag";
+import ViewAllLink from "./view-all-link";
 
 /** `countries` maps brand id → its "Made In" country. */
 interface BrandGridProps { brands: Brand[]; countries?: Record<number, string>; }
@@ -13,7 +14,10 @@ export default function BrandGrid({ brands, countries = {} }: BrandGridProps) {
   if (!brands.length) return null;
   return (
     <section className="max-w-7xl mx-auto px-2 sm:px-4 pt-3 pb-6">
-      <h2 className="text-2xl font-bold text-stone-800 mb-6">Meet Our Brands</h2>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-bold text-stone-800">Shop by Brand</h2>
+        <ViewAllLink href="/products" />
+      </div>
       <div className="relative">
         <div className="flex overflow-x-auto gap-2 pb-2 scrollbar-hide">
           {brands.map(brand => {

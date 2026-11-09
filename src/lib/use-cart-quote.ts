@@ -16,6 +16,8 @@ export function useCartQuote(
     customerId?: number;
     procodeId?: number;
     selectedOfferId?: number | null;
+    /** true = the customer picked the promo code instead of an offer. */
+    promoPicked?: boolean;
     skip?: boolean;
     loyaltyPointsUsed?: number;
   } = {}
@@ -26,7 +28,8 @@ export function useCartQuote(
         ? {
             customerId: opts.customerId,
             procodeId: opts.procodeId,
-            selectedOfferId: opts.selectedOfferId ?? undefined,
+            selectedOfferId: opts.promoPicked ? undefined : opts.selectedOfferId ?? undefined,
+            selectedDiscount: opts.promoPicked ? ("promo" as const) : opts.selectedOfferId ? ("offer" as const) : undefined,
             loyaltyPointsUsed: opts.loyaltyPointsUsed || undefined,
             items: items.map(toOrderLine),
           }
@@ -36,6 +39,7 @@ export function useCartQuote(
       opts.customerId,
       opts.procodeId,
       opts.selectedOfferId,
+      opts.promoPicked,
       opts.skip,
       opts.loyaltyPointsUsed,
     ]
