@@ -54,13 +54,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   <ProductRatingsProvider ratings={productRatings}>
                     <ShowStockLeftProvider value={settings?.showStockLeft ?? false}>
                       <MenuProvider>
-                        {/*
-             * Flex row: [sidebar spacer] [content column]
-             * The sidebar spacer's width transitions 0 ↔ 18rem, which
-             * causes the content column (flex-1) to shrink/grow — the
-             * "push" effect. The actual visible sidebar is a fixed panel
-             * inside MenuSidebar that slides in sync with the spacer.
-             */}
                         <div className="flex min-h-screen">
                           <Suspense fallback={null}><ScrollToTop /></Suspense>
                           <MenuSidebar sections={sections} />
