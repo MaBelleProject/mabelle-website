@@ -36,7 +36,7 @@ export default function OfferPicker({
   return (
     <fieldset className="mb-4">
       <legend className="text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1">Choose your discount</legend>
-      <p className="text-xs text-stone-400 mb-2">Only one discount can be used per order.</p>
+      <p className="text-xs text-stone-400 mb-2">Choose your main discount — other offers or a promo code are added only when they can be combined with it.</p>
       <div className="flex flex-col gap-2">
         {offers.map(o => {
           const selected = appliedOfferId === o.offerId;

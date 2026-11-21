@@ -176,7 +176,10 @@ export interface Offer {
   buyQuantity: number | null; getQuantity: number | null;
   discountAmount: string; discountPercentage: string;
   startDate: string | null; endDate: string | null;
+  /** Can be combined with promo codes. */
   combinable: boolean;
+  combinableWithOffers: boolean;
+  combinableWithBundles: boolean;
   /** 1 = highest priority (0 = not set, ranks last); only the highest-priority applicable offer is applied. API returns offers in this order. */
   priority: number;
 }

@@ -118,7 +118,13 @@ export default function OfferDetailModal({ offer, onClose }: Props) {
               </div>
             )}
             {!offer.combinable && (
-              <p className="text-xs text-stone-400 mt-1">Cannot be combined with other offers.</p>
+              <p className="text-xs text-stone-400 mt-1">Cannot be combined with promo codes.</p>
+            )}
+            {!offer.combinableWithOffers && (
+              <p className="text-xs text-stone-400 mt-1">Can only be combined with offers that allow it.</p>
+            )}
+            {!offer.combinableWithBundles && (
+              <p className="text-xs text-stone-400 mt-1">Cannot be combined with bundles.</p>
             )}
           </div>
 

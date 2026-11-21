@@ -68,6 +68,11 @@ function canShareFiles() {
   return shareSupport;
 }
 
+/** iPhone / iPad (iPadOS reports itself as a Mac, so touch support gives it away). */
+const isIOS = () =>
+  typeof navigator !== "undefined" &&
+  (/iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1));
+
 const money = (n: number) => `$${(Number.isFinite(n) ? n : 0).toFixed(2)}`;
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
@@ -134,6 +139,42 @@ export function OrderVoucher({ order, logoUrl, companyName = "MaBelle Bites" }: 
     } finally { setBusy(null); }
   };
 
+  /**
+   * Safari on iOS can't print the page with everything but the voucher hidden (it prints blank or extra pages),
+   * so there the voucher is copied into its own hidden frame and that frame is printed. Elsewhere the page
+   * itself is printed, as before.
+   */
+  const print = async () => {
+    const node = ref.current;
+    if (!node || !isIOS()) { window.print(); return; }
+    setError(null);
+    const frame = document.createElement("iframe");
+    frame.setAttribute("aria-hidden", "true");
+    frame.style.cssText = "position:fixed;left:0;top:0;width:480px;height:10px;border:0;opacity:0;pointer-events:none;";
+    document.body.appendChild(frame);
+    const cleanup = () => setTimeout(() => frame.remove(), 60_000);
+    try {
+      const doc = frame.contentDocument;
+      const win = frame.contentWindow;
+      if (!doc || !win) throw new Error("no frame");
+      doc.open();
+      doc.write(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Voucher ${order.orderNumber}</title>
+<style>@page{margin:10mm}html,body{margin:0;padding:0;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.voucher-print-area{box-sizing:border-box;width:100%;max-width:460px;margin:0 auto;border-radius:16px}.voucher-print-area *{box-sizing:border-box}</style>
+</head><body>${node.outerHTML}</body></html>`);
+      doc.close();
+      // Wait for the logo so it is on the printout
+      await Promise.all(Array.from(doc.images).map(img => img.complete ? null : new Promise(r => { img.onload = img.onerror = () => r(null); setTimeout(() => r(null), 4000); })));
+      win.focus();
+      win.print();
+      cleanup();
+    } catch {
+      frame.remove();
+      // No printing from this browser: fall back to the PDF
+      download();
+    }
+  };
+
   const date = new Date(order.orderDate);
   const dateText = Number.isNaN(date.getTime()) ? order.orderDate : date.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
   const deliveryOffer = order.offers.find(x => x.freeDelivery);
@@ -151,7 +192,7 @@ export function OrderVoucher({ order, logoUrl, companyName = "MaBelle Bites" }: 
       }`}</style>
 
       <div className="flex flex-wrap items-center justify-center gap-2 mb-4 print:hidden">
-        <button type="button" onClick={() => window.print()} className={`${btn} bg-white border border-stone-200 text-stone-700 hover:bg-stone-50`}>
+        <button type="button" onClick={print} className={`${btn} bg-white border border-stone-200 text-stone-700 hover:bg-stone-50`}>
           <Printer className="w-4 h-4" /> Print
         </button>
         <button type="button" onClick={download} disabled={!!busy} className={`${btn} text-white`} style={{ background: C.brand }}>

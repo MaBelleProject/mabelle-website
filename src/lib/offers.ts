@@ -32,7 +32,10 @@ export function offerScope(o: Offer) {
 }
 
 export function offerEnds(o: Offer) {
-  return o.endDate ? `Ends ${new Date(o.endDate).toLocaleDateString()}` : null;
+  // Offers run on Lebanon time, whatever the visitor's time zone is
+  return o.endDate
+    ? `Ends ${new Date(o.endDate).toLocaleString("en-GB", { timeZone: "Asia/Beirut", day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit", hour12: true })} (Lebanon time)`
+    : null;
 }
 
 /**

@@ -9,6 +9,7 @@ import { fileUrl } from "@/lib/api";
 import Image from "next/image";
 import { Heart, Menu, Search, ShoppingCart } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useRef } from "react";
 
 interface HeaderProps {
   brands: Brand[];
@@ -20,10 +21,24 @@ export default function Header({ brands: _brands, settings }: HeaderProps) {
   const { toggle, open } = useMenu();
   const { customer } = useCustomer();
   const { count: favCount } = useFavorites();
+  const headerRef = useRef<HTMLElement>(null);
+  // The header is fixed, so the page below it is pushed down by its real height (--header-h, see the layout).
+  // iOS can make it taller than the usual 80px (text size, toolbars), which used to hide the top of the page.
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+    const set = () => document.documentElement.style.setProperty("--header-h", `${el.getBoundingClientRect().height}px`);
+    set();
+    const ro = new ResizeObserver(set);
+    ro.observe(el);
+    window.addEventListener("pageshow", set);
+    window.addEventListener("orientationchange", set);
+    return () => { ro.disconnect(); window.removeEventListener("pageshow", set); window.removeEventListener("orientationchange", set); };
+  }, []);
   const logoUrl = settings?.companyLogo ? fileUrl(settings.companyLogo) : undefined;
 
   return (
-    <header className="fixed top-0 left-0 right-0 w-full z-40 bg-white/95 backdrop-blur border-b border-[var(--sage-light)] shadow-sm">
+    <header ref={headerRef} className="fixed top-0 left-0 right-0 w-full z-40 bg-white/95 backdrop-blur border-b border-[var(--sage-light)] shadow-sm" style={{ WebkitTransform: "translateZ(0)", transform: "translateZ(0)" }}>
       <div className="max-w-7xl mx-auto px-2 sm:px-4">
         <div className="relative flex items-center justify-between py-4">
           {/* Left: menu + search icons — hidden while sidebar is open (X inside sidebar handles close) */}
