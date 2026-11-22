@@ -2,13 +2,12 @@ import BestSellersList from "@/components/best-sellers-list";
 import BrandGrid from "@/components/brand-grid";
 import BundleCard from "@/components/bundle-card";
 import Carousel from "@/components/carousel";
-import HorizontalRow from "@/components/horizontal-row";
 import HomeOffersSection from "@/components/home-offers-section";
+import HorizontalRow from "@/components/horizontal-row";
 import MobileGreeting from "@/components/mobile-greeting";
 import OffersNote from "@/components/offers-note";
 import OrderAgainSection from "@/components/order-again-section";
 import ProductCard from "@/components/product-card";
-import QuickInfoButtons from "@/components/quick-info-buttons";
 import SectionGrid from "@/components/section-grid";
 import ShopByAge from "@/components/shop-by-age";
 import ViewAllLink from "@/components/view-all-link";
@@ -49,22 +48,22 @@ export default async function HomePage() {
       )}
 
       {/* 2. Four quick information buttons */}
-      <QuickInfoButtons
+      {/* <QuickInfoButtons
         deliveryCharge={settings?.deliveryCharge}
         phoneNumber={settings?.phoneNumber}
         hasOffers={offers.length > 0}
-      />
+      /> */}
 
       {/* 3. Order Again (logged-in customers only, fetches its own data) */}
       <OrderAgainSection />
 
-      {/* 4. Shop by Age */}
-      <ShopByAge products={products} />
 
-      {/* 5. Shop by Category (one tile per section code, across brands) */}
+      {/* 4. Shop by Category (one tile per section code, across brands) */}
       <div id="sections-area">
         <SectionGrid sections={sections} />
       </div>
+      {/* 5. Shop by Age */}
+      <ShopByAge products={products} />
 
       {/* 6. Best Sellers */}
       <BestSellersList products={bestSellers} />
