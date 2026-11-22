@@ -70,7 +70,7 @@ export default async function HomePage() {
 
       {/* 7. Offers (highest priority first) */}
       {offers.length > 0 && (
-        <section id="offers-area" className="max-w-7xl mx-auto px-2 sm:px-4 pt-3 pb-6 scroll-mt-24">
+        <section id="offers-area" className="max-w-7xl mx-auto px-2 sm:px-4 py-3 scroll-mt-24">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-stone-800">Offers</h2>
             <ViewAllLink href="/offers" />
@@ -97,7 +97,7 @@ export default async function HomePage() {
 
       {/* 11. Customize Gifts */}
       {gifts.length > 0 && (
-        <section className="max-w-7xl mx-auto px-2 sm:px-4 pt-3 pb-6">
+        <section className="max-w-7xl mx-auto px-2 sm:px-4 py-3">
           <Link href="/gifts" className="flex items-center gap-4 rounded-2xl bg-[var(--cream)] border border-[var(--brand-light)] px-6 py-5 hover:shadow-md transition">
             <span className="w-12 h-12 rounded-full bg-white flex items-center justify-center shrink-0"><Gift className="w-6 h-6 text-[var(--brand)]" /></span>
             <span className="flex-1">

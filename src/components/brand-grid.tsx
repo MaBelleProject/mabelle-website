@@ -13,7 +13,7 @@ interface BrandGridProps { brands: Brand[]; countries?: Record<number, string>; 
 export default function BrandGrid({ brands, countries = {} }: BrandGridProps) {
   if (!brands.length) return null;
   return (
-    <section className="max-w-7xl mx-auto px-2 sm:px-4 pt-3 pb-6">
+    <section className="max-w-7xl mx-auto px-2 sm:px-4 py-3">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-stone-800">Shop by Brand</h2>
         <ViewAllLink href="/products" />

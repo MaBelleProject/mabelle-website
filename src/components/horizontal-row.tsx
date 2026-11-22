@@ -33,7 +33,7 @@ export default function HorizontalRow({ title, viewAllHref, children }: Horizont
   const scroll = () => scrollRef.current?.scrollBy({ left: 320, behavior: "smooth" });
 
   return (
-    <section className="max-w-7xl mx-auto px-2 sm:px-4 pt-3 pb-6">
+    <section className="max-w-7xl mx-auto px-2 sm:px-4 py-3">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-stone-800">{title}</h2>
         <ViewAllLink href={viewAllHref} />

@@ -8,7 +8,7 @@ export default function ShopByAge({ products }: { products: Product[] }) {
   const options = ageOptions(products);
   if (!options.length) return null;
   return (
-    <section id="age-area" className="max-w-7xl mx-auto px-2 sm:px-4 pt-3 pb-6">
+    <section id="age-area" className="max-w-7xl mx-auto px-2 sm:px-4 py-3">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-stone-800">Shop by Age</h2>
         <ViewAllLink href="/products" />
