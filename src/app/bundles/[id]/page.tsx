@@ -7,6 +7,7 @@ import { cachedStorefrontApi } from "@/lib/cached-storefront";
 import { BundleCartControlWithSwaps } from "@/components/bundle-card";
 import { Layers } from "lucide-react";
 import BackButton from "@/components/back-button";
+import TrackViewItem from "@/components/analytics/track-view-item";
 
 interface PageProps { params: Promise<{ id: string }> }
 
@@ -41,6 +42,7 @@ async function BundleContent({ params }: PageProps) {
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+      <TrackViewItem item={{ item_id: `bundle-${bundle.id}`, item_name: bundle.name, item_category: "Bundle", price }} />
       <nav className="text-xs text-stone-400 mb-6 flex flex-wrap items-center gap-1.5">
         <BackButton />
         <Link href="/" className="hover:text-[var(--brand)] shrink-0">Home</Link>

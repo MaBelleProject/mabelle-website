@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { Offer } from "@/lib/api";
+import { trackSelectPromotion } from "@/lib/analytics";
 import OfferCard from "./offer-card";
 import OfferDetailModal from "./offer-detail-modal";
 
@@ -15,7 +16,7 @@ export default function HomeOffersSection({ offers }: { offers: Offer[] }) {
           {offers.map(o => (
             <button
               key={o.id}
-              onClick={() => setSelectedOffer(o)}
+              onClick={() => { trackSelectPromotion({ promotion_id: `offer-${o.id}`, promotion_name: o.name, creative_slot: "home_offers" }); setSelectedOffer(o); }}
               className="shrink-0 w-[85%] sm:w-[45%] lg:w-[32%] text-left rounded-xl hover:shadow-md hover:-translate-y-0.5 transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]/40"
             >
               <OfferCard offer={o} compact />

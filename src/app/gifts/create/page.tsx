@@ -3,6 +3,7 @@ import { fileUrl } from "@/lib/api";
 import { cachedStorefrontApi } from "@/lib/cached-storefront";
 import GiftCustomizer from "../[id]/gift-customizer";
 import BackButton from "@/components/back-button";
+import TrackViewItem from "@/components/analytics/track-view-item";
 import { cacheLife } from "next/cache";
 
 export default async function CreateGiftPage() {
@@ -16,6 +17,7 @@ export default async function CreateGiftPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-2 sm:px-4 py-8">
+      <TrackViewItem item={{ item_id: "gift-custom", item_name: "Create Your Own Gift", item_category: "Gift", price: 0 }} />
       <nav className="text-xs text-stone-400 mb-6 flex items-center gap-1.5">
         <BackButton />
         <Link href="/" className="hover:text-[var(--brand)]">Home</Link>

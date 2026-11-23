@@ -7,6 +7,7 @@ import { hasFreeDelivery, useCustomer } from "@/context/customer-context";
 import Link from "next/link";
 import { ArrowLeft, LogIn, LogOut, Eye, EyeOff } from "lucide-react";
 import { optionalEmailError } from "@/lib/email";
+import { trackBeginCheckout } from "@/lib/analytics";
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -35,6 +36,11 @@ export default function CheckoutPage() {
       setRedirecting(true);
     }
   }, [items.length, router]);
+
+  // GA4 begin_checkout (reported once per cart, also when a signed-in customer skips straight to the review)
+  useEffect(() => {
+    if (items.length > 0) trackBeginCheckout(items);
+  }, [items]);
 
   // Pre-populate form from previously saved checkout info (edit flow)
   useEffect(() => {

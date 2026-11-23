@@ -7,11 +7,12 @@ import { fileUrl, storefrontApi } from "@/lib/api";
 import { useCartQuote } from "@/lib/use-cart-quote";
 import { Minus, Plus, ShoppingBag, Star, Tag, Trash2 } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { trackViewCart } from "@/lib/analytics";
 import BackButton from "@/components/back-button";
 
 export default function CartPage() {
-  const { items, update, maxQtyFor, remove, subtotal, selectedOfferId, selectOffer, promoPicked, selectPromo } = useCart();
+  const { items, update, maxQtyFor, remove, subtotal, selectedOfferId, selectOffer, promoPicked, selectPromo, cartReady } = useCart();
   const { customer, customerReady } = useCustomer();
   const { quote } = useCartQuote(items, { customerId: customer?.id, selectedOfferId, promoPicked, skip: !customerReady });
   const [deliveryCharge, setDeliveryCharge] = useState(0);
@@ -21,6 +22,14 @@ export default function CartPage() {
       if (s?.deliveryCharge) setDeliveryCharge(parseFloat(s.deliveryCharge));
     }).catch(() => { });
   }, []);
+
+  // GA4 view_cart, once per visit to the cart page (after the saved cart has loaded).
+  const viewCartSent = useRef(false);
+  useEffect(() => {
+    if (!cartReady || viewCartSent.current || items.length === 0) return;
+    viewCartSent.current = true;
+    trackViewCart(items);
+  }, [cartReady, items]);
 
   if (items.length === 0) {
     return (

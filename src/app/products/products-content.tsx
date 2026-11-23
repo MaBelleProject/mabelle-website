@@ -6,6 +6,7 @@ import { fileUrl, type Product, type Brand, type OriginCountry, type SectionGrou
 import { ageOptions, matchesAge } from "@/lib/age";
 import { countryInfo, madeInLabel } from "@/lib/countries";
 import ProductCard from "@/components/product-card";
+import { trackSearch } from "@/lib/analytics";
 import { ArrowLeft, ChevronDown, Search, SlidersHorizontal, X } from "lucide-react";
 
 // ─── Fuzzy search ─────────────────────────────────────────────────────────────
@@ -171,6 +172,19 @@ export default function ProductsContent({ initialProducts, initialBrands, sectio
       (!query.trim() || fuzzyMatch(query.trim(), `${p.name} ${p.brandName} ${p.sectionName}`)),
     );
   }, [allProducts, query, brandFilter, sectionFilter, ageFilter, sections]);
+
+  // GA4 search: once the customer has stopped typing (also for a search started from the home page).
+  const lastSearch = useRef("");
+  const resultsCount = products.length;
+  useEffect(() => {
+    const term = query.trim();
+    if (!term || term.toLowerCase() === lastSearch.current) return;
+    const t = setTimeout(() => {
+      lastSearch.current = term.toLowerCase();
+      trackSearch(term, resultsCount);
+    }, 1200);
+    return () => clearTimeout(t);
+  }, [query, resultsCount]);
 
   const clearAll = () => {
     setQuery("");

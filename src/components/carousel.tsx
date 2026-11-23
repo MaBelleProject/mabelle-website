@@ -2,6 +2,7 @@
 
 import type { CarouselSlide, SectionGroup } from "@/lib/api";
 import { fileUrl } from "@/lib/api";
+import { trackSelectPromotion } from "@/lib/analytics";
 import { sectionHref, sectionOfId } from "@/lib/sections";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -104,6 +105,12 @@ export default function Carousel({ slides, sections = [] }: CarouselProps) {
     const slide = slides[current];
     if (wasDraggedRef.current) { wasDraggedRef.current = false; return; }
     if (!isClickable(slide)) return;
+    trackSelectPromotion({
+      promotion_id: `banner-${slide.id}`,
+      promotion_name: slide.title || `Banner ${slide.id}`,
+      creative_name: slide.destinationType ?? undefined,
+      creative_slot: `home_carousel_${current + 1}`,
+    });
     switch (slide.destinationType) {
       case "offers":
         router.push("/offers");

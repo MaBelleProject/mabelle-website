@@ -10,6 +10,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import TrackViewItem from "@/components/analytics/track-view-item";
 import AddToCartButton from "./add-to-cart-button";
 import ProductInfoTabs from "./product-info-tabs";
 
@@ -60,6 +61,7 @@ async function ProductContent({ params }: PageProps) {
 
   return (
     <div className="max-w-7xl mx-auto px-2 sm:px-4 py-8">
+      <TrackViewItem item={{ item_id: String(product.id), item_name: product.name, item_category: "Product", ...(product.categoryName ? { item_brand: product.categoryName } : {}), price, ...(originalPrice ? { discount: Math.round((originalPrice - price) * 100) / 100 } : {}) }} />
       {/* Breadcrumb */}
       <nav className="text-xs text-stone-400 mb-6 flex items-center gap-1.5">
         <BackButton />

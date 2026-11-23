@@ -5,6 +5,7 @@ import { toOrderLine, useCart, type CartItem } from "@/context/cart-context";
 import { useCustomer } from "@/context/customer-context";
 import { storefrontApi, type PromoCode } from "@/lib/api";
 import { useCartQuote } from "@/lib/use-cart-quote";
+import { trackAddShippingInfo, trackBeginCheckout, trackCheckoutError, trackPurchase } from "@/lib/analytics";
 import { ArrowLeft, CheckCircle, Star, Tag, XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -64,6 +65,15 @@ export default function ReviewPage() {
       if (saved.remark) setOrderNote(String(saved.remark).slice(0, 200));
     } catch { router.replace("/checkout"); setRedirecting(true); }
   }, [cartReady]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // GA4 checkout funnel: the delivery details are known once this page has them (form or saved account address).
+  // Only the delivery type is reported. Each step is sent once per cart.
+  const hasInfo = !!info;
+  useEffect(() => {
+    if (!hasInfo || items.length === 0) return;
+    trackBeginCheckout(items);
+    trackAddShippingInfo(items, !!(info?.freeDelivery ?? info?.isNonProfit));
+  }, [hasInfo]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     storefrontApi.settings().then(s => {
@@ -148,6 +158,25 @@ export default function ReviewPage() {
 
       const order = await storefrontApi.createOrder(orderPayload);
 
+      // GA4 purchase (sent once per order number): product revenue without delivery, delivery as shipping.
+      try {
+        const net = parseFloat(order.netTotal);
+        const due = parseFloat(order.totalDue);
+        const netTotal = Number.isFinite(net) ? net : quote ? quote.netTotal : subtotal;
+        const orderFreeDelivery = quote?.freeDelivery ?? !!(info.freeDelivery ?? isNonProfit);
+        const shipping = orderFreeDelivery ? 0
+          : Number.isFinite(due) && Number.isFinite(net) ? due - net
+          : quote?.deliveryDue ?? deliveryCharge;
+        trackPurchase({
+          transactionId: order.orderNumber || String(order.id),
+          items,
+          quotedUnitPrices: items.map((_, idx) => quote?.items[idx]?.unitPrice),
+          netTotal,
+          shipping,
+          coupon: quote?.promoApplied && quote.promoCode ? quote.promoCode : quote?.offers[0]?.offerName ?? null,
+        });
+      } catch { /* analytics must never block an order */ }
+
       // Auto-login the guest if they created an account during checkout
       if (!info.customerId && info.password) {
         try { await login(info.phone, info.password); } catch { /* non-fatal */ }
@@ -157,6 +186,7 @@ export default function ReviewPage() {
       sessionStorage.removeItem("checkout_info");
       router.push(`/order-success?orderNumber=${encodeURIComponent(order.orderNumber)}&total=${encodeURIComponent(order.totalDue ?? order.netTotal)}`);
     } catch (err: any) {
+      trackCheckoutError();
       setError(err?.message ?? "Failed to place order. Please try again.");
       setPlacing(false);
     }

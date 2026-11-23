@@ -1,6 +1,7 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { trackCartChange } from "@/lib/analytics";
 import type { OrderLine } from "@/lib/api";
 
 export type CartItemType = "product" | "bundle" | "gift";
@@ -152,6 +153,19 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, [items, selectedOfferId, hydrated]);
 
+  // GA4 add_to_cart / remove_from_cart: whatever changed the cart (product cards, cart page, bundles, gifts),
+  // the difference with the previous cart is what was added or removed. The cart loaded from storage is the start.
+  const reportedItems = useRef<CartItem[] | null>(null);
+  const skipNextCartEvent = useRef(false);
+  useEffect(() => {
+    if (!hydrated) return;
+    const before = reportedItems.current;
+    reportedItems.current = items;
+    if (before === null || before === items) return;
+    if (skipNextCartEvent.current) { skipNextCartEvent.current = false; return; }
+    trackCartChange(before, items);
+  }, [items, hydrated]);
+
   // Picking an offer drops a picked promo code and vice versa: never both.
   const selectOffer = (offerId: number | null) => { setSelectedOfferId(offerId); setPromoPicked(false); };
   const selectPromo = (picked: boolean) => { setPromoPicked(picked); if (picked) setSelectedOfferId(null); };
@@ -198,7 +212,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setItems(prev => prev.filter(i => i.key !== key));
   };
 
-  const clear = () => { setItems([]); selectOffer(null); };
+  // Emptying the cart after an order is not a "remove from cart".
+  const clear = () => { if (items.length) skipNextCartEvent.current = true; setItems([]); selectOffer(null); };
 
   const count = items.reduce((s, i) => s + i.quantity, 0);
   const subtotal = items.reduce((s, i) => s + i.unitPrice * i.quantity, 0);

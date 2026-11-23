@@ -1,3 +1,5 @@
+import CookieConsent from "@/components/analytics/cookie-consent";
+import GoogleAnalytics from "@/components/analytics/google-analytics";
 import FeedbackPopup from "@/components/feedback-popup";
 import Footer from "@/components/footer";
 import Header from "@/components/header";
@@ -12,6 +14,7 @@ import { OffersProvider } from "@/context/offers-context";
 import { ProductOriginsProvider } from "@/context/product-origins-context";
 import { ProductRatingsProvider } from "@/context/product-ratings-context";
 import { ShowStockLeftProvider } from "@/context/settings-context";
+import { GA_MEASUREMENT_ID, gtagBootstrapScript } from "@/lib/analytics";
 import { cachedStorefrontApi } from "@/lib/cached-storefront";
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
@@ -44,6 +47,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang="en" className={geist.variable}>
       <head>
         <script dangerouslySetInnerHTML={{ __html: `(function(){if("scrollRestoration"in history)history.scrollRestoration="manual";function r(){window.scrollTo(0,0);document.documentElement.scrollTop=0;document.body.scrollTop=0;}function guard(){var stopped=false;function stop(){stopped=true;}["touchstart","wheel","mousedown","keydown"].forEach(function(e){window.addEventListener(e,stop,{once:true,passive:true});});var end=Date.now()+3000;(function w(){if(stopped||Date.now()>end)return;if(window.scrollY>0)r();requestAnimationFrame(w);})();[50,100,200,400,800,1600].forEach(function(d){setTimeout(function(){if(!stopped&&window.scrollY>0)r();},d);});}document.addEventListener("DOMContentLoaded",r);window.addEventListener("load",function(){r();guard();});window.addEventListener("beforeunload",r);window.addEventListener("pageshow",function(){r();guard();});var tsY=0,tsX=0;document.addEventListener("touchstart",function(e){tsY=e.touches[0].clientY;tsX=e.touches[0].clientX;},{passive:true});document.addEventListener("touchmove",function(e){var dy=e.touches[0].clientY-tsY,dx=Math.abs(e.touches[0].clientX-tsX);if(window.scrollY===0&&dy>0&&dy>dx&&e.cancelable)e.preventDefault();},{passive:false});})();` }} />
+        {GA_MEASUREMENT_ID && <script id="ga4-consent-defaults" dangerouslySetInnerHTML={{ __html: gtagBootstrapScript() }} />}
       </head>
       <body>
         <CartProvider>
@@ -63,6 +67,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                             <Footer settings={settings} />
                             <WhatsAppButton phoneNumber={settings?.phoneNumber} />
                             <FeedbackPopup />
+                            <CookieConsent />
                           </div>
                         </div>
                       </MenuProvider>
@@ -73,6 +78,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             </FavoritesProvider>
           </CustomerProvider>
         </CartProvider>
+        <GoogleAnalytics />
       </body>
     </html>
   );
