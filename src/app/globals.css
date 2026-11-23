@@ -49,7 +49,15 @@
     color: var(--foreground);
     font-family: var(--font-sans), system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
-    overscroll-behavior-y: none;
+  }
+
+  /* iOS only (-webkit-touch-callout exists only in iOS WebKit): stop the top overscroll that starts
+     pull-to-refresh. Paired with the touch guard in layout.tsx for iOS versions that ignore this. */
+  @supports (-webkit-touch-callout: none) {
+    html,
+    body {
+      overscroll-behavior-y: none;
+    }
   }
 
   h1,
