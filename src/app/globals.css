@@ -38,6 +38,12 @@
     box-sizing: border-box;
   }
 
+  /* The header is fixed: anything the browser scrolls into view (a focused field on iOS, #anchors)
+     stops below it instead of behind it */
+  html {
+    scroll-padding-top: var(--header-h, 80px);
+  }
+
   body {
     background-color: var(--background);
     color: var(--foreground);

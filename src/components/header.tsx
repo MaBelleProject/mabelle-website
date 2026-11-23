@@ -27,7 +27,12 @@ export default function Header({ brands: _brands, settings }: HeaderProps) {
   useEffect(() => {
     const el = headerRef.current;
     if (!el) return;
-    const set = () => document.documentElement.style.setProperty("--header-h", `${el.getBoundingClientRect().height}px`);
+    // Rounded up and only written when it really changes, so the page never shifts by a fraction of a pixel mid-scroll
+    let last = "";
+    const set = () => {
+      const h = `${Math.ceil(el.offsetHeight)}px`;
+      if (h !== last) { last = h; document.documentElement.style.setProperty("--header-h", h); }
+    };
     set();
     const ro = new ResizeObserver(set);
     ro.observe(el);
@@ -37,8 +42,11 @@ export default function Header({ brands: _brands, settings }: HeaderProps) {
   }, []);
   const logoUrl = settings?.companyLogo ? fileUrl(settings.companyLogo) : undefined;
 
+  // Solid white instead of white/95 + backdrop-blur (looks the same): on iOS a fixed element with
+  // backdrop-filter (plus the old translateZ hack) is repainted late while the page scrolls, so the
+  // content just under the header was clipped / covered during the scroll.
   return (
-    <header ref={headerRef} className="fixed top-0 left-0 right-0 w-full z-40 bg-white/95 backdrop-blur border-b border-[var(--sage-light)] shadow-sm" style={{ WebkitTransform: "translateZ(0)", transform: "translateZ(0)" }}>
+    <header ref={headerRef} className="fixed top-0 left-0 right-0 w-full z-40 bg-white border-b border-[var(--sage-light)] shadow-sm">
       <div className="max-w-7xl mx-auto px-2 sm:px-4">
         <div className="relative flex items-center justify-between py-4">
           {/* Left: menu + search icons — hidden while sidebar is open (X inside sidebar handles close) */}

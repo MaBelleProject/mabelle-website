@@ -6,7 +6,7 @@
  * The same component is used by the dashboard and the website.
  */
 
-import { useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Download, Loader2, Printer, Share2 } from "lucide-react";
 
 export interface VoucherLine {
@@ -55,7 +55,6 @@ export interface VoucherOrder {
   totalDue: number;
 }
 
-const noSubscribe = () => () => {};
 let shareSupport: boolean | undefined;
 /** Whether this browser can share a PDF file (Web Share API level 2) — checked once. */
 function canShareFiles() {
@@ -103,14 +102,17 @@ export function OrderVoucher({ order, logoUrl, companyName = "MaBelle Bites" }: 
   const [busy, setBusy] = useState<"pdf" | "share" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [logoFailed, setLogoFailed] = useState(false);
-  // Phones that can share files (WhatsApp...) get a Share button; known only in the browser (false while rendering on the server)
-  const canShare = useSyncExternalStore(noSubscribe, canShareFiles, () => false);
   const fileName = `MaBelle-Voucher-${order.orderNumber}.pdf`;
 
   /** The voucher as a one-page PDF (the page is as long as the voucher, like a receipt). */
-  const makePdf = async () => {
+  const makePdf = async (): Promise<File> => {
     const node = ref.current;
     if (!node) throw new Error("Voucher not ready");
+    // Wait for the logo and fonts, or they are missing from the capture (iOS is slow to decode images)
+    await Promise.all([
+      document.fonts?.ready,
+      ...Array.from(node.querySelectorAll("img")).map(img => img.decode?.().catch(() => null)),
+    ]);
     const [{ domToCanvas }, { jsPDF }] = await Promise.all([import("modern-screenshot"), import("jspdf")]);
     const canvas = await domToCanvas(node, { scale: 2, backgroundColor: "#ffffff" });
     const width = 120; // mm
@@ -118,25 +120,100 @@ export function OrderVoucher({ order, logoUrl, companyName = "MaBelle Bites" }: 
     const pdf = new jsPDF({ unit: "mm", format: [width, height], orientation: height > width ? "portrait" : "landscape" });
     pdf.addImage(canvas.toDataURL("image/jpeg", 0.92), "JPEG", 0, 0, width, height);
     pdf.setProperties({ title: `Voucher ${order.orderNumber}`, author: companyName });
-    return pdf;
+    return new File([pdf.output("blob")], fileName, { type: "application/pdf" });
   };
 
+  /*
+   * The PDF is made in the background as soon as the voucher is on screen. iOS (Safari, Chrome, every iOS
+   * browser) only lets a page download a file or open the share sheet straight from the tap — after a slow
+   * `await` the tap no longer counts and the browser silently does nothing. With the file ready, the buttons
+   * act at once, inside the tap.
+   */
+  const orderKey = JSON.stringify(order);
+  const pdfRef = useRef<{ promise: Promise<File>; file: File | null } | null>(null);
+  const getPdf = () => {
+    if (!pdfRef.current) {
+      const entry: { promise: Promise<File>; file: File | null } = { promise: makePdf(), file: null };
+      entry.promise.then(f => { entry.file = f; }, () => { if (pdfRef.current === entry) pdfRef.current = null; });
+      pdfRef.current = entry;
+    }
+    return pdfRef.current;
+  };
+  useEffect(() => {
+    pdfRef.current = null; // the order or the logo changed: make it again
+    const t = setTimeout(() => { getPdf().promise.catch(() => {}); }, 400);
+    return () => clearTimeout(t);
+  }, [orderKey, logoFailed]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /** Saves the file through a download link (desktop, Android, iOS Safari 13+). */
+  const saveFile = (file: File) => {
+    const url = URL.createObjectURL(file);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = file.name;
+    a.rel = "noopener";
+    a.style.display = "none";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    // iOS reads the file after the click returns, so the link is kept alive for a while
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  };
+
+  /** Opens the system share sheet with the PDF file itself (WhatsApp, Mail, Save to Files...). */
+  const shareFile = (file: File) =>
+    // Only the file: with extra text, WhatsApp on iOS sends the text and drops the PDF
+    navigator.share({ files: [file] });
+
+  const isNotAllowed = (e: unknown) => (e as Error)?.name === "NotAllowedError";
+  const isAbort = (e: unknown) => (e as Error)?.name === "AbortError";
+
   const download = async () => {
-    setBusy("pdf"); setError(null);
-    try { (await makePdf()).save(fileName); }
-    catch { setError("Could not create the PDF. Please try Print → Save as PDF instead."); }
-    finally { setBusy(null); }
+    setError(null);
+    const entry = getPdf();
+    let file = entry.file;
+    if (!file) {
+      setBusy("pdf");
+      try { file = await entry.promise; }
+      catch { setError("Could not create the PDF. Please try Print → Save as PDF instead."); return; }
+      finally { setBusy(null); }
+    }
+    // Chrome, Firefox and Edge on iOS can't save a generated file through a link: the share sheet's "Save to Files" can
+    const ua = navigator.userAgent;
+    const iosSafari = /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS|GSA/.test(ua);
+    if (isIOS() && !iosSafari && canShareFiles()) {
+      try { await shareFile(file); return; }
+      catch (e) {
+        if (isAbort(e)) return;
+        if (isNotAllowed(e)) { setError("Your PDF is ready — tap Download PDF again."); return; }
+      }
+    }
+    saveFile(file);
   };
 
   const share = async () => {
-    setBusy("share"); setError(null);
-    try {
-      const blob = (await makePdf()).output("blob");
-      const file = new File([blob], fileName, { type: "application/pdf" });
-      await navigator.share({ files: [file], title: `Voucher ${order.orderNumber}`, text: `${companyName} — order ${order.orderNumber}` });
-    } catch (e) {
-      if ((e as Error)?.name !== "AbortError") setError("Sharing is not available here. Download the PDF and send it instead.");
-    } finally { setBusy(null); }
+    setError(null);
+    const entry = getPdf();
+    let file = entry.file;
+    if (!file) {
+      setBusy("share");
+      try { file = await entry.promise; }
+      catch { setError("Could not create the PDF. Please try again."); return; }
+      finally { setBusy(null); }
+    }
+    if (!canShareFiles()) {
+      // Browser can't share files (e.g. Firefox on a computer): save the PDF and open WhatsApp to attach it
+      saveFile(file);
+      window.open(`https://wa.me/?text=${encodeURIComponent(`${companyName} — voucher for order ${order.orderNumber}`)}`, "_blank", "noopener");
+      return;
+    }
+    try { await shareFile(file); }
+    catch (e) {
+      if (isAbort(e)) return;
+      // The PDF took too long and the tap expired: it is ready now, so the next tap opens the share sheet at once
+      if (isNotAllowed(e)) setError("Your PDF is ready — tap Share again.");
+      else setError("Could not open sharing here. Please use Download PDF instead.");
+    }
   };
 
   /**
@@ -198,11 +275,9 @@ export function OrderVoucher({ order, logoUrl, companyName = "MaBelle Bites" }: 
         <button type="button" onClick={download} disabled={!!busy} className={`${btn} text-white`} style={{ background: C.brand }}>
           {busy === "pdf" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />} Download PDF
         </button>
-        {canShare && (
-          <button type="button" onClick={share} disabled={!!busy} className={`${btn} text-white`} style={{ background: "#25D366" }}>
-            {busy === "share" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Share2 className="w-4 h-4" />} Share (WhatsApp…)
-          </button>
-        )}
+        <button type="button" onClick={share} disabled={!!busy} className={`${btn} text-white`} style={{ background: "#25D366" }}>
+          {busy === "share" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Share2 className="w-4 h-4" />} Share (WhatsApp…)
+        </button>
       </div>
       {error && <p className="text-center text-sm text-red-600 mb-3 print:hidden">{error}</p>}
 
