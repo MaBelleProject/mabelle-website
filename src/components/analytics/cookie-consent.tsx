@@ -1,27 +1,39 @@
 "use client";
 
 import { GA_MEASUREMENT_ID, getStoredConsent, setConsent, type ConsentChoice } from "@/lib/analytics";
-import { useEffect, useState } from "react";
+import { statConsent } from "@/lib/site-stats";
+import { useEffect, useRef, useState } from "react";
 
 /**
  * Asks once whether analytics cookies may be used. Until the visitor accepts, Google Analytics runs in
  * cookieless mode (Consent Mode v2, analytics_storage = denied). The choice is kept in this browser and can be
  * changed later through `openCookieSettings()`.
+ *
+ * Each explicit Accept / Decline click is also counted once in the anonymous first-party statistics
+ * (no identifier). The banner only opens while no choice is stored, so a reload does not count again.
  */
 export default function CookieConsent() {
   const [open, setOpen] = useState(false);
+  /** One count per time the banner is shown, even if a fast double tap fires twice before it closes. */
+  const answered = useRef(false);
 
   useEffect(() => {
     if (!GA_MEASUREMENT_ID) return;
     if (getStoredConsent() === null) setOpen(true);
-    const reopen = () => setOpen(true);
+    const reopen = () => { answered.current = false; setOpen(true); };
     window.addEventListener("mabelle:open-cookie-settings", reopen);
     return () => window.removeEventListener("mabelle:open-cookie-settings", reopen);
   }, []);
 
   if (!open) return null;
 
-  const choose = (choice: ConsentChoice) => { setConsent(choice); setOpen(false); };
+  const choose = (choice: ConsentChoice) => {
+    if (answered.current) return;
+    answered.current = true;
+    setConsent(choice);
+    statConsent(choice === "granted" ? "accepted" : "declined");
+    setOpen(false);
+  };
 
   return (
     <div

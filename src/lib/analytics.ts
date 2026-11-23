@@ -1,14 +1,19 @@
 /**
- * Google Analytics 4 (gtag.js) helpers.
+ * Website analytics helpers: Google Analytics 4 (gtag.js) with Consent Mode + first-party statistics.
  *
  * - Consent Mode v2: every consent type defaults to "denied". Analytics cookies are only used once the visitor
- *   accepts (see `CookieConsent`); before that GA receives cookieless pings only.
+ *   accepts (see `CookieConsent`); before that, or after Decline, GA receives cookieless pings only.
+ *   Advertising storage always stays denied. Not answering the banner is never treated as accepting.
+ * - The Website Analytics dashboard reads the cookieless first-party counters (see `site-stats.ts`), which
+ *   need no consent and use no cookies, browser storage or identifiers; duplicate-event guards live in memory.
+ *   The only thing kept in the browser is the banner choice itself (CONSENT_STORAGE_KEY).
  * - No personal data is ever sent: no names, phones, emails, addresses, gift messages or order notes.
  *   Page URLs are stripped of every query parameter except a few harmless catalogue filters.
- * - All calls are no-ops when GA is disabled (no measurement ID) or during server rendering.
+ * - All calls are no-ops during server rendering, and GA calls are no-ops without a measurement ID.
  */
 
 import type { CartItem } from "@/context/cart-context";
+import { SITE_STATS_ENABLED, statEvent, statPageView, statPurchase, type StatEvent } from "@/lib/site-stats";
 
 /**
  * The GA4 measurement ID. NEXT_PUBLIC_GA_MEASUREMENT_ID overrides it; without it, production builds use the
@@ -20,6 +25,9 @@ export const GA_MEASUREMENT_ID =
 export const CURRENCY = "USD";
 export const CONSENT_STORAGE_KEY = "mabelle_analytics_consent";
 export const CONSENT_CHANGE_EVENT = "mabelle:consent-change";
+
+/** Left in browsers by older versions (the purchase list is now kept in memory); deleted on load. */
+const LEGACY_STORAGE_KEYS = ["ga_reported_purchases"];
 
 /** Query parameters that are safe (and useful) to keep in page_location. Everything else is dropped. */
 const ALLOWED_QUERY_PARAMS = ["categoryId", "sectionCode", "age", "section", "brand"];
@@ -35,6 +43,11 @@ declare global {
 }
 
 const enabled = () => typeof window !== "undefined" && !!GA_MEASUREMENT_ID && typeof window.gtag === "function";
+/** Either GA or the first-party statistics will receive events. */
+const active = () => typeof window !== "undefined" && (enabled() || SITE_STATS_ENABLED);
+
+/** Events the first-party statistics count (purchase is handled separately: the server records the order). */
+const STAT_EVENTS = new Set<StatEvent>(["view_item", "add_to_cart", "view_cart", "begin_checkout"]);
 
 /** DebugView: on with NEXT_PUBLIC_GA_DEBUG=true, or for this browser tab after visiting any page with ?ga_debug=1. */
 export function isDebugMode(): boolean {
@@ -51,8 +64,11 @@ export function isDebugMode(): boolean {
 }
 
 function send(eventName: string, params: Record<string, unknown> = {}) {
-  if (!enabled()) return;
-  window.gtag!("event", eventName, isDebugMode() ? { ...params, debug_mode: true } : params);
+  if (enabled()) window.gtag!("event", eventName, isDebugMode() ? { ...params, debug_mode: true } : params);
+  if (STAT_EVENTS.has(eventName as StatEvent)) {
+    const items = (params.items as GaItem[] | undefined)?.map(i => ({ id: i.item_id, name: i.item_name, qty: i.quantity }));
+    statEvent(eventName as Exclude<StatEvent, "page_view" | "purchase">, items);
+  }
 }
 
 // ─── Consent ──────────────────────────────────────────────────────────────────
@@ -81,13 +97,15 @@ export function openCookieSettings() {
 }
 
 /**
- * The inline script for <head>: sets the Consent Mode defaults (and the stored choice of a returning visitor)
- * before gtag.js loads, so not a single hit goes out without them.
+ * The inline script for <head>, run before gtag.js loads so not a single hit goes out without it:
+ * - Consent Mode defaults: everything denied, then the stored choice of a returning visitor who accepted.
+ * - Removes the purchase list older versions kept in localStorage.
  */
 export function gtagBootstrapScript() {
   return `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}window.gtag=gtag;` +
     `gtag('consent','default',{ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',analytics_storage:'denied'});` +
     `try{if(localStorage.getItem(${JSON.stringify(CONSENT_STORAGE_KEY)})==='granted')gtag('consent','update',{analytics_storage:'granted'});}catch(e){}` +
+    `try{${JSON.stringify(LEGACY_STORAGE_KEYS)}.forEach(function(k){localStorage.removeItem(k)});}catch(e){}` +
     `gtag('set','ads_data_redaction',true);gtag('js',new Date());`;
 }
 
@@ -109,6 +127,7 @@ let configured = false;
 
 /** Sends a page_view for the current route. Called on the first load and after every client-side navigation. */
 export function trackPageView() {
+  statPageView();
   if (!enabled()) return;
   const page_location = sanitizedLocation();
   const page_title = document.title;
@@ -195,25 +214,25 @@ export function trackViewCart(items: CartItem[]) {
 /** A key for "this cart", so funnel steps are reported once per cart, not on every refresh. */
 const cartSignature = (items: CartItem[]) => items.map(i => `${i.key}:${i.quantity}`).sort().join("|");
 
+/** Last cart reported per funnel step. In memory only (no browser storage), so a full reload may report again. */
+const reportedCart = new Map<string, string>();
+
 function oncePerCart(step: string, items: CartItem[]) {
-  try {
-    const key = `ga_${step}`;
-    const sig = cartSignature(items);
-    if (sessionStorage.getItem(key) === sig) return false;
-    sessionStorage.setItem(key, sig);
-  } catch { /* storage unavailable: report anyway */ }
+  const sig = cartSignature(items);
+  if (reportedCart.get(step) === sig) return false;
+  reportedCart.set(step, sig);
   return true;
 }
 
 export function trackBeginCheckout(items: CartItem[]) {
-  if (!enabled() || !items.length || !oncePerCart("begin_checkout", items)) return;
+  if (!active() || !items.length || !oncePerCart("begin_checkout", items)) return;
   const gaItems = items.map(i => toGaItem(i));
   send("begin_checkout", { currency: CURRENCY, value: itemsValue(gaItems), items: gaItems });
 }
 
 /** Delivery details were given (or taken from the account). Only the delivery type is reported, never the address. */
 export function trackAddShippingInfo(items: CartItem[], freeDelivery: boolean) {
-  if (!enabled() || !items.length || !oncePerCart("add_shipping_info", items)) return;
+  if (!active() || !items.length || !oncePerCart("add_shipping_info", items)) return;
   const gaItems = items.map(i => toGaItem(i));
   send("add_shipping_info", {
     currency: CURRENCY,
@@ -228,17 +247,10 @@ export function trackCheckoutError() {
   send("checkout_error", { currency: CURRENCY });
 }
 
-const REPORTED_PURCHASES_KEY = "ga_reported_purchases";
-
-/** True the first time a transaction id is seen in this browser; later calls (retries, double clicks) get false. */
-function claimTransaction(transactionId: string): boolean {
-  try {
-    const seen: string[] = JSON.parse(localStorage.getItem(REPORTED_PURCHASES_KEY) ?? "[]");
-    if (seen.includes(transactionId)) return false;
-    localStorage.setItem(REPORTED_PURCHASES_KEY, JSON.stringify([...seen, transactionId].slice(-50)));
-  } catch { /* storage unavailable: the in-memory guard below still prevents doubles on this page */ }
-  return true;
-}
+/**
+ * Order numbers already reported on this page (retries, double clicks). In memory only: no browser storage.
+ * Online sales on the dashboard come from the order tables, so a repeat here can't double-count revenue there.
+ */
 const reportedThisPage = new Set<string>();
 
 /**
@@ -259,9 +271,12 @@ export function trackPurchase(args: {
   shipping: number;
   coupon?: string | null;
 }) {
-  if (!enabled() || !args.transactionId || reportedThisPage.has(args.transactionId)) return;
+  if (!active() || !args.transactionId || reportedThisPage.has(args.transactionId)) return;
   reportedThisPage.add(args.transactionId);
-  if (!claimTransaction(args.transactionId)) return;
+  statPurchase(args.transactionId);
+  // The funnel steps start over for the next order.
+  reportedCart.clear();
+  if (!enabled()) return;
 
   const value = round(Math.max(0, args.netTotal));
   const shipping = round(Math.max(0, args.shipping));
@@ -284,8 +299,6 @@ export function trackPurchase(args: {
     ...(args.coupon ? { coupon: args.coupon } : {}),
     items,
   });
-  // The funnel steps start over for the next order.
-  try { sessionStorage.removeItem("ga_begin_checkout"); sessionStorage.removeItem("ga_add_shipping_info"); } catch { /* ignore */ }
 }
 
 // ─── Search & promotions ──────────────────────────────────────────────────────
