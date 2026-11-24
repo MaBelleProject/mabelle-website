@@ -90,7 +90,7 @@ export default async function HomePage() {
         <BrandGrid brands={brands} countries={brandCountries(products)} />
       </div>
 
-      {/* 10. All Products (first 8, in the same order as the full list) */}
+      {/* 10. All Products (first 8, in the same order as the full list ) */}
       <HorizontalRow title="All Products" viewAllHref="/products">
         {featured.map(p => <ProductCard key={p.id} product={p} compact />)}
       </HorizontalRow>
