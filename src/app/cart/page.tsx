@@ -3,7 +3,7 @@
 import OfferPicker, { RecommendedBadge } from "@/components/offer-picker";
 import { cartItemHref, useCart } from "@/context/cart-context";
 import { hasFreeDelivery, useCustomer } from "@/context/customer-context";
-import { fileUrl, storefrontApi } from "@/lib/api";
+import { fileUrl, storefrontApi, type StorefrontDeliveryCity } from "@/lib/api";
 import { useCartQuote } from "@/lib/use-cart-quote";
 import { Minus, Plus, ShoppingBag, Star, Tag, Trash2 } from "lucide-react";
 import Link from "next/link";
@@ -14,14 +14,26 @@ import BackButton from "@/components/back-button";
 export default function CartPage() {
   const { items, update, maxQtyFor, remove, subtotal, selectedOfferId, selectOffer, promoPicked, selectPromo, cartReady } = useCart();
   const { customer, customerReady } = useCustomer();
-  const { quote } = useCartQuote(items, { customerId: customer?.id, selectedOfferId, promoPicked, skip: !customerReady });
-  const [deliveryCharge, setDeliveryCharge] = useState(0);
+  const [deliveryCities, setDeliveryCities] = useState<StorefrontDeliveryCity[]>([]);
 
   useEffect(() => {
-    storefrontApi.settings().then(s => {
-      if (s?.deliveryCharge) setDeliveryCharge(parseFloat(s.deliveryCharge));
-    }).catch(() => { });
+    storefrontApi.deliveryCities().then(setDeliveryCities).catch(() => {});
   }, []);
+
+  // Look up the delivery fee for the customer's saved city (if logged in with a saved city).
+  const customerCity = customer?.city ?? null;
+  const cityRecord = customerCity
+    ? deliveryCities.find(c => c.name.toLowerCase() === customerCity.toLowerCase())
+    : null;
+  const knownDeliveryFee = cityRecord?.deliveryFee ? parseFloat(cityRecord.deliveryFee) : null;
+
+  const { quote } = useCartQuote(items, {
+    customerId: customer?.id,
+    selectedOfferId,
+    promoPicked,
+    skip: !customerReady,
+    city: customerCity ?? undefined,
+  });
 
   // GA4 view_cart, once per visit to the cart page (after the saved cart has loaded).
   const viewCartSent = useRef(false);
@@ -54,11 +66,16 @@ export default function CartPage() {
   const freeDelivery = quote?.freeDelivery ?? hasFreeDelivery(customer);
   const shownSubtotal = quote?.subtotal ?? subtotal;
   // Delivery is kept outside the order's net total; the total to pay is netTotal + delivery left after offers.
-  const delivery = quote && !freeDelivery ? quote.deliveryCharge : deliveryCharge;
-  const deliveryDue = freeDelivery ? 0 : (quote ? quote.deliveryDue : deliveryCharge);
-  const total = quote
-    ? freeDelivery ? quote.totalDue - quote.deliveryDue : quote.totalDue
-    : subtotal + (freeDelivery ? 0 : deliveryCharge);
+  const delivery = quote && !freeDelivery ? quote.deliveryCharge : (knownDeliveryFee ?? 0);
+  const deliveryDue = freeDelivery ? 0 : (quote ? quote.deliveryDue : (knownDeliveryFee ?? 0));
+  // City is "known" only when there's an actual location to price delivery for.
+  // !!quote alone is not enough — a guest quote is fetched without a city and falls back to the settings charge.
+  const cityKnown = freeDelivery || knownDeliveryFee !== null || (!!quote && customerCity !== null);
+  const total = !cityKnown
+    ? shownSubtotal
+    : quote
+      ? freeDelivery ? quote.totalDue - quote.deliveryDue : quote.totalDue
+      : subtotal + (freeDelivery ? 0 : (knownDeliveryFee ?? 0));
   const itemOffers = quote?.offers.filter(o => o.offerType !== "free_delivery") ?? [];
   const deliveryOffer = quote?.offers.find(o => o.offerType === "free_delivery");
   const recommendedId = quote?.availableOffers.find(o => o.recommended)?.offerId;
@@ -177,21 +194,25 @@ export default function CartPage() {
               )}
             </div>
           ))}
-          <div className="flex justify-between text-sm text-stone-400 mb-6">
+          <div className={`flex ${cityKnown ? "justify-between" : "flex-col gap-0.5"} text-sm text-stone-400 mb-6`}>
             <span>
               Delivery
               {freeDelivery && <span className="text-green-600"> · {isNonProfit ? "Non-profit" : "Free delivery"}</span>}
               {!freeDelivery && deliveryOffer && <span className="text-green-600"> · {deliveryOffer.offerName}{recommendedId === deliveryOffer.offerId && <RecommendedBadge />}</span>}
             </span>
-            <span>
-              {freeDelivery
-                ? delivery > 0
-                  ? <><span className="line-through mr-1">${delivery.toFixed(2)}</span><span className="text-green-600">Free</span></>
-                  : <span className="text-green-600">Free</span>
-                : deliveryDue < delivery
-                  ? <><span className="line-through mr-1">${delivery.toFixed(2)}</span><span className="text-green-600">{deliveryDue > 0 ? `$${deliveryDue.toFixed(2)}` : "Free"}</span></>
-                  : delivery > 0 ? `$${delivery.toFixed(2)}` : "Free"}
-            </span>
+            {cityKnown ? (
+              <span>
+                {freeDelivery
+                  ? delivery > 0
+                    ? <><span className="line-through mr-1">${delivery.toFixed(2)}</span><span className="text-green-600">Free</span></>
+                    : <span className="text-green-600">Free</span>
+                  : deliveryDue < delivery
+                    ? <><span className="line-through mr-1">${delivery.toFixed(2)}</span><span className="text-green-600">{deliveryDue > 0 ? `$${deliveryDue.toFixed(2)}` : "Free"}</span></>
+                    : delivery > 0 ? `$${delivery.toFixed(2)}` : "Free"}
+              </span>
+            ) : (
+              <span className="text-xs">Delivery fee will be calculated based on your location.</span>
+            )}
           </div>
           {showPoints && (
             <div className="mb-6 text-sm">
@@ -202,7 +223,7 @@ export default function CartPage() {
             </div>
           )}
           <div className="flex justify-between font-bold text-stone-800 text-base border-t border-[var(--sage-light)] pt-4 mb-6">
-            <span>Total</span>
+            <span>{cityKnown ? "Total" : "Subtotal"}</span>
             <span>${total.toFixed(2)}</span>
           </div>
           <Link

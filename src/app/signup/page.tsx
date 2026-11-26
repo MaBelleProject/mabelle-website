@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ShoppingBag, Eye, EyeOff } from "lucide-react";
 import { useCustomer } from "@/context/customer-context";
 import { emailOrUndefined, optionalEmailError } from "@/lib/email";
+import { storefrontApi, type StorefrontDeliveryCity } from "@/lib/api";
+import CitySelect from "@/components/city-select";
 import Link from "next/link";
 
 export default function SignupPage() {
@@ -15,6 +17,11 @@ export default function SignupPage() {
   const [busy, setBusy] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [apiError, setApiError] = useState("");
+  const [deliveryCities, setDeliveryCities] = useState<StorefrontDeliveryCity[]>([]);
+
+  useEffect(() => {
+    storefrontApi.deliveryCities().then(setDeliveryCities).catch(() => {});
+  }, []);
 
   const set = (field: string, value: string) => {
     setForm(prev => ({ ...prev, [field]: value }));
@@ -27,6 +34,7 @@ export default function SignupPage() {
     if (!form.phone.trim()) e.phone = "Phone number is required";
     const emailError = optionalEmailError(form.email);
     if (emailError) e.email = emailError;
+    if (!form.city) e.city = "City is required";
     if (!form.password) e.password = "Password is required";
     else if (form.password.length < 6) e.password = "Password must be at least 6 characters";
     if (form.password !== form.confirmPassword) e.confirmPassword = "Passwords do not match";
@@ -101,18 +109,24 @@ export default function SignupPage() {
           />
         </Field>
 
+        <Field label="City *" error={errors.city}>
+          <CitySelect
+            cities={deliveryCities}
+            value={form.city}
+            onChange={v => set("city", v)}
+            hasError={!!errors.city}
+            showFee={false}
+          />
+        </Field>
+
         <div className="grid grid-cols-2 gap-3">
-          <Field label="City" error={errors.city}>
-            <input type="text" value={form.city} onChange={e => set("city", e.target.value)} placeholder="Your city" className={inputCls(!!errors.city)} />
+          <Field label="Delivery Address" error={errors.address}>
+            <input type="text" value={form.address} onChange={e => set("address", e.target.value)} placeholder="Street, building… (optional)" className={inputCls(!!errors.address)} />
           </Field>
           <Field label="Floor / Apt" error={errors.floor}>
             <input type="text" value={form.floor} onChange={e => set("floor", e.target.value)} placeholder="e.g. 3rd floor" className={inputCls(!!errors.floor)} />
           </Field>
         </div>
-
-        <Field label="Delivery Address" error={errors.address}>
-          <input type="text" value={form.address} onChange={e => set("address", e.target.value)} placeholder="Street, building, landmark… (optional)" className={inputCls(!!errors.address)} />
-        </Field>
 
         <Field label="Password *" error={errors.password}>
           <div className="relative">

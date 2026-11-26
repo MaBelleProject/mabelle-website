@@ -8,6 +8,8 @@ import Link from "next/link";
 import { ArrowLeft, LogIn, LogOut, Eye, EyeOff } from "lucide-react";
 import { optionalEmailError } from "@/lib/email";
 import { trackBeginCheckout } from "@/lib/analytics";
+import { storefrontApi, type SavedAddress, type StorefrontDeliveryCity } from "@/lib/api";
+import CitySelect from "@/components/city-select";
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -22,12 +24,26 @@ export default function CheckoutPage() {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showPassword, setShowPassword] = useState(false);
+  const [deliveryCities, setDeliveryCities] = useState<StorefrontDeliveryCity[]>([]);
+
+  const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
 
   const [showLoginForm, setShowLoginForm] = useState(false);
   const [loginPhone, setLoginPhone] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [loginError, setLoginError] = useState("");
   const [loginBusy, setLoginBusy] = useState(false);
+
+  // Load active delivery cities for the dropdown
+  useEffect(() => {
+    storefrontApi.deliveryCities().then(setDeliveryCities).catch(() => {});
+  }, []);
+
+  // Load saved addresses for logged-in customers (used for quick-pick in the form)
+  useEffect(() => {
+    if (!customer) return;
+    storefrontApi.getAddresses(customer.id).then(setSavedAddresses).catch(() => {});
+  }, [customer?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Redirect if cart is empty
   useEffect(() => {
@@ -69,13 +85,16 @@ export default function CheckoutPage() {
       sessionStorage.removeItem("checkout_edit");
       return; // show the form so the user can edit their delivery details
     }
+    const savedCity = customer.city ?? "";
+    const cityFeeRecord = deliveryCities.find(c => c.name.toLowerCase() === savedCity.toLowerCase());
     sessionStorage.setItem("checkout_info", JSON.stringify({
       name: customer.name,
       phone: customer.phone,
       email: customer.email ?? "",
       address: customer.address,
-      city: customer.city ?? "",
+      city: savedCity,
       floor: customer.floor ?? "",
+      deliveryFee: cityFeeRecord?.deliveryFee ?? null,
       paymentMethod: "cash",
       remark: "",
       customerId: customer.id,
@@ -93,8 +112,13 @@ export default function CheckoutPage() {
     if (errors[field]) setErrors(prev => { const n = { ...prev }; delete n[field]; return n; });
   };
 
+  // The delivery fee for the selected city (null = not in zone list; fall back to default on the backend)
+  const selectedCityRecord = deliveryCities.find(c => c.name === form.city);
+  const selectedDeliveryFee = selectedCityRecord?.deliveryFee ?? null;
+
   const validate = () => {
     const e: Record<string, string> = {};
+    if (!form.city) e.city = "City is required";
     if (!form.address.trim()) e.address = "Delivery address is required";
     if (!customer) {
       if (!form.name.trim()) e.name = "Name is required";
@@ -140,6 +164,7 @@ export default function CheckoutPage() {
       address: form.address,
       city: form.city,
       floor: form.floor,
+      deliveryFee: selectedDeliveryFee,
       paymentMethod: "cash",
       remark: form.remark,
       password: !customer ? form.password : undefined,
@@ -242,10 +267,48 @@ export default function CheckoutPage() {
           </>
         )}
 
+        {/* Saved address quick-pick — logged-in customers only */}
+        {customer && savedAddresses.length > 0 && (
+          <div className="bg-[var(--sage-light)] rounded-xl px-4 py-3">
+            <p className="text-xs font-medium text-stone-600 mb-2">Pick from saved addresses</p>
+            <div className="flex flex-col gap-2">
+              {savedAddresses.map(addr => (
+                <button
+                  key={addr.id}
+                  type="button"
+                  onClick={() => {
+                    set("city", addr.city);
+                    set("address", addr.address);
+                    set("floor", addr.floor ?? "");
+                  }}
+                  className="text-left px-3 py-2.5 rounded-xl bg-white hover:border-[var(--brand)] border border-stone-200 transition"
+                >
+                  <div className="flex items-center gap-1.5 text-sm">
+                    <span className="font-medium text-stone-700">{addr.city}</span>
+                    {addr.isDefault && (
+                      <span className="text-[9px] font-bold uppercase tracking-wide text-[var(--brand)] bg-white border border-[var(--brand)] px-1.5 py-0.5 rounded-full">
+                        Default
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-stone-400 mt-0.5">
+                    {addr.address}{addr.floor ? ` · ${addr.floor}` : ""}
+                  </p>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Delivery address — always shown when form is visible */}
         <div className="grid sm:grid-cols-2 gap-4">
-          <Field label="City" error={errors.city}>
-            <input type="text" value={form.city} onChange={e => set("city", e.target.value)} placeholder="Your city" className={inputCls(!!errors.city)} />
+          <Field label="City *" error={errors.city}>
+            <CitySelect
+              cities={deliveryCities}
+              value={form.city}
+              onChange={v => set("city", v)}
+              hasError={!!errors.city}
+            />
           </Field>
           <Field label="Floor / Apt" error={errors.floor}>
             <input type="text" value={form.floor} onChange={e => set("floor", e.target.value)} placeholder="e.g. 3rd floor, apt 12" className={inputCls(!!errors.floor)} />
@@ -295,6 +358,7 @@ function inputCls(hasError: boolean) {
     hasError ? "border-red-300 focus:border-red-400 focus:ring-red-200" : "border-stone-200 focus:border-[var(--brand)] focus:ring-[var(--brand)]"
   }`;
 }
+
 
 function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
   return (

@@ -101,6 +101,22 @@ export interface ProductDetail extends Product {
   }[];
 }
 
+export interface StorefrontDeliveryCity { name: string; deliveryFee: string | null; zoneName: string | null; }
+
+export interface SavedAddress {
+  id: number;
+  customerId: number;
+  name: string | null;
+  phone: string | null;
+  address: string;
+  city: string;
+  floor: string | null;
+  notes: string | null;
+  isDefault: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Settings {
   id: number | null; projectId: number;
   companyName: string | null; slogan: string | null; companyLogo: string | null;
@@ -374,17 +390,18 @@ export const storefrontApi = {
   giftPackaging: () => request<GiftPackaging[]>('/gifts/packaging'),
   giftCards: () => request<GiftCard[]>('/gifts/cards'),
   offers: () => request<Offer[]>('/offers'),
-  quote: (data: { customerId?: number; procodeId?: number; selectedOfferId?: number; selectedDiscount?: 'offer' | 'promo'; loyaltyPointsUsed?: number; items: OrderLine[] }) =>
+  quote: (data: { customerId?: number; procodeId?: number; selectedOfferId?: number; selectedDiscount?: 'offer' | 'promo'; loyaltyPointsUsed?: number; city?: string; items: OrderLine[] }) =>
     request<OrderQuote>('/orders/quote', { method: 'POST', body: JSON.stringify(data) }),
   settings: () => request<Settings | null>('/settings'),
+  deliveryCities: () => request<StorefrontDeliveryCity[]>('/delivery-cities'),
   validatePromo: (code: string, phone?: string) =>
     request<{ valid: boolean; promo: PromoCode | null; message?: string }>(
       `/promo-codes/validate?code=${encodeURIComponent(code)}${phone ? `&phone=${encodeURIComponent(phone)}` : ''}`
     ),
   createOrder: (data: {
     customerId?: number;
-    newCustomer?: { name: string; phone: string; email?: string; address?: string; password?: string };
-    phoneNumber?: string; address?: string; paymentMethod: string; remark?: string;
+    newCustomer?: { name: string; phone: string; email?: string; address?: string; city?: string; password?: string };
+    phoneNumber?: string; address?: string; city?: string; paymentMethod: string; remark?: string;
     procodeId?: number; selectedOfferId?: number; selectedDiscount?: 'offer' | 'promo'; loyaltyPointsUsed?: number; items: OrderLine[];
     orderType?: string;
   }) => request<{ id: number; orderNumber: string; netTotal: string; totalDue: string }>('/orders', {
@@ -433,4 +450,16 @@ export const storefrontApi = {
     request<{ id: number; status: string }>(`/general-reviews/${id}?customerId=${customerId}`, { method: 'PATCH', body: JSON.stringify(data) }),
   getCustomerGeneralReviews: (customerId: number) =>
     request<MyGeneralReview[]>(`/customers/${customerId}/general-reviews`),
+
+  // ─── Saved addresses ───────────────────────────────────────────────────────
+  getAddresses: (customerId: number) =>
+    request<SavedAddress[]>(`/customers/${customerId}/addresses`),
+  createAddress: (customerId: number, data: { name?: string; phone?: string; address: string; city: string; floor?: string; notes?: string; isDefault?: boolean }) =>
+    request<SavedAddress>(`/customers/${customerId}/addresses`, { method: 'POST', body: JSON.stringify(data) }),
+  updateAddress: (customerId: number, addressId: number, data: { name?: string; phone?: string; address?: string; city?: string; floor?: string; notes?: string; isDefault?: boolean }) =>
+    request<SavedAddress>(`/customers/${customerId}/addresses/${addressId}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  deleteAddress: (customerId: number, addressId: number) =>
+    request<{ success: boolean }>(`/customers/${customerId}/addresses/${addressId}`, { method: 'DELETE' }),
+  setDefaultAddress: (customerId: number, addressId: number) =>
+    request<SavedAddress>(`/customers/${customerId}/addresses/${addressId}/set-default`, { method: 'POST' }),
 };

@@ -14,6 +14,8 @@ interface CheckoutInfo {
   name: string; phone: string; email: string; address: string;
   city: string; floor: string; paymentMethod: string; remark: string;
   password?: string; customerId?: number; isNonProfit?: boolean; freeDelivery?: boolean;
+  /** Zone-based delivery fee stored when the customer selected their city. */
+  deliveryFee?: string | null;
 }
 
 /** Rough preview until the server quote arrives (which also applies the offer rules): bundles never get a promo code. */
@@ -32,6 +34,7 @@ export default function ReviewPage() {
   const { login } = useCustomer();
   const [info, setInfo] = useState<CheckoutInfo | null>(null);
   const [deliveryCharge, setDeliveryCharge] = useState(0);
+  const [infoCity, setInfoCity] = useState<string | undefined>(undefined);
   const [promoInput, setPromoInput] = useState("");
   const [promo, setPromo] = useState<PromoCode | null>(null);
   const [promoError, setPromoError] = useState("");
@@ -46,7 +49,7 @@ export default function ReviewPage() {
   const [maxPoints, setMaxPoints] = useState(0);
   const requestedPoints = usePoints ? (pointsInput === null ? maxPoints : Math.max(0, Math.floor(Number(pointsInput)) || 0)) : 0;
   // Exact totals from the server: offers applied automatically, bundle / gift prices
-  const { quote, error: quoteError } = useCartQuote(items, { customerId: info?.customerId, procodeId: promo?.id, selectedOfferId, promoPicked, loyaltyPointsUsed: requestedPoints });
+  const { quote, error: quoteError } = useCartQuote(items, { customerId: info?.customerId, procodeId: promo?.id, selectedOfferId, promoPicked, loyaltyPointsUsed: requestedPoints, city: infoCity });
   const quotedMax = quote?.maxRedeemablePoints;
   useEffect(() => { if (quotedMax !== undefined) setMaxPoints(quotedMax); }, [quotedMax]);
 
@@ -63,6 +66,8 @@ export default function ReviewPage() {
       const saved = JSON.parse(raw);
       setInfo(saved);
       if (saved.remark) setOrderNote(String(saved.remark).slice(0, 200));
+      if (saved.city) setInfoCity(saved.city);
+      if (saved.deliveryFee) setDeliveryCharge(parseFloat(saved.deliveryFee));
     } catch { router.replace("/checkout"); setRedirecting(true); }
   }, [cartReady]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -75,9 +80,11 @@ export default function ReviewPage() {
     trackAddShippingInfo(items, !!(info?.freeDelivery ?? info?.isNonProfit));
   }, [hasInfo]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Pre-quote delivery charge fallback; the quote (with city) overrides this once it loads.
   useEffect(() => {
     storefrontApi.settings().then(s => {
-      if (s?.deliveryCharge) setDeliveryCharge(parseFloat(s.deliveryCharge));
+      const fee = s?.deliveryCharge ? parseFloat(s.deliveryCharge) : 0;
+      if (fee > 0) setDeliveryCharge(prev => prev > 0 ? prev : fee);
     }).catch(() => { });
   }, []);
 
@@ -133,6 +140,7 @@ export default function ReviewPage() {
       const orderPayload: Parameters<typeof storefrontApi.createOrder>[0] = {
         phoneNumber: info.phone,
         address: fullAddress,
+        city: info.city || undefined,
         paymentMethod: info.paymentMethod,
         remark: orderNote.trim() || undefined,
         procodeId: promo?.id,
@@ -152,6 +160,7 @@ export default function ReviewPage() {
           phone: info.phone,
           email: info.email || undefined,
           address: fullAddress,
+          city: info.city || undefined,
           password: info.password || undefined,
         };
       }

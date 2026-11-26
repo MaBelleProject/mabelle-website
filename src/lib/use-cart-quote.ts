@@ -20,6 +20,8 @@ export function useCartQuote(
     promoPicked?: boolean;
     skip?: boolean;
     loyaltyPointsUsed?: number;
+    /** City name for zone-based delivery fee lookup. */
+    city?: string;
   } = {}
 ) {
   const request = useMemo(
@@ -31,6 +33,7 @@ export function useCartQuote(
             selectedOfferId: opts.promoPicked ? undefined : opts.selectedOfferId ?? undefined,
             selectedDiscount: opts.promoPicked ? ("promo" as const) : opts.selectedOfferId ? ("offer" as const) : undefined,
             loyaltyPointsUsed: opts.loyaltyPointsUsed || undefined,
+            city: opts.city || undefined,
             items: items.map(toOrderLine),
           }
         : null,
@@ -42,6 +45,7 @@ export function useCartQuote(
       opts.promoPicked,
       opts.skip,
       opts.loyaltyPointsUsed,
+      opts.city,
     ]
   );
 
