@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { Check, Minus, Plus, ShoppingCart, Layers } from "lucide-react";
-import type { Bundle, BundleReplacementProduct } from "@/lib/api";
+import type { Bundle } from "@/lib/api";
 import { fileUrl } from "@/lib/api";
-import { useCart, bundleKey, maxLineQty } from "@/context/cart-context";
+import { useCart, bundleKey, maxLineQty, unitsInCart } from "@/context/cart-context";
 
 interface BundleSwap { bundleItemId: number; productId: number }
 
@@ -83,11 +84,38 @@ export function BundleCartControl({ bundle, size = "sm" }: { bundle: Bundle; siz
   );
 }
 
-/** Full add-to-cart control with per-item swap selection for the bundle detail page. */
-export function BundleCartControlWithSwaps({ bundle }: { bundle: Bundle }) {
-  const { items, add, update } = useCart();
+/** Only the swaps the bundle still allows (a saved cart line may predate a change to the bundle). */
+function validSwaps(b: Bundle, swaps: BundleSwap[] | undefined): BundleSwap[] {
+  return (swaps ?? []).filter((s) => {
+    const item = b.items.find((i) => i.id === s.bundleItemId);
+    return !!item && s.productId !== item.productId && item.replacements.some((r) => r.productId === s.productId);
+  });
+}
+
+/**
+ * Full add-to-cart control with per-item swap selection for the bundle detail page.
+ * With `editKey` (a bundle line of the cart) it loads that line's swaps and quantity and updates it in place.
+ */
+export function BundleCartControlWithSwaps({ bundle, editKey }: { bundle: Bundle; editKey?: string }) {
+  const { items, add, update, replace, cartReady } = useCart();
+  const router = useRouter();
   const [swaps, setSwaps] = useState<BundleSwap[]>([]);
+  const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
+  const [updated, setUpdated] = useState(false);
+
+  const editLine = editKey ? items.find((i) => i.key === editKey && i.itemType === "bundle" && i.bundleId === bundle.id) : undefined;
+  // Once saved, the edited line has a new key; stay in edit mode until we leave for the cart.
+  const isEditing = !!editLine || updated;
+
+  // Once the cart has loaded, start from the edited line's products and quantity.
+  const editApplied = useRef(false);
+  useEffect(() => {
+    if (editApplied.current || !cartReady || !editLine) return;
+    editApplied.current = true;
+    setSwaps(validSwaps(bundle, editLine.bundleSelections));
+    setQuantity(Math.max(1, editLine.quantity));
+  }, [cartReady, editLine, bundle]);
 
   /** The swaps with one item set to `productId` (choosing the default removes its swap). */
   const swapsWith = (bundleItemId: number, productId: number) => {
@@ -95,13 +123,40 @@ export function BundleCartControlWithSwaps({ bundle }: { bundle: Bundle }) {
     const defaultId = bundle.items.find((i) => i.id === bundleItemId)?.productId;
     return productId === defaultId ? without : [...without, { bundleItemId, productId }];
   };
-  // How many of a selection the stock allows, once the cart's other lines (products, bundles, gifts) are counted.
-  const maxFor = (s: BundleSwap[]) => maxLineQty(items, bundleCartItem(bundle, s));
+
+  // The cart lines that hold stock against this selection: all of them, except the line being edited
+  // (its units are given back when it is replaced, so they are not counted twice).
+  const others = editLine ? items.filter((i) => i.key !== editLine.key) : items;
+
+  // ── Stock, per product ──
+  const stockOf = (productId: number) => {
+    for (const i of bundle.items) {
+      if (i.productId === productId) return i.stock;
+      const r = i.replacements.find((x) => x.productId === productId);
+      if (r) return r.stock;
+    }
+    return 0;
+  };
+  /** Units of a product one bundle of a selection takes (the same product may fill more than one item). */
+  const unitsPerBundle = (s: BundleSwap[], productId: number) =>
+    bundle.items.reduce((n, i) => n + ((s.find((x) => x.bundleItemId === i.id)?.productId ?? i.productId) === productId ? i.quantity : 0), 0);
+  /** Bundles of a selection a product's stock can still make, after the cart's other lines. */
+  const bundlesFrom = (s: BundleSwap[], productId: number) => {
+    const per = unitsPerBundle(s, productId);
+    return per > 0 ? Math.floor(Math.max(0, stockOf(productId) - unitsInCart(others, productId)) / per) : Number.MAX_SAFE_INTEGER;
+  };
 
   const cartKey = bundleSwapKey(bundle.id, swaps);
-  const qty = items.find((i) => i.key === cartKey)?.quantity ?? 0;
-  const availableStock = maxFor(swaps);
-  const noStock = availableStock <= 0 && qty === 0;
+  // A line already holding this exact selection (when editing, another line than the edited one).
+  const sameLineQty = others.find((i) => i.key === cartKey)?.quantity ?? 0;
+  // Most more of this selection the cart can take (with what the same selection already has).
+  const room = Math.max(0, maxLineQty(others, bundleCartItem(bundle, swaps)) - sameLineQty);
+
+  const qty = isEditing ? 0 : sameLineQty;
+  // Units the action asks for: one more when adding, the chosen quantity when updating.
+  const wanted = isEditing ? quantity : 1;
+  const noStock = !isEditing && room <= 0 && qty === 0;
+  const overStock = isEditing && quantity > room;
 
   const setSwap = (bundleItemId: number, productId: number) => {
     setAdded(false);
@@ -112,6 +167,13 @@ export function BundleCartControlWithSwaps({ bundle }: { bundle: Bundle }) {
     if (noStock) return;
     add(bundleCartItem(bundle, swaps));
     setAdded(true);
+  };
+
+  const updateCart = () => {
+    if (!editLine || quantity < 1 || overStock) return;
+    replace(editLine.key, bundleCartItem(bundle, swaps), quantity);
+    setUpdated(true);
+    router.push("/cart");
   };
 
   return (
@@ -127,6 +189,9 @@ export function BundleCartControlWithSwaps({ bundle }: { bundle: Bundle }) {
               ? { name: item.productName, imageUrl: item.imageUrl, sellingPrice: item.sellingPrice }
               : item.replacements.find((r) => r.productId === chosenId);
             const img = fileUrl(chosen?.imageUrl);
+            // This item's own product, checked on its own: shown only when it is what holds the selection back.
+            const chosenCan = bundlesFrom(swaps, chosenId);
+            const chosenShort = !updated && (isEditing || qty === 0) && chosenCan < wanted;
             const allOptions: { productId: number; name: string; imageUrl?: string | null; sellingPrice: string }[] = [
               { productId: item.productId, name: item.productName, imageUrl: item.imageUrl, sellingPrice: item.sellingPrice },
               ...item.replacements,
@@ -143,6 +208,11 @@ export function BundleCartControlWithSwaps({ bundle }: { bundle: Bundle }) {
                       {chosen?.name ?? item.productName}
                     </Link>
                     <p className="text-xs text-stone-400">${parseFloat(chosen?.sellingPrice ?? item.sellingPrice).toFixed(2)} · {item.quantity} included</p>
+                    {chosenShort && (
+                      <p className="text-xs text-red-500 mt-0.5">
+                        Not enough stock{isEditing && chosenCan > 0 ? ` — enough for ${chosenCan} bundle${chosenCan === 1 ? "" : "s"}` : ""}
+                      </p>
+                    )}
                   </div>
                   <span className="text-sm font-semibold text-stone-700 shrink-0">× {item.quantity}</span>
                 </div>
@@ -150,8 +220,9 @@ export function BundleCartControlWithSwaps({ bundle }: { bundle: Bundle }) {
                 {allOptions.length > 1 && (
                   <div className="flex flex-wrap gap-1.5 sm:pl-[52px]">
                     {allOptions.map((opt) => {
-                      // Not enough of this product left (with the rest of the cart) to make even one bundle
-                      const short = opt.productId !== chosenId && maxFor(swapsWith(item.id, opt.productId)) <= 0;
+                      // Not enough of THIS product left (with the rest of the cart) to make even one bundle.
+                      // Only the option's own product is checked, so another item running short never flags it.
+                      const short = opt.productId !== chosenId && bundlesFrom(swapsWith(item.id, opt.productId), opt.productId) < 1;
                       return (
                         <button
                           key={opt.productId}
@@ -179,8 +250,49 @@ export function BundleCartControlWithSwaps({ bundle }: { bundle: Bundle }) {
         Bundle price is fixed at <span className="font-semibold text-stone-600">${parseFloat(bundle.price).toFixed(2)}</span> regardless of your selection
       </p>
 
-      {/* Add to cart */}
-      {noStock ? (
+      {/* Update the edited cart line / add to cart */}
+      {isEditing ? (
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-1 bg-[var(--sage-light)] rounded-full p-0.5">
+              <button
+                type="button"
+                onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                disabled={quantity <= 1 || updated}
+                className="w-8 h-8 rounded-full bg-white shadow flex items-center justify-center hover:bg-[var(--brand-light)] transition disabled:opacity-40"
+                aria-label="Decrease"
+              >
+                <Minus className="w-3.5 h-3.5" />
+              </button>
+              <span className="w-8 text-center font-semibold">{quantity}</span>
+              <button
+                type="button"
+                onClick={() => setQuantity(quantity + 1)}
+                disabled={quantity >= room || updated}
+                className="w-8 h-8 rounded-full bg-[var(--brand)] text-white shadow flex items-center justify-center hover:bg-[var(--brand-dark)] transition disabled:opacity-40"
+                aria-label="Increase"
+              >
+                <Plus className="w-3.5 h-3.5" />
+              </button>
+            </div>
+            <button
+              type="button"
+              onClick={updateCart}
+              disabled={overStock || updated}
+              className="flex items-center justify-center gap-2 flex-1 min-w-[180px] py-3 rounded-full bg-[var(--brand)] hover:bg-[var(--brand-dark)] text-white font-semibold transition disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {updated ? <Check className="w-5 h-5" /> : <ShoppingCart className="w-5 h-5" />}
+              {updated ? "Updated!" : `Update Cart · $${(parseFloat(bundle.price) * quantity).toFixed(2)}`}
+            </button>
+          </div>
+          {overStock && !updated && (
+            <p className="text-sm font-medium text-stone-500 bg-[var(--sage-light)] rounded-full px-3 py-1 w-fit">
+              {room > 0 ? `Only ${room} available for this selection (counting your cart)` : "Not enough stock for this selection (counting your cart)"}
+            </p>
+          )}
+          <Link href="/cart" className="text-sm text-[var(--brand)] font-semibold hover:underline w-fit">Back to cart →</Link>
+        </div>
+      ) : noStock ? (
         <p className="text-sm font-medium text-stone-500 bg-[var(--sage-light)] rounded-full px-3 py-1 w-fit">
           {bundle.available <= 0 && !swaps.length ? "Out of stock" : "Not enough stock for this selection (counting your cart)"}
         </p>
@@ -193,7 +305,7 @@ export function BundleCartControlWithSwaps({ bundle }: { bundle: Bundle }) {
             <span className="w-8 text-center font-semibold">{qty}</span>
             <button
               onClick={() => update(cartKey, qty + 1)}
-              disabled={qty >= availableStock}
+              disabled={room <= 0}
               className="w-8 h-8 rounded-full bg-[var(--brand)] text-white shadow flex items-center justify-center hover:bg-[var(--brand-dark)] transition disabled:opacity-40"
               aria-label="Increase"
             >

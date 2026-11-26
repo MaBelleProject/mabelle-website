@@ -69,7 +69,8 @@ export const bundleKey = (bundleId: number) => `b-${bundleId}`;
 
 /** Where a cart line's own page is. */
 export const cartItemHref = (item: CartItem) =>
-  item.itemType === "bundle" ? `/bundles/${item.bundleId}`
+  // Bundle keys carry the swaps ("b-1-3:7,4:9"), so they are encoded for the query string.
+  item.itemType === "bundle" ? `/bundles/${item.bundleId}?edit=${encodeURIComponent(item.key)}`
   : item.itemType === "gift" ? (item.giftPackageId ? `/gifts/${item.giftPackageId}?edit=${item.key}` : `/gifts/create?edit=${item.key}`)
   : `/product/${item.productId}`;
 
@@ -81,6 +82,11 @@ interface CartContextValue {
   add: (item: NewItem, quantity?: number) => void;
   /** Sets a line's quantity; an increase is capped by the stock left after the cart's other lines. */
   update: (key: string, quantity: number) => void;
+  /**
+   * Replaces the line `oldKey` with `item` × `quantity`, in place (an edited bundle / gift). The old line's units are
+   * not counted against the new one; if another line already has the new key the two are merged.
+   */
+  replace: (oldKey: string, item: NewItem, quantity: number) => void;
   /** The most of this line the cart can hold now (see `maxLineQty`). */
   maxQtyFor: (key: string) => number;
   /** Units of a product still free: `stock` less what the cart's lines (but `exceptKey`) already take. */
@@ -200,6 +206,28 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const replace = (oldKey: string, item: NewItem, quantity: number) => {
+    selectOffer(null);
+    const itemType = item.itemType ?? "product";
+    const key = item.key ?? (itemType === "bundle" ? bundleKey(item.bundleId!) : productKey(item.productId!));
+    setItems(prev => {
+      const at = prev.findIndex(i => i.key === oldKey);
+      const rest = prev.filter(i => i.key !== oldKey);
+      // The edited line's own units are free again; the rest of the cart still counts.
+      const max = maxLineQty(rest, { ...item, key, itemType });
+      const same = rest.find(i => i.key === key);
+      if (same) {
+        // Same configuration as another line: one line, never more than the stock allows.
+        return rest.map(i => i.key === key ? { ...i, ...item, key, itemType, quantity: Math.max(i.quantity, Math.min(i.quantity + quantity, max)) } : i);
+      }
+      const qty = Math.min(quantity, max);
+      if (qty <= 0) return prev;
+      const line = { ...item, key, itemType, quantity: qty };
+      if (at < 0) return [...rest, line];
+      return [...rest.slice(0, at), line, ...rest.slice(at)];
+    });
+  };
+
   const maxQtyFor = (key: string) => {
     const line = items.find(i => i.key === key);
     return line ? maxLineQty(items, line) : 0;
@@ -219,7 +247,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const subtotal = items.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
 
   return (
-    <CartContext.Provider value={{ items, add, update, maxQtyFor, stockLeft, remove, clear, selectedOfferId, selectOffer, promoPicked, selectPromo, count, subtotal, cartReady: hydrated }}>
+    <CartContext.Provider value={{ items, add, update, replace, maxQtyFor, stockLeft, remove, clear, selectedOfferId, selectOffer, promoPicked, selectPromo, count, subtotal, cartReady: hydrated }}>
       {children}
     </CartContext.Provider>
   );

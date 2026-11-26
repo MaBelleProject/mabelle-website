@@ -9,7 +9,11 @@ import { Layers } from "lucide-react";
 import BackButton from "@/components/back-button";
 import TrackViewItem from "@/components/analytics/track-view-item";
 
-interface PageProps { params: Promise<{ id: string }> }
+interface PageProps {
+  params: Promise<{ id: string }>
+  /** `edit` = the cart line (key) being edited from the cart. */
+  searchParams?: Promise<{ edit?: string }>
+}
 
 export default function BundlePage(props: PageProps) {
   return (
@@ -30,8 +34,9 @@ export default function BundlePage(props: PageProps) {
   );
 }
 
-async function BundleContent({ params }: PageProps) {
+async function BundleContent({ params, searchParams }: PageProps) {
   const { id } = await params;
+  const editKey = searchParams ? (await searchParams).edit : undefined;
   const bundle = await cachedStorefrontApi.bundle(parseInt(id)).catch(() => null);
   if (!bundle) notFound();
 
@@ -88,7 +93,7 @@ async function BundleContent({ params }: PageProps) {
           )}
 
           <div className="mt-2">
-            <BundleCartControlWithSwaps bundle={bundle} />
+            <BundleCartControlWithSwaps bundle={bundle} editKey={editKey} />
           </div>
         </div>
       </div>
