@@ -70,7 +70,7 @@ export const bundleKey = (bundleId: number) => `b-${bundleId}`;
 /** Where a cart line's own page is. */
 export const cartItemHref = (item: CartItem) =>
   item.itemType === "bundle" ? `/bundles/${item.bundleId}`
-  : item.itemType === "gift" ? (item.giftPackageId ? `/gifts/${item.giftPackageId}` : "/gifts/create")
+  : item.itemType === "gift" ? (item.giftPackageId ? `/gifts/${item.giftPackageId}?edit=${item.key}` : `/gifts/create?edit=${item.key}`)
   : `/product/${item.productId}`;
 
 type NewItem = Omit<CartItem, "quantity" | "key" | "itemType"> & { key?: string; itemType?: CartItemType };

@@ -4,16 +4,14 @@ import { cachedStorefrontApi } from "@/lib/cached-storefront";
 import GiftCustomizer from "../[id]/gift-customizer";
 import BackButton from "@/components/back-button";
 import TrackViewItem from "@/components/analytics/track-view-item";
-import { cacheLife } from "next/cache";
 
-export default async function CreateGiftPage() {
-  'use cache';
-  cacheLife('minutes');
+export default async function CreateGiftPage({ searchParams }: { searchParams?: Promise<{ edit?: string }> }) {
   const [packagings, allProducts, giftCards] = await Promise.all([
     cachedStorefrontApi.giftPackaging().catch(() => []),
     cachedStorefrontApi.products().catch(() => []),
     cachedStorefrontApi.giftCards().catch(() => []),
   ]);
+  const editKey = searchParams ? (await searchParams).edit : undefined;
 
   return (
     <div className="max-w-6xl mx-auto px-2 sm:px-4 py-8">
@@ -43,7 +41,7 @@ export default async function CreateGiftPage() {
         <div className="flex flex-col gap-4">
           <h1 className="text-2xl sm:text-3xl font-bold text-stone-800">Create Your Own Gift</h1>
           <p className="text-stone-500 text-sm">Pick exactly what you want — no restrictions, your perfect gift.</p>
-          <GiftCustomizer gift={null} packagings={packagings} allProducts={allProducts} giftCardImage={fileUrl(giftCards[0]?.imageUrl)} />
+          <GiftCustomizer gift={null} packagings={packagings} allProducts={allProducts} giftCardImage={fileUrl(giftCards[0]?.imageUrl)} editKey={editKey} />
         </div>
       </div>
     </div>

@@ -6,7 +6,7 @@ import { fileUrl, type GiftPackage, type GiftPackaging, type GiftProduct, type P
 import { Check, Minus, Plus, Search, ShoppingCart, Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 interface Selection { productId: number; quantity: number }
 
@@ -113,13 +113,15 @@ export default function GiftCustomizer({
   packagings,
   allProducts,
   giftCardImage,
+  editKey,
 }: {
   gift: GiftPackage | null;
   packagings: GiftPackaging[];
   allProducts: Product[];
   giftCardImage?: string | null;
+  editKey?: string;
 }) {
-  const { add, stockLeft } = useCart();
+  const { add, remove, stockLeft, items, cartReady } = useCart();
   const { customer } = useCustomer();
   // Non-profit customers pay the gift box's cost price (same as price when no cost is set).
   const boxPrice = (p: GiftPackaging) => parseFloat(customer?.isNonProfit ? p.cost ?? p.price : p.price);
@@ -142,6 +144,23 @@ export default function GiftCustomizer({
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
+  // Tracks the cart key of the item being edited (updated after each save to avoid stale key).
+  const [currentEditKey, setCurrentEditKey] = useState(editKey);
+
+  // Once the cart hydrates, load the existing gift item's state for editing.
+  const editApplied = useRef(false);
+  useEffect(() => {
+    if (!editApplied.current && cartReady && currentEditKey) {
+      const editItem = items.find(i => i.key === currentEditKey);
+      if (editItem) {
+        editApplied.current = true;
+        setSelections(editItem.giftSelections?.map(s => ({ productId: s.productId, quantity: s.quantity })) ?? []);
+        setPackagingId(editItem.packagingId ?? null);
+        setMessage(editItem.giftMessage ?? "");
+        setQuantity(editItem.quantity);
+      }
+    }
+  }, [cartReady, currentEditKey, items]);
 
   const selectedIds = useMemo(() => new Set(selections.map((s) => s.productId)), [selections]);
 
@@ -175,14 +194,15 @@ export default function GiftCustomizer({
     const p = productMap.get(pid);
     return (p as Product)?.quantity ?? (p as GiftProduct)?.stock ?? 0;
   };
-  // What is still free of a product: its stock less what the cart already takes (products, bundles, gifts).
-  const freeOf = (pid: number) => stockLeft(pid, stockOf(pid));
+  // Exclude the item being edited from stock counts so its products don't reduce available stock.
+  const freeOf = (pid: number) => stockLeft(pid, stockOf(pid), currentEditKey);
 
   const perGift = new Map<number, number>();
   for (const c of selections) if (c.quantity > 0) perGift.set(c.productId, (perGift.get(c.productId) ?? 0) + c.quantity);
   const maxGifts = perGift.size ? Math.min(...[...perGift].map(([pid, q]) => Math.floor(freeOf(pid) / q))) : 0;
 
   const empty = selections.length === 0;
+  const isEditing = !!currentEditKey && cartReady && !!items.find(i => i.key === currentEditKey);
 
   const addToCart = () => {
     if (empty || maxGifts < 1) return;
@@ -192,8 +212,10 @@ export default function GiftCustomizer({
       .filter((s) => s.quantity > 0)
       .map((s) => `${s.quantity} × ${productMap.get(s.productId)?.name ?? ""}`)
       .join(", ");
+    const newKey = `g-${gift?.id ?? "custom"}-${hash(JSON.stringify([giftSelections, packagingId, giftMessage]))}`;
+    if (currentEditKey) remove(currentEditKey);
     add({
-      key: `g-${gift?.id ?? "custom"}-${hash(JSON.stringify([giftSelections, packagingId, giftMessage]))}`,
+      key: newKey,
       itemType: "gift",
       giftPackageId: gift?.id ?? null,
       productCode: gift?.code ?? "GIFT",
@@ -209,6 +231,7 @@ export default function GiftCustomizer({
       giftMessage,
       contents: [contentsLabel + (packaging ? ` + ${packaging.name}` : "")],
     }, Math.min(quantity, maxGifts));
+    setCurrentEditKey(newKey);
     setAdded(true);
   };
 
@@ -229,7 +252,12 @@ export default function GiftCustomizer({
 
         {showPicker && (
           <div className="mb-3">
-            <ProductPicker allProducts={allProducts} selected={selectedIds} stockLeft={(p) => stockLeft(p.id, p.quantity)} onAdd={(id) => { addProduct(id); setShowPicker(false); }} />
+            <ProductPicker
+              allProducts={allProducts}
+              selected={selectedIds}
+              stockLeft={(p) => stockLeft(p.id, p.quantity, currentEditKey)}
+              onAdd={(id) => { addProduct(id); }}
+            />
           </div>
         )}
 
@@ -257,7 +285,7 @@ export default function GiftCustomizer({
                     <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 mt-1.5">
                       <p className="text-xs text-stone-400 shrink-0">${parseFloat((p as Product).sellingPrice).toFixed(2)} each</p>
                       <div className="flex items-center gap-1.5 ml-auto shrink-0">
-                        <Stepper value={sel.quantity} min={1} max={maxQty} onChange={(v) => setQty(sel.productId, v)} />
+                        <Stepper value={sel.quantity} min={0} max={maxQty} onChange={(v) => setQty(sel.productId, v)} />
                         <button type="button" onClick={() => removeProduct(sel.productId)} className="p-1 text-stone-300 hover:text-red-400 transition" aria-label="Remove">
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -349,7 +377,11 @@ export default function GiftCustomizer({
           className="flex items-center justify-center gap-2 flex-1 min-w-[180px] py-3 rounded-full bg-[var(--brand)] hover:bg-[var(--brand-dark)] text-white font-semibold transition disabled:opacity-40 disabled:cursor-not-allowed"
         >
           {added ? <Check className="w-5 h-5" /> : <ShoppingCart className="w-5 h-5" />}
-          {added ? "Added!" : `Add to Cart · $${(unitPrice * quantity).toFixed(2)}`}
+          {added
+            ? (isEditing ? "Updated!" : "Added!")
+            : isEditing
+              ? `Update Cart · $${(unitPrice * quantity).toFixed(2)}`
+              : `Add to Cart · $${(unitPrice * quantity).toFixed(2)}`}
         </button>
         {added && <Link href="/cart" className="text-sm text-[var(--brand)] font-semibold hover:underline">View cart →</Link>}
       </div>

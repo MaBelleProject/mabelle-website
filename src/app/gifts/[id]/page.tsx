@@ -9,7 +9,10 @@ import { Gift } from "lucide-react";
 import BackButton from "@/components/back-button";
 import TrackViewItem from "@/components/analytics/track-view-item";
 
-interface PageProps { params: Promise<{ id: string }> }
+interface PageProps {
+  params: Promise<{ id: string }>
+  searchParams?: Promise<{ edit?: string }>
+}
 
 export default function GiftPage(props: PageProps) {
   return (
@@ -29,8 +32,9 @@ export default function GiftPage(props: PageProps) {
   );
 }
 
-async function GiftContent({ params }: PageProps) {
+async function GiftContent({ params, searchParams }: PageProps) {
   const { id } = await params;
+  const editKey = searchParams ? (await searchParams).edit : undefined;
   const [gift, packagings, allProducts, giftCards] = await Promise.all([
     cachedStorefrontApi.gift(parseInt(id)).catch(() => null),
     cachedStorefrontApi.giftPackaging().catch(() => []),
@@ -63,7 +67,7 @@ async function GiftContent({ params }: PageProps) {
         <div className="flex flex-col gap-4 min-w-0">
           <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-stone-800">{gift.name}</h1>
           {gift.description && <p className="text-stone-600 text-sm leading-relaxed">{gift.description}</p>}
-          <GiftCustomizer gift={gift} packagings={packagings} allProducts={allProducts} giftCardImage={fileUrl(giftCards[0]?.imageUrl)} />
+          <GiftCustomizer gift={gift} packagings={packagings} allProducts={allProducts} giftCardImage={fileUrl(giftCards[0]?.imageUrl)} editKey={editKey} />
         </div>
       </div>
     </div>
